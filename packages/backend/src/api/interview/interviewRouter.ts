@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
-import type { Request, Response } from 'express';
+import type { Request, Response, IRouter } from 'express';
 import { ServiceResponse } from '@/common/models/serviceResponse.js';
 import { geminiService } from '@/services/geminiService.js';
 import type { ExtractedFacts } from '@/common/types/interview.js';
 import { StatusCodes } from 'http-status-codes';
 
-export const interviewRouter = Router();
+export const interviewRouter: IRouter = Router();
 
 // Configure multer for audio file uploads
 const upload = multer({ 
