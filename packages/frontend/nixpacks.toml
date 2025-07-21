@@ -1,11 +1,30 @@
+# Railway frontend configuration with Caddy
+[variables]
+NPM_CONFIG_UPDATE_NOTIFIER = 'false'
+NPM_CONFIG_FUND = 'false'
+
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'npm-9_x']
+nixPkgs = ['nodejs-18_x', 'pnpm']
+
+# Download caddy from nix
+[phases.caddy]
+dependsOn = ['setup']
+nixpkgsArchive = 'ba913eda2df8eb72147259189d55932012df6301'
+nixPkgs = ['caddy']
+
+# Format the Caddyfile
+[phases.fmt]
+dependsOn = ['caddy']
+cmds = ['caddy fmt --overwrite Caddyfile']
 
 [phases.install]
-cmds = ['npm ci']
+dependsOn = ['fmt']
+cmds = ['pnpm install --frozen-lockfile']
 
 [phases.build]
-cmds = ['npm run build']
+dependsOn = ['install']
+cmds = ['pnpm run build']
 
+# Start caddy web server
 [start]
-cmd = 'npx serve -s dist -l 3000'
+cmd = 'exec caddy run --config Caddyfile --adapter caddyfile 2>&1'
