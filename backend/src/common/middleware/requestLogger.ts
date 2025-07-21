@@ -1,44 +1,43 @@
 import pinoHttp from 'pino-http';
 import pino from 'pino';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: isDevelopment
+const logger = pino(
+  isDevelopment
     ? {
-        targets: [
-          {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'SYS:standard',
-              ignore: 'pid,hostname',
+        level: process.env.LOG_LEVEL || 'debug',
+        transport: {
+          targets: [
+            {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'SYS:standard',
+                ignore: 'pid,hostname',
+              },
+              level: 'info',
             },
-            level: 'info',
-          },
-          {
-            target: 'pino/file',
-            options: {
-              destination: join(__dirname, '../../../logs/app.log'),
-              mkdir: true,
+            {
+              target: 'pino/file',
+              options: {
+                destination: './logs/app.log',
+                mkdir: true,
+              },
+              level: 'debug',
             },
-            level: 'debug',
-          },
-        ],
+          ],
+        },
       }
     : {
-        target: 'pino/file',
-        options: {
-          destination: join(__dirname, '../../../logs/app.log'),
-          mkdir: true,
+        // Production: JSON logs to stdout (Railway/Docker captures)
+        level: process.env.LOG_LEVEL || 'info',
+        formatters: {
+          level: (label) => ({ level: label }),
         },
-      },
-});
+        timestamp: pino.stdTimeFunctions.isoTime,
+      }
+);
 
 export const requestLogger = pinoHttp({
   logger,
