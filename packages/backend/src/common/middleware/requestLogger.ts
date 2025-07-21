@@ -1,20 +1,43 @@
 import pinoHttp from 'pino-http';
 import pino from 'pino';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   transport: isDevelopment
     ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-        },
+        targets: [
+          {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'SYS:standard',
+              ignore: 'pid,hostname',
+            },
+            level: 'info',
+          },
+          {
+            target: 'pino/file',
+            options: {
+              destination: join(__dirname, '../../../logs/app.log'),
+              mkdir: true,
+            },
+            level: 'debug',
+          },
+        ],
       }
-    : undefined,
+    : {
+        target: 'pino/file',
+        options: {
+          destination: join(__dirname, '../../../logs/app.log'),
+          mkdir: true,
+        },
+      },
 });
 
 export const requestLogger = pinoHttp({
@@ -42,7 +65,7 @@ export const requestLogger = pinoHttp({
     }),
     res: (res) => ({
       statusCode: res.statusCode,
-      headers: isDevelopment ? res.getHeaders() : undefined,
+      headers: isDevelopment && res.getHeaders ? res.getHeaders() : undefined,
     }),
   },
 });
