@@ -1,6 +1,0 @@
-[build]
-builder = "dockerfile"
-dockerfilePath = "packages/backend/Dockerfile"
-
-[deploy]
-startCommand = "pnpm --filter backend run start"
