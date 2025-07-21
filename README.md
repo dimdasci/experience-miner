@@ -119,11 +119,3 @@ experience-miner/
 ## License
 
 This project is licensed under the [Business Source License 1.1](LICENSE). Personal use for job searching activities is permitted. Commercial use (career coaching, recruiting, competitive products) is prohibited. The license converts to MIT after 4 years.
-
-## Contributing
-
-This is an MVP focused on speed to market. See `tasks/implementation-plan.md` for detailed technical specifications and development roadmap.
-
-## Support
-
-For technical guidance, see [CLAUDE.md](CLAUDE.md) for Claude Code integration details.
