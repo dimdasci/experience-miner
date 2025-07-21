@@ -4,7 +4,7 @@ NPM_CONFIG_UPDATE_NOTIFIER = 'false'
 NPM_CONFIG_FUND = 'false'
 
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'pnpm']
+nixPkgs = ['nodejs-18_x']
 
 # Download caddy from nix
 [phases.caddy]
@@ -19,11 +19,11 @@ cmds = ['caddy fmt --overwrite Caddyfile']
 
 [phases.install]
 dependsOn = ['fmt']
-cmds = ['pnpm install --frozen-lockfile']
+cmds = ['npm ci']
 
 [phases.build]
 dependsOn = ['install']
-cmds = ['pnpm run build']
+cmds = ['npm run build']
 
 # Start caddy web server
 [start]
