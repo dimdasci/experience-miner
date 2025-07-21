@@ -2,7 +2,8 @@ import { z } from 'zod';
 import 'dotenv/config';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // Railway provides environment name, fallback to development for local dev
+  RAILWAY_ENVIRONMENT_NAME: z.string().optional(),
   PORT: z.coerce.number().int().positive().default(8080),
   
   // Gemini AI Configuration
@@ -22,9 +23,9 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
-export type EnvConfig = z.infer<typeof envSchema>;
+type BaseEnvConfig = z.infer<typeof envSchema>;
 
-function validateEnv(): EnvConfig {
+function validateEnv(): BaseEnvConfig {
   try {
     return envSchema.parse(process.env);
   } catch (error) {
@@ -43,17 +44,32 @@ function validateEnv(): EnvConfig {
   }
 }
 
-export const env = validateEnv();
+const baseEnv = validateEnv();
 
-// Log configuration in development
-if (env.NODE_ENV === 'development') {
-  console.log('🔧 Environment configuration:');
-  console.log(`  - NODE_ENV: ${env.NODE_ENV}`);
-  console.log(`  - PORT: ${env.PORT}`);
-  console.log(`  - LOG_LEVEL: ${env.LOG_LEVEL}`);
-  console.log(`  - API_KEY: ${env.API_KEY ? '✅ Set' : '❌ Missing'}`);
-  console.log(`  - FRONTEND_URL: ${env.FRONTEND_URL || '⚠️  Not set (using localhost)'}`);
-  console.log(`  - RAILWAY_PUBLIC_DOMAIN: ${env.RAILWAY_PUBLIC_DOMAIN || '⚠️  Not set (local dev)'}`);
-  console.log(`  - SUPABASE_URL: ${env.SUPABASE_URL ? '✅ Set' : '⚠️  Optional (not set)'}`);
-  console.log(`  - SUPABASE_SERVICE_KEY: ${env.SUPABASE_SERVICE_KEY ? '✅ Set' : '⚠️  Optional (not set)'}`);
+// Use Railway environment name or default to development for local
+const NODE_ENV = baseEnv.RAILWAY_ENVIRONMENT_NAME || 'development';
+
+export const env = {
+  ...baseEnv,
+  NODE_ENV,
+  isDevelopment: NODE_ENV === 'development',
+  isProduction: NODE_ENV === 'production',
+};
+
+export type EnvConfig = typeof env;
+
+// Log configuration 
+console.log('🔧 Environment configuration:');
+console.log(`  - RAILWAY_ENVIRONMENT_NAME: ${env.RAILWAY_ENVIRONMENT_NAME || '⚠️  Not set (local dev)'}`);
+console.log(`  - NODE_ENV: ${env.NODE_ENV}`);
+console.log(`  - PORT: ${env.PORT}`);
+console.log(`  - LOG_LEVEL: ${env.LOG_LEVEL}`);
+console.log(`  - API_KEY: ${env.API_KEY ? '✅ Set' : '❌ Missing'}`);
+console.log(`  - FRONTEND_URL: ${env.FRONTEND_URL || '⚠️  Not set (using localhost)'}`);
+console.log(`  - RAILWAY_PUBLIC_DOMAIN: ${env.RAILWAY_PUBLIC_DOMAIN || '⚠️  Not set (local dev)'}`);
+console.log(`  - SUPABASE_URL: ${env.SUPABASE_URL ? '✅ Set' : '⚠️  Optional (not set)'}`);
+console.log(`  - SUPABASE_SERVICE_KEY: ${env.SUPABASE_SERVICE_KEY ? '✅ Set' : '⚠️  Optional (not set)'}`);
+
+if (env.NODE_ENV !== 'development' && !env.FRONTEND_URL) {
+  console.warn('⚠️  FRONTEND_URL not set in deployed environment - CORS will be disabled');
 }
