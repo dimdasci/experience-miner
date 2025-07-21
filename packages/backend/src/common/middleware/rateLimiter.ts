@@ -20,7 +20,7 @@ export const aiRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
+  skip: (_req) => {
     // Skip rate limiting in development
     return process.env.NODE_ENV === 'development';
   },

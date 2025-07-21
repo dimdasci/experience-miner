@@ -120,7 +120,7 @@ describe('ServiceResponse', () => {
 
       expect(Array.isArray(response.responseObject)).toBe(true);
       expect(response.responseObject).toHaveLength(3);
-      expect(response.responseObject[0].id).toBe(1);
+      expect(response.responseObject?.[0]?.id).toBe(1);
     });
   });
 });

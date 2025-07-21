@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { geminiService } from './geminiService.js';
 import { 
   mockTranscriptionResponse, 
@@ -183,7 +183,7 @@ describe('GeminiService', () => {
 
       await geminiService.extractFacts(transcript);
 
-      const callArgs = mockGenerateContent.mock.calls[0][0];
+      const callArgs = mockGenerateContent.mock.calls[0]?.[0];
       expect(callArgs.contents).toContain('act as a professional career coach');
       expect(callArgs.contents).toContain('job seeker trying to build their resume');
       expect(callArgs.contents).toContain(transcript);

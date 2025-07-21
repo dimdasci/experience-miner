@@ -5,7 +5,6 @@ import { interviewRouter } from './interviewRouter.js';
 import { 
   mockTranscriptionResponse, 
   mockExtractionResponse, 
-  createMockFile,
   createTestTranscript,
   expectServiceResponse,
   expectValidExtractedFacts 
@@ -98,7 +97,7 @@ describe('Interview Router', () => {
     it('should respect file size limits', async () => {
       const largeBuffer = Buffer.alloc(15 * 1024 * 1024); // 15MB (over 10MB limit)
       
-      const response = await request(app)
+      await request(app)
         .post('/api/interview/transcribe')
         .attach('audio', largeBuffer, 'large-audio.webm')
         .expect(413); // Payload too large
@@ -176,7 +175,7 @@ describe('Interview Router', () => {
       const longTranscript = 'A'.repeat(10000); // Very long transcript
       mockGeminiService.extractFacts.mockResolvedValueOnce(mockExtractionResponse);
 
-      const response = await request(app)
+      await request(app)
         .post('/api/interview/extract')
         .send({ transcript: longTranscript })
         .expect(200);

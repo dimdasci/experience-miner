@@ -54,12 +54,13 @@ export interface ProcessingResult {
   model: string
 }
 
-// API Response wrapper
+// API Response wrapper (matches backend ServiceResponse)
 export interface ApiResponse<T = any> {
   success: boolean
-  data?: T
+  responseObject: T
+  message: string
+  statusCode: number
   error?: string
-  message?: string
 }
 
 // Audio recording types

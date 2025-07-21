@@ -1,4 +1,4 @@
-import { GoogleGenAI, type GenerateContentRequest } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { Type } from '@google/genai';
 import { env } from '@/common/utils/envConfig.js';
 import type { ExtractedFacts } from '@/common/types/interview.js';
@@ -22,7 +22,7 @@ class GeminiService {
         },
       };
 
-      const request: GenerateContentRequest = {
+      const request = {
         model: this.model,
         contents: [{
           parts: [
@@ -98,7 +98,7 @@ class GeminiService {
 TRANSCRIPT:
 ${transcript}`;
 
-      const request: GenerateContentRequest = {
+      const request = {
         model: this.model,
         contents: prompt,
         config: { 

@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import { ServiceResponse } from '@/common/models/serviceResponse.js';
 import { StatusCodes } from 'http-status-codes';
 
-export const healthCheckRouter = Router();
+export const healthCheckRouter: Router = Router();
 
 healthCheckRouter.get('/', (_req: Request, res: Response) => {
   const serviceResponse = ServiceResponse.success('Service is healthy', {

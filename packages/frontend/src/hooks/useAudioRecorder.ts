@@ -4,7 +4,6 @@ import { RECORDING_CONSTRAINTS, MAX_RECORDING_DURATION } from '../constants'
 
 interface UseAudioRecorderOptions {
   onRecordingComplete?: (recording: AudioRecording) => void
-  onTranscriptionReceived?: (transcript: string) => void
   autoStop?: boolean
   maxDuration?: number
 }
@@ -12,7 +11,6 @@ interface UseAudioRecorderOptions {
 export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
   const {
     onRecordingComplete,
-    onTranscriptionReceived,
     autoStop = true,
     maxDuration = MAX_RECORDING_DURATION
   } = options

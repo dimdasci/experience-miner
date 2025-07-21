@@ -37,6 +37,9 @@ class ApiService {
       console.error('API request failed:', error)
       return {
         success: false,
+        responseObject: {} as T,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        statusCode: 500,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       }
     }
@@ -105,6 +108,9 @@ class ApiService {
       console.error('Transcription failed:', error)
       return {
         success: false,
+        responseObject: { transcript: '' },
+        message: error instanceof Error ? error.message : 'Transcription failed',
+        statusCode: 500,
         error: error instanceof Error ? error.message : 'Transcription failed'
       }
     }
