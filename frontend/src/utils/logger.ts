@@ -141,11 +141,6 @@ export class UserJourneyLogger {
       // Store user context for consistent logging format
       this.currentUserId = userId;
       this.currentUserPrefix = userData?.email_prefix || 'unknown';
-      
-      Sentry.setUser({
-        id: userId,
-        ...userData
-      });
 
       this.logUserAction({
         action: 'user_identified',
@@ -155,8 +150,6 @@ export class UserJourneyLogger {
       // Clear user context
       this.currentUserId = null;
       this.currentUserPrefix = null;
-      
-      Sentry.setUser(null);
       
       this.logUserAction({
         action: 'user_cleared',
