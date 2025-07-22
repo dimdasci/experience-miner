@@ -1,9 +1,13 @@
 import crypto from "node:crypto";
 import * as Sentry from "@sentry/node";
-import type { IRouter, Request, Response } from "express";
+import type { IRouter, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import multer from "multer";
+import {
+	type AuthenticatedRequest,
+	authenticateToken,
+} from "@/common/middleware/auth.js";
 import { ServiceResponse } from "@/common/models/serviceResponse.js";
 import type { ExtractedFacts } from "@/common/types/interview.js";
 import { geminiService } from "@/services/geminiService.js";
@@ -21,14 +25,18 @@ const upload = multer({
 // Transcribe audio to text
 interviewRouter.post(
 	"/transcribe",
+	authenticateToken,
 	upload.single("audio"),
-	async (req: Request, res: Response) => {
+	async (req: AuthenticatedRequest, res: Response) => {
 		const requestId = crypto.randomUUID();
 		const startTime = Date.now();
+		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
 
 		// Log transcription request
 		Sentry.logger?.info?.("Transcription request started", {
 			requestId,
+			user_id: req.user?.id,
+			user: userPrefix,
 			fileSize: req.file?.size,
 			mimeType: req.file?.mimetype,
 			hasFile: !!req.file,
@@ -37,12 +45,19 @@ interviewRouter.post(
 		if (!req.file) {
 			// Log warning (structured logs if available, fallback to issues)
 			if (Sentry.logger?.warn) {
-				Sentry.logger.warn("Transcription failed - no file", { requestId });
+				Sentry.logger.warn("Transcription failed - no file", {
+					requestId,
+					user_id: req.user?.id,
+					user: userPrefix,
+				});
 			} else {
 				Sentry.captureMessage("Transcription failed - no audio file provided", {
 					level: "warning",
 					tags: { endpoint: "transcribe", error: "no_file" },
-					contexts: { request: { id: requestId } },
+					contexts: {
+						request: { id: requestId },
+						user: { id: req.user?.id, email_prefix: userPrefix },
+					},
 				});
 			}
 
@@ -65,6 +80,8 @@ interviewRouter.post(
 			// Log successful transcription
 			Sentry.logger?.info?.("Transcription completed successfully", {
 				requestId,
+				user_id: req.user?.id,
+				user: userPrefix,
 				fileSize: req.file.size,
 				transcriptLength: transcript.length,
 				processingTime: duration,
@@ -87,6 +104,8 @@ interviewRouter.post(
 			if (Sentry.logger?.error) {
 				Sentry.logger.error("Transcription failed", {
 					requestId,
+					user_id: req.user?.id,
+					user: userPrefix,
 					fileSize: req.file.size,
 					processingTime: duration,
 					error: error instanceof Error ? error.message : String(error),
@@ -100,6 +119,7 @@ interviewRouter.post(
 							fileSize: req.file.size,
 							processingTime: duration,
 						},
+						user: { id: req.user?.id, email_prefix: userPrefix },
 					},
 				});
 			}
@@ -116,112 +136,127 @@ interviewRouter.post(
 );
 
 // Extract structured facts from transcript
-interviewRouter.post("/extract", async (req: Request, res: Response) => {
-	const { transcript } = req.body;
-	const requestId = crypto.randomUUID();
-	const startTime = Date.now();
+interviewRouter.post(
+	"/extract",
+	authenticateToken,
+	async (req: AuthenticatedRequest, res: Response) => {
+		const { transcript } = req.body;
+		const requestId = crypto.randomUUID();
+		const startTime = Date.now();
+		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
 
-	// Log extraction request
-	Sentry.logger?.info?.("Facts extraction request started", {
-		requestId,
-		transcriptLength: transcript?.length || 0,
-		hasTranscript: !!transcript,
-	});
+		// Log extraction request
+		Sentry.logger?.info?.("Facts extraction request started", {
+			requestId,
+			user_id: req.user?.id,
+			user: userPrefix,
+			transcriptLength: transcript?.length || 0,
+			hasTranscript: !!transcript,
+		});
 
-	if (!transcript || typeof transcript !== "string") {
-		// Log warning (structured logs if available, fallback to issues)
-		if (Sentry.logger?.warn) {
-			Sentry.logger.warn("Facts extraction failed - invalid transcript", {
+		if (!transcript || typeof transcript !== "string") {
+			// Log warning (structured logs if available, fallback to issues)
+			if (Sentry.logger?.warn) {
+				Sentry.logger.warn("Facts extraction failed - invalid transcript", {
+					requestId,
+					user_id: req.user?.id,
+					user: userPrefix,
+					transcriptType: typeof transcript,
+				});
+			} else {
+				Sentry.captureMessage(
+					"Facts extraction failed - no transcript provided",
+					{
+						level: "warning",
+						tags: { endpoint: "extract", error: "no_transcript" },
+						contexts: {
+							request: {
+								id: requestId,
+								transcriptType: typeof transcript,
+							},
+							user: { id: req.user?.id, email_prefix: userPrefix },
+						},
+					},
+				);
+			}
+
+			const serviceResponse = ServiceResponse.failure(
+				"No transcript provided or invalid format",
+				null,
+				StatusCodes.BAD_REQUEST,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		try {
+			const extractedFacts: ExtractedFacts =
+				await geminiService.extractFacts(transcript);
+
+			const duration = Date.now() - startTime;
+
+			// Log successful extraction with detailed metrics
+			const factsCounts = {
+				companies: extractedFacts.companies?.length || 0,
+				roles: extractedFacts.roles?.length || 0,
+				projects: extractedFacts.projects?.length || 0,
+				achievements: extractedFacts.achievements?.length || 0,
+				skills: extractedFacts.skills?.length || 0,
+			};
+
+			Sentry.logger?.info?.("Facts extraction completed successfully", {
 				requestId,
-				transcriptType: typeof transcript,
+				user_id: req.user?.id,
+				user: userPrefix,
+				transcriptLength: transcript.length,
+				processingTime: duration,
+				extractedCounts: factsCounts,
+				totalFacts: Object.values(factsCounts).reduce(
+					(sum, count) => sum + count,
+					0,
+				),
 			});
-		} else {
-			Sentry.captureMessage(
-				"Facts extraction failed - no transcript provided",
-				{
-					level: "warning",
-					tags: { endpoint: "extract", error: "no_transcript" },
+
+			const serviceResponse = ServiceResponse.success(
+				"Facts extracted successfully",
+				extractedFacts,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		} catch (error) {
+			const duration = Date.now() - startTime;
+			console.error("Error in /api/interview/extract:", error);
+
+			// Log extraction error
+			if (Sentry.logger?.error) {
+				Sentry.logger.error("Facts extraction failed", {
+					requestId,
+					user_id: req.user?.id,
+					user: userPrefix,
+					transcriptLength: transcript.length,
+					processingTime: duration,
+					error: error instanceof Error ? error.message : String(error),
+				});
+			} else {
+				Sentry.captureException(error, {
+					tags: { endpoint: "extract", status: "error" },
 					contexts: {
 						request: {
 							id: requestId,
-							transcriptType: typeof transcript,
+							transcriptLength: transcript.length,
+							processingTime: duration,
 						},
+						user: { id: req.user?.id, email_prefix: userPrefix },
 					},
-				},
+				});
+			}
+
+			const serviceResponse = ServiceResponse.failure(
+				"Failed to extract facts from transcript",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		}
-
-		const serviceResponse = ServiceResponse.failure(
-			"No transcript provided or invalid format",
-			null,
-			StatusCodes.BAD_REQUEST,
-		);
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
-	}
-
-	try {
-		const extractedFacts: ExtractedFacts =
-			await geminiService.extractFacts(transcript);
-
-		const duration = Date.now() - startTime;
-
-		// Log successful extraction with detailed metrics
-		const factsCounts = {
-			companies: extractedFacts.companies?.length || 0,
-			roles: extractedFacts.roles?.length || 0,
-			projects: extractedFacts.projects?.length || 0,
-			achievements: extractedFacts.achievements?.length || 0,
-			skills: extractedFacts.skills?.length || 0,
-		};
-
-		Sentry.logger?.info?.("Facts extraction completed successfully", {
-			requestId,
-			transcriptLength: transcript.length,
-			processingTime: duration,
-			extractedCounts: factsCounts,
-			totalFacts: Object.values(factsCounts).reduce(
-				(sum, count) => sum + count,
-				0,
-			),
-		});
-
-		const serviceResponse = ServiceResponse.success(
-			"Facts extracted successfully",
-			extractedFacts,
-		);
-
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
-	} catch (error) {
-		const duration = Date.now() - startTime;
-		console.error("Error in /api/interview/extract:", error);
-
-		// Log extraction error
-		if (Sentry.logger?.error) {
-			Sentry.logger.error("Facts extraction failed", {
-				requestId,
-				transcriptLength: transcript.length,
-				processingTime: duration,
-				error: error instanceof Error ? error.message : String(error),
-			});
-		} else {
-			Sentry.captureException(error, {
-				tags: { endpoint: "extract", status: "error" },
-				contexts: {
-					request: {
-						id: requestId,
-						transcriptLength: transcript.length,
-						processingTime: duration,
-					},
-				},
-			});
-		}
-
-		const serviceResponse = ServiceResponse.failure(
-			"Failed to extract facts from transcript",
-			null,
-			StatusCodes.INTERNAL_SERVER_ERROR,
-		);
-
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
-	}
-});
+	},
+);

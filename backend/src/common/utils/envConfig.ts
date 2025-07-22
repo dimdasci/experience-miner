@@ -15,9 +15,9 @@ const envSchema = z.object({
 	// Railway Configuration (automatically provided by Railway)
 	RAILWAY_PUBLIC_DOMAIN: z.string().optional(),
 
-	// Supabase Configuration (optional for local development)
-	SUPABASE_URL: z.string().url().optional(),
-	SUPABASE_SERVICE_KEY: z.string().optional(),
+	// Supabase Configuration (required for authentication)
+	SUPABASE_URL: z.string().url().min(1, "Supabase URL is required"),
+	SUPABASE_ANON_KEY: z.string().min(1, "Supabase anon key is required"),
 
 	// Logging
 	LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
@@ -78,11 +78,9 @@ console.log(
 console.log(
 	`  - RAILWAY_PUBLIC_DOMAIN: ${env.RAILWAY_PUBLIC_DOMAIN || "⚠️  Not set (local dev)"}`,
 );
+console.log(`  - SUPABASE_URL: ${env.SUPABASE_URL ? "✅ Set" : "❌ Missing"}`);
 console.log(
-	`  - SUPABASE_URL: ${env.SUPABASE_URL ? "✅ Set" : "⚠️  Optional (not set)"}`,
-);
-console.log(
-	`  - SUPABASE_SERVICE_KEY: ${env.SUPABASE_SERVICE_KEY ? "✅ Set" : "⚠️  Optional (not set)"}`,
+	`  - SUPABASE_ANON_KEY: ${env.SUPABASE_ANON_KEY ? "✅ Set" : "❌ Missing"}`,
 );
 console.log(
 	`  - SENTRY_DSN_BACKEND: ${env.SENTRY_DSN_BACKEND ? "✅ Set" : "⚠️  Optional (not set)"}`,

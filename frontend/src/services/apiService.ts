@@ -6,6 +6,7 @@ import {
   ProcessingResult 
 } from '../types'
 import { API_ENDPOINTS } from '../constants'
+import { supabase } from '../lib/supabase'
 
 class ApiService {
   private baseUrl: string
@@ -14,14 +15,28 @@ class ApiService {
     this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
   }
 
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+    
+    return headers;
+  }
+
   private async request<T>(
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
+      const authHeaders = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         headers: {
-          'Content-Type': 'application/json',
+          ...authHeaders,
           ...options.headers,
         },
         ...options,
@@ -95,8 +110,17 @@ class ApiService {
     formData.append('audio', audioBlob, 'recording.webm')
 
     try {
+      // Get auth token for FormData requests
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = {};
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(`${this.baseUrl}/interview/transcribe`, {
         method: 'POST',
+        headers,
         body: formData,
       })
 
