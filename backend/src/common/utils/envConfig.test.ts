@@ -103,11 +103,11 @@ describe("Environment Configuration", () => {
 		process.env.RAILWAY_ENVIRONMENT_NAME = "test";
 		process.env.API_KEY = "test_key";
 		process.env.SUPABASE_URL = "https://test.supabase.co";
-		process.env.SUPABASE_SERVICE_KEY = "test_service_key";
+		process.env.SUPABASE_ANON_KEY = "test_anon_key";
 
 		const { env } = await import("./envConfig.js");
 
 		expect(env.SUPABASE_URL).toBe("https://test.supabase.co");
-		expect(env.SUPABASE_SERVICE_KEY).toBe("test_service_key");
+		expect(env.SUPABASE_ANON_KEY).toBe("test_anon_key");
 	});
 });
