@@ -1,44 +1,37 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "composite": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"],
-      "@/api/*": ["api/*"],
-      "@/services/*": ["services/*"],
-      "@/common/*": ["common/*"]
-    },
-    "types": ["node", "vitest/globals"],
-    "lib": ["ES2020"]
-  },
-  "include": [
-    "src/**/*",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"moduleDetection": "force",
+		"noEmit": true,
+		"composite": true,
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"baseUrl": "./src",
+		"paths": {
+			"@/*": ["*"],
+			"@/api/*": ["api/*"],
+			"@/services/*": ["services/*"],
+			"@/common/*": ["common/*"]
+		},
+		"types": ["node", "vitest/globals"],
+		"lib": ["ES2020"]
+	},
+	"include": ["src/**/*", "**/*.test.ts", "**/*.spec.ts"],
+	"exclude": ["node_modules", "dist"]
 }

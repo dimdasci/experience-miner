@@ -1,239 +1,267 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import request from 'supertest';
-import express from 'express';
-import { interviewRouter } from './interviewRouter.js';
-import { 
-  mockTranscriptionResponse, 
-  mockExtractionResponse, 
-  createTestTranscript,
-  expectServiceResponse,
-  expectValidExtractedFacts 
-} from '../../test/helpers.js';
+import express from "express";
+import request from "supertest";
+import type { Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	createTestTranscript,
+	expectServiceResponse,
+	expectValidExtractedFacts,
+	mockExtractionResponse,
+	mockTranscriptionResponse,
+} from "../../test/helpers.js";
+import { interviewRouter } from "./interviewRouter.js";
 
 // Mock the Gemini service
-vi.mock('@/services/geminiService.js', () => ({
-  geminiService: {
-    transcribeAudio: vi.fn(),
-    extractFacts: vi.fn(),
-  },
+vi.mock("@/services/geminiService.js", () => ({
+	geminiService: {
+		transcribeAudio: vi.fn(),
+		extractFacts: vi.fn(),
+	},
 }));
 
-describe('Interview Router', () => {
-  let app: express.Application;
-  let mockGeminiService: any;
+describe("Interview Router", () => {
+	let app: express.Application;
+	let mockGeminiService: {
+		transcribeAudio: Mock;
+		extractFacts: Mock;
+	};
 
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    
-    app = express();
-    app.use(express.json());
-    app.use('/api/interview', interviewRouter);
-    
-    // Get the mocked gemini service
-    const { geminiService } = await import('@/services/geminiService.js');
-    mockGeminiService = geminiService;
-  });
+	beforeEach(async () => {
+		vi.clearAllMocks();
 
-  describe('POST /transcribe', () => {
-    it('should transcribe audio successfully', async () => {
-      mockGeminiService.transcribeAudio.mockResolvedValueOnce(mockTranscriptionResponse.text);
+		app = express();
+		app.use(express.json());
+		app.use("/api/interview", interviewRouter);
 
-      const response = await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('mock audio data'), 'test-audio.webm')
-        .expect(200);
+		// Get the mocked gemini service
+		const { geminiService } = await import("@/services/geminiService.js");
+		mockGeminiService = geminiService as unknown as typeof mockGeminiService;
+	});
 
-      expectServiceResponse(response.body, true);
-      expect(response.body.message).toBe('Audio transcribed successfully');
-      expect(response.body.responseObject.transcript).toBe(mockTranscriptionResponse.text);
-      
-      expect(mockGeminiService.transcribeAudio).toHaveBeenCalledWith(
-        expect.any(Buffer),
-        'audio/webm'
-      );
-    });
+	describe("POST /transcribe", () => {
+		it("should transcribe audio successfully", async () => {
+			mockGeminiService.transcribeAudio.mockResolvedValueOnce(
+				mockTranscriptionResponse.text,
+			);
 
-    it('should return 400 when no audio file is provided', async () => {
-      const response = await request(app)
-        .post('/api/interview/transcribe')
-        .expect(400);
+			const response = await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
+				.expect(200);
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('No audio file provided');
-      expect(mockGeminiService.transcribeAudio).not.toHaveBeenCalled();
-    });
+			expectServiceResponse(response.body, true);
+			expect(response.body.message).toBe("Audio transcribed successfully");
+			expect(response.body.responseObject.transcript).toBe(
+				mockTranscriptionResponse.text,
+			);
 
-    it('should handle transcription errors', async () => {
-      mockGeminiService.transcribeAudio.mockRejectedValueOnce(
-        new Error('Gemini transcription failed')
-      );
+			expect(mockGeminiService.transcribeAudio).toHaveBeenCalledWith(
+				expect.any(Buffer),
+				"audio/webm",
+			);
+		});
 
-      const response = await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('mock audio data'), 'test-audio.webm')
-        .expect(500);
+		it("should return 400 when no audio file is provided", async () => {
+			const response = await request(app)
+				.post("/api/interview/transcribe")
+				.expect(400);
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('Failed to transcribe audio');
-    });
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe("No audio file provided");
+			expect(mockGeminiService.transcribeAudio).not.toHaveBeenCalled();
+		});
 
-    it('should handle different audio mime types', async () => {
-      mockGeminiService.transcribeAudio.mockResolvedValueOnce(mockTranscriptionResponse.text);
+		it("should handle transcription errors", async () => {
+			mockGeminiService.transcribeAudio.mockRejectedValueOnce(
+				new Error("Gemini transcription failed"),
+			);
 
-      await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('mock audio data'), {
-          filename: 'test-audio.mp3',
-          contentType: 'audio/mp3',
-        })
-        .expect(200);
+			const response = await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
+				.expect(500);
 
-      expect(mockGeminiService.transcribeAudio).toHaveBeenCalledWith(
-        expect.any(Buffer),
-        'audio/mp3'
-      );
-    });
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe("Failed to transcribe audio");
+		});
 
-    it('should respect file size limits', async () => {
-      const largeBuffer = Buffer.alloc(15 * 1024 * 1024); // 15MB (over 10MB limit)
-      
-      await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', largeBuffer, 'large-audio.webm')
-        .expect(413); // Payload too large
+		it("should handle different audio mime types", async () => {
+			mockGeminiService.transcribeAudio.mockResolvedValueOnce(
+				mockTranscriptionResponse.text,
+			);
 
-      expect(mockGeminiService.transcribeAudio).not.toHaveBeenCalled();
-    });
-  });
+			await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("mock audio data"), {
+					filename: "test-audio.mp3",
+					contentType: "audio/mp3",
+				})
+				.expect(200);
 
-  describe('POST /extract', () => {
-    it('should extract facts successfully', async () => {
-      const transcript = createTestTranscript();
-      mockGeminiService.extractFacts.mockResolvedValueOnce(mockExtractionResponse);
+			expect(mockGeminiService.transcribeAudio).toHaveBeenCalledWith(
+				expect.any(Buffer),
+				"audio/mp3",
+			);
+		});
 
-      const response = await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript })
-        .expect(200);
+		it("should respect file size limits", async () => {
+			const largeBuffer = Buffer.alloc(15 * 1024 * 1024); // 15MB (over 10MB limit)
 
-      expectServiceResponse(response.body, true);
-      expect(response.body.message).toBe('Facts extracted successfully');
-      expectValidExtractedFacts(response.body.responseObject);
-      
-      expect(mockGeminiService.extractFacts).toHaveBeenCalledWith(transcript);
-    });
+			await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", largeBuffer, "large-audio.webm")
+				.expect(413); // Payload too large
 
-    it('should return 400 when no transcript is provided', async () => {
-      const response = await request(app)
-        .post('/api/interview/extract')
-        .send({})
-        .expect(400);
+			expect(mockGeminiService.transcribeAudio).not.toHaveBeenCalled();
+		});
+	});
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('No transcript provided or invalid format');
-      expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
-    });
+	describe("POST /extract", () => {
+		it("should extract facts successfully", async () => {
+			const transcript = createTestTranscript();
+			mockGeminiService.extractFacts.mockResolvedValueOnce(
+				mockExtractionResponse,
+			);
 
-    it('should return 400 when transcript is not a string', async () => {
-      const response = await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript: 123 })
-        .expect(400);
+			const response = await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript })
+				.expect(200);
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('No transcript provided or invalid format');
-      expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
-    });
+			expectServiceResponse(response.body, true);
+			expect(response.body.message).toBe("Facts extracted successfully");
+			expectValidExtractedFacts(response.body.responseObject);
 
-    it('should return 400 when transcript is empty string', async () => {
-      const response = await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript: '' })
-        .expect(400);
+			expect(mockGeminiService.extractFacts).toHaveBeenCalledWith(transcript);
+		});
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('No transcript provided or invalid format');
-      expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
-    });
+		it("should return 400 when no transcript is provided", async () => {
+			const response = await request(app)
+				.post("/api/interview/extract")
+				.send({})
+				.expect(400);
 
-    it('should handle extraction errors', async () => {
-      const transcript = createTestTranscript();
-      mockGeminiService.extractFacts.mockRejectedValueOnce(
-        new Error('Gemini extraction failed')
-      );
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe(
+				"No transcript provided or invalid format",
+			);
+			expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
+		});
 
-      const response = await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript })
-        .expect(500);
+		it("should return 400 when transcript is not a string", async () => {
+			const response = await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript: 123 })
+				.expect(400);
 
-      expectServiceResponse(response.body, false);
-      expect(response.body.message).toBe('Failed to extract facts from transcript');
-    });
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe(
+				"No transcript provided or invalid format",
+			);
+			expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
+		});
 
-    it('should handle long transcripts', async () => {
-      const longTranscript = 'A'.repeat(10000); // Very long transcript
-      mockGeminiService.extractFacts.mockResolvedValueOnce(mockExtractionResponse);
+		it("should return 400 when transcript is empty string", async () => {
+			const response = await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript: "" })
+				.expect(400);
 
-      await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript: longTranscript })
-        .expect(200);
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe(
+				"No transcript provided or invalid format",
+			);
+			expect(mockGeminiService.extractFacts).not.toHaveBeenCalled();
+		});
 
-      expect(mockGeminiService.extractFacts).toHaveBeenCalledWith(longTranscript);
-    });
-  });
+		it("should handle extraction errors", async () => {
+			const transcript = createTestTranscript();
+			mockGeminiService.extractFacts.mockRejectedValueOnce(
+				new Error("Gemini extraction failed"),
+			);
 
-  describe('integration scenarios', () => {
-    it('should handle complete transcription -> extraction workflow', async () => {
-      // First transcribe
-      mockGeminiService.transcribeAudio.mockResolvedValueOnce(mockTranscriptionResponse.text);
+			const response = await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript })
+				.expect(500);
 
-      const transcribeResponse = await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('mock audio data'), 'test-audio.webm')
-        .expect(200);
+			expectServiceResponse(response.body, false);
+			expect(response.body.message).toBe(
+				"Failed to extract facts from transcript",
+			);
+		});
 
-      const transcript = transcribeResponse.body.responseObject.transcript;
+		it("should handle long transcripts", async () => {
+			const longTranscript = "A".repeat(10000); // Very long transcript
+			mockGeminiService.extractFacts.mockResolvedValueOnce(
+				mockExtractionResponse,
+			);
 
-      // Then extract
-      mockGeminiService.extractFacts.mockResolvedValueOnce(mockExtractionResponse);
+			await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript: longTranscript })
+				.expect(200);
 
-      const extractResponse = await request(app)
-        .post('/api/interview/extract')
-        .send({ transcript })
-        .expect(200);
+			expect(mockGeminiService.extractFacts).toHaveBeenCalledWith(
+				longTranscript,
+			);
+		});
+	});
 
-      expectServiceResponse(extractResponse.body, true);
-      expectValidExtractedFacts(extractResponse.body.responseObject);
-    });
-  });
+	describe("integration scenarios", () => {
+		it("should handle complete transcription -> extraction workflow", async () => {
+			// First transcribe
+			mockGeminiService.transcribeAudio.mockResolvedValueOnce(
+				mockTranscriptionResponse.text,
+			);
 
-  describe('error handling edge cases', () => {
-    it('should handle malformed audio files', async () => {
-      mockGeminiService.transcribeAudio.mockRejectedValueOnce(
-        new Error('Invalid audio format')
-      );
+			const transcribeResponse = await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
+				.expect(200);
 
-      const response = await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('not actual audio data'), 'fake.webm')
-        .expect(500);
+			const transcript = transcribeResponse.body.responseObject.transcript;
 
-      expectServiceResponse(response.body, false);
-    });
+			// Then extract
+			mockGeminiService.extractFacts.mockResolvedValueOnce(
+				mockExtractionResponse,
+			);
 
-    it('should handle network errors to Gemini API', async () => {
-      mockGeminiService.transcribeAudio.mockRejectedValueOnce(
-        new Error('Network error: Connection timeout')
-      );
+			const extractResponse = await request(app)
+				.post("/api/interview/extract")
+				.send({ transcript })
+				.expect(200);
 
-      const response = await request(app)
-        .post('/api/interview/transcribe')
-        .attach('audio', Buffer.from('mock audio data'), 'test-audio.webm')
-        .expect(500);
+			expectServiceResponse(extractResponse.body, true);
+			expectValidExtractedFacts(extractResponse.body.responseObject);
+		});
+	});
 
-      expectServiceResponse(response.body, false);
-    });
-  });
+	describe("error handling edge cases", () => {
+		it("should handle malformed audio files", async () => {
+			mockGeminiService.transcribeAudio.mockRejectedValueOnce(
+				new Error("Invalid audio format"),
+			);
+
+			const response = await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("not actual audio data"), "fake.webm")
+				.expect(500);
+
+			expectServiceResponse(response.body, false);
+		});
+
+		it("should handle network errors to Gemini API", async () => {
+			mockGeminiService.transcribeAudio.mockRejectedValueOnce(
+				new Error("Network error: Connection timeout"),
+			);
+
+			const response = await request(app)
+				.post("/api/interview/transcribe")
+				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
+				.expect(500);
+
+			expectServiceResponse(response.body, false);
+		});
+	});
 });

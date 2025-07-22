@@ -1,133 +1,137 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { errorHandler } from './errorHandler.js';
-import { createMockRequest, createMockResponse, createMockNext } from '../../test/setup.js';
-import { StatusCodes } from 'http-status-codes';
+import { StatusCodes } from "http-status-codes";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	createMockNext,
+	createMockRequest,
+	createMockResponse,
+} from "../../test/setup.js";
+import { errorHandler } from "./errorHandler.js";
 
-describe('Error Handler Middleware', () => {
-  let req: any;
-  let res: any;
-  let next: any;
+describe("Error Handler Middleware", () => {
+	let req: Record<string, unknown>;
+	let res: Record<string, unknown>;
+	let next: () => void;
 
-  beforeEach(() => {
-    req = createMockRequest();
-    res = createMockResponse();
-    next = createMockNext();
-  });
+	beforeEach(() => {
+		req = createMockRequest();
+		res = createMockResponse();
+		next = createMockNext();
+	});
 
-  it('should handle generic errors with 500 status', () => {
-    const error = new Error('Generic server error');
-    
-    errorHandler(error, req, res, next);
+	it("should handle generic errors with 500 status", () => {
+		const error = new Error("Generic server error");
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Internal Server Error',
-      responseObject: null,
-      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-    });
-  });
+		errorHandler(error, req, res, next);
 
-  it('should handle ValidationError with 400 status', () => {
-    const error = new Error('Invalid input data');
-    error.name = 'ValidationError';
-    
-    errorHandler(error, req, res, next);
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.INTERNAL_SERVER_ERROR);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: "Internal Server Error",
+			responseObject: null,
+			statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+		});
+	});
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.BAD_REQUEST);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Invalid request data',
-      responseObject: null,
-      statusCode: StatusCodes.BAD_REQUEST,
-    });
-  });
+	it("should handle ValidationError with 400 status", () => {
+		const error = new Error("Invalid input data");
+		error.name = "ValidationError";
 
-  it('should handle UnauthorizedError with 401 status', () => {
-    const error = new Error('Access denied');
-    error.name = 'UnauthorizedError';
-    
-    errorHandler(error, req, res, next);
+		errorHandler(error, req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.UNAUTHORIZED);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Unauthorized access',
-      responseObject: null,
-      statusCode: StatusCodes.UNAUTHORIZED,
-    });
-  });
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.BAD_REQUEST);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: "Invalid request data",
+			responseObject: null,
+			statusCode: StatusCodes.BAD_REQUEST,
+		});
+	});
 
-  it('should handle Gemini API errors with 503 status', () => {
-    const error = new Error('Gemini service is down');
-    
-    errorHandler(error, req, res, next);
+	it("should handle UnauthorizedError with 401 status", () => {
+		const error = new Error("Access denied");
+		error.name = "UnauthorizedError";
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.SERVICE_UNAVAILABLE);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'AI service temporarily unavailable',
-      responseObject: null,
-      statusCode: StatusCodes.SERVICE_UNAVAILABLE,
-    });
-  });
+		errorHandler(error, req, res, next);
 
-  it('should handle AI-related errors with 503 status', () => {
-    const error = new Error('AI processing failed');
-    
-    errorHandler(error, req, res, next);
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.UNAUTHORIZED);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: "Unauthorized access",
+			responseObject: null,
+			statusCode: StatusCodes.UNAUTHORIZED,
+		});
+	});
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.SERVICE_UNAVAILABLE);
-    expect(res.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'AI service temporarily unavailable',
-      responseObject: null,
-      statusCode: StatusCodes.SERVICE_UNAVAILABLE,
-    });
-  });
+	it("should handle Gemini API errors with 503 status", () => {
+		const error = new Error("Gemini service is down");
 
-  it('should log errors to console', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const error = new Error('Test error for logging');
-    
-    errorHandler(error, req, res, next);
+		errorHandler(error, req, res, next);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Unhandled error:', error);
-    
-    consoleSpy.mockRestore();
-  });
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.SERVICE_UNAVAILABLE);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: "AI service temporarily unavailable",
+			responseObject: null,
+			statusCode: StatusCodes.SERVICE_UNAVAILABLE,
+		});
+	});
 
-  it('should not call next function', () => {
-    const error = new Error('Test error');
-    
-    errorHandler(error, req, res, next);
+	it("should handle AI-related errors with 503 status", () => {
+		const error = new Error("AI processing failed");
 
-    expect(next).not.toHaveBeenCalled();
-  });
+		errorHandler(error, req, res, next);
 
-  it('should return ServiceResponse format', () => {
-    const error = new Error('Test error');
-    
-    errorHandler(error, req, res, next);
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.SERVICE_UNAVAILABLE);
+		expect(res.json).toHaveBeenCalledWith({
+			success: false,
+			message: "AI service temporarily unavailable",
+			responseObject: null,
+			statusCode: StatusCodes.SERVICE_UNAVAILABLE,
+		});
+	});
 
-    const jsonCall = res.json.mock.calls[0][0];
-    expect(jsonCall).toHaveProperty('success', false);
-    expect(jsonCall).toHaveProperty('message');
-    expect(jsonCall).toHaveProperty('responseObject');
-    expect(jsonCall).toHaveProperty('statusCode');
-  });
+	it("should log errors to console", () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+		const error = new Error("Test error for logging");
 
-  it('should handle errors without message gracefully', () => {
-    const error = {} as Error; // Error without message
-    
-    errorHandler(error, req, res, next);
+		errorHandler(error, req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        message: 'Internal Server Error',
-      })
-    );
-  });
+		expect(consoleSpy).toHaveBeenCalledWith("Unhandled error:", error);
+
+		consoleSpy.mockRestore();
+	});
+
+	it("should not call next function", () => {
+		const error = new Error("Test error");
+
+		errorHandler(error, req, res, next);
+
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("should return ServiceResponse format", () => {
+		const error = new Error("Test error");
+
+		errorHandler(error, req, res, next);
+
+		const jsonCall = res.json.mock.calls[0][0];
+		expect(jsonCall).toHaveProperty("success", false);
+		expect(jsonCall).toHaveProperty("message");
+		expect(jsonCall).toHaveProperty("responseObject");
+		expect(jsonCall).toHaveProperty("statusCode");
+	});
+
+	it("should handle errors without message gracefully", () => {
+		const error = {} as Error; // Error without message
+
+		errorHandler(error, req, res, next);
+
+		expect(res.status).toHaveBeenCalledWith(StatusCodes.INTERNAL_SERVER_ERROR);
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({
+				success: false,
+				message: "Internal Server Error",
+			}),
+		);
+	});
 });
