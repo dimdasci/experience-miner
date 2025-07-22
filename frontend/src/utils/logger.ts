@@ -21,6 +21,8 @@ interface InterviewProgressLog {
 export class UserJourneyLogger {
   private static sessionId = crypto.randomUUID();
   private static startTime = Date.now();
+  private static currentUserId: string | null = null;
+  private static currentUserPrefix: string | null = null;
 
   /**
    * Log general user actions for journey tracking
@@ -31,6 +33,9 @@ export class UserJourneyLogger {
       sessionId: this.sessionId,
       timestamp: new Date().toISOString(),
       sessionDuration: Date.now() - this.startTime,
+      // Add user context in flat format like backend
+      user_id: this.currentUserId,
+      user: this.currentUserPrefix,
     };
 
     // Send to Sentry as structured log
@@ -65,6 +70,9 @@ export class UserJourneyLogger {
       sessionId: this.sessionId,
       timestamp: new Date().toISOString(),
       sessionDuration: Date.now() - this.startTime,
+      // Add user context in flat format like backend
+      user_id: this.currentUserId,
+      user: this.currentUserPrefix,
     };
 
     if (typeof Sentry.logger !== 'undefined') {
@@ -112,6 +120,9 @@ export class UserJourneyLogger {
         userJourney: {
           sessionId: this.sessionId,
           sessionDuration: Date.now() - this.startTime,
+          // Add user context in flat format like backend
+          user_id: this.currentUserId,
+          user: this.currentUserPrefix,
           ...context
         }
       }
@@ -126,16 +137,32 @@ export class UserJourneyLogger {
    * Set user context for session tracking
    */
   static setUser(userId: string, userData?: Record<string, any>) {
-    Sentry.setUser({
-      id: userId,
-      ...userData
-    });
+    if (userId) {
+      // Store user context for consistent logging format
+      this.currentUserId = userId;
+      this.currentUserPrefix = userData?.email_prefix || 'unknown';
+      
+      Sentry.setUser({
+        id: userId,
+        ...userData
+      });
 
-    this.logUserAction({
-      action: 'user_identified',
-      userId,
-      data: userData
-    });
+      this.logUserAction({
+        action: 'user_identified',
+        data: userData
+      });
+    } else {
+      // Clear user context
+      this.currentUserId = null;
+      this.currentUserPrefix = null;
+      
+      Sentry.setUser(null);
+      
+      this.logUserAction({
+        action: 'user_cleared',
+        data: {}
+      });
+    }
   }
 
   /**

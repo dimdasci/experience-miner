@@ -28,9 +28,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         const userPrefix = session.user.email?.split('@')[0] ?? 'unknown';
+        // Set user context in Sentry for all subsequent events
+        UserJourneyLogger.setUser(session.user.id, { 
+          email_prefix: userPrefix
+        });
         UserJourneyLogger.logUserAction({ 
-          action: 'session_restored', 
-          userId: session.user.id,
+          action: 'session_restored',
           data: { user: userPrefix }
         });
       }
@@ -43,9 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
 
       const userPrefix = session?.user?.email?.split('@')[0] ?? 'unknown';
+      
+      if (session?.user) {
+        // Set user context in Sentry for all subsequent events
+        UserJourneyLogger.setUser(session.user.id, { 
+          email_prefix: userPrefix
+        });
+      }
+      
       UserJourneyLogger.logUserAction({ 
         action: 'auth_state_changed',
-        userId: session?.user?.id,
         data: { event, user: userPrefix }
       });
     });
@@ -99,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         action: 'otp_verification_successful',
         data: { user: userPrefix }
       });
+      // Note: User context will be set by the auth state change handler
     }
 
     return { error };
@@ -108,11 +119,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userPrefix = user?.email?.split('@')[0] ?? 'unknown';
     UserJourneyLogger.logUserAction({ 
       action: 'signout_initiated',
-      userId: user?.id,
       data: { user: userPrefix }
     });
     
     await supabase.auth.signOut();
+    
+    // Clear user context in Sentry
+    UserJourneyLogger.setUser('', {});
+    
     UserJourneyLogger.logUserAction({ 
       action: 'signout_completed',
       data: { user: userPrefix }
