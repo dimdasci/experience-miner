@@ -1,21 +1,60 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Recorder from './Recorder'
 import FactsView from './FactsView'
+import { UserJourneyLogger } from '../../utils/logger'
 
 const InterviewView = () => {
   const [sessionData, setSessionData] = useState<any[]>([])
   const [showFacts, setShowFacts] = useState(false)
 
+  // Log when interview view loads
+  useEffect(() => {
+    UserJourneyLogger.logInterviewProgress({ stage: 'started' })
+    UserJourneyLogger.logUserAction({
+      action: 'interview_view_loaded',
+      component: 'InterviewView'
+    })
+  }, [])
+
   const handleSessionComplete = () => {
+    // Log session completion
+    UserJourneyLogger.logInterviewProgress({ 
+      stage: 'completed',
+      data: { totalResponses: sessionData.length }
+    })
+    UserJourneyLogger.logUserAction({
+      action: 'interview_session_completed',
+      component: 'InterviewView',
+      data: { responsesCount: sessionData.length }
+    })
+    
     // Show facts view after interview completion
     setShowFacts(true)
   }
 
   const handleDataUpdate = (data: any) => {
+    // Log new response added
+    UserJourneyLogger.logUserAction({
+      action: 'interview_response_added',
+      component: 'InterviewView',
+      data: { 
+        responseLength: data.response?.length || 0,
+        hasQuestion: !!data.question,
+        totalResponses: sessionData.length + 1
+      }
+    })
+    
     setSessionData(prev => [...prev, data])
   }
 
   const handleRestart = () => {
+    // Log session restart
+    UserJourneyLogger.logUserAction({
+      action: 'interview_restarted',
+      component: 'InterviewView',
+      data: { previousResponsesCount: sessionData.length }
+    })
+    
     setSessionData([])
     setShowFacts(false)
   }

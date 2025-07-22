@@ -21,6 +21,11 @@ const envSchema = z.object({
 
 	// Logging
 	LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+
+	// Sentry Configuration
+	SENTRY_DSN_BACKEND: z.string().optional(),
+	SENTRY_ENVIRONMENT: z.string().default("development"),
+	SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(1.0),
 });
 
 type BaseEnvConfig = z.infer<typeof envSchema>;
@@ -79,6 +84,11 @@ console.log(
 console.log(
 	`  - SUPABASE_SERVICE_KEY: ${env.SUPABASE_SERVICE_KEY ? "✅ Set" : "⚠️  Optional (not set)"}`,
 );
+console.log(
+	`  - SENTRY_DSN_BACKEND: ${env.SENTRY_DSN_BACKEND ? "✅ Set" : "⚠️  Optional (not set)"}`,
+);
+console.log(`  - SENTRY_ENVIRONMENT: ${env.SENTRY_ENVIRONMENT}`);
+console.log(`  - SENTRY_TRACES_SAMPLE_RATE: ${env.SENTRY_TRACES_SAMPLE_RATE}`);
 
 if (env.NODE_ENV !== "development" && !env.FRONTEND_URL) {
 	console.warn(

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2, User, Briefcase, Award, Code, Target, Loader2, AlertCircle } from 'lucide-react'
 import { apiService } from '../../services/apiService'
+import { UserJourneyLogger } from '../../utils/logger'
 
 interface ExtractedFacts {
   summary: string
@@ -29,11 +30,32 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Log when FactsView loads
+  useEffect(() => {
+    UserJourneyLogger.logNavigation('InterviewView', 'FactsView')
+    UserJourneyLogger.logUserAction({
+      action: 'facts_view_loaded',
+      component: 'FactsView',
+      data: { responsesCount: sessionData.length }
+    })
+  }, [])
+
   const handleProcessFacts = async () => {
     if (sessionData.length === 0) {
       setError('No interview responses to process')
       return
     }
+
+    // Log extraction start
+    UserJourneyLogger.logInterviewProgress({
+      stage: 'extracting',
+      data: { responsesCount: sessionData.length }
+    })
+    UserJourneyLogger.logUserAction({
+      action: 'facts_extraction_started',
+      component: 'FactsView',
+      data: { responsesCount: sessionData.length }
+    })
 
     setIsLoading(true)
     setError(null)
@@ -44,18 +66,50 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
         .map(item => `Q: ${item.question}\nA: ${item.response}`)
         .join('\n\n')
 
-      console.log('Processing transcript:', combinedTranscript)
+      if (import.meta.env.DEV) {
+        console.log('Processing transcript:', combinedTranscript)
+      }
       
       const result = await apiService.extractFacts(combinedTranscript)
       
       if (result.success && result.responseObject) {
         setFacts(result.responseObject)
+        
+        // Log successful extraction
+        UserJourneyLogger.logInterviewProgress({
+          stage: 'completed',
+          extractedFactsCount: Object.keys(result.responseObject).length
+        })
+        UserJourneyLogger.logUserAction({
+          action: 'facts_extraction_completed',
+          component: 'FactsView',
+          data: {
+            responsesCount: sessionData.length,
+            extractedFacts: {
+              companies: result.responseObject.companies?.length || 0,
+              roles: result.responseObject.roles?.length || 0,
+              projects: result.responseObject.projects?.length || 0,
+              achievements: result.responseObject.achievements?.length || 0,
+              skills: result.responseObject.skills?.length || 0
+            }
+          }
+        })
       } else {
         setError(result.error || 'Failed to extract facts from your responses')
+        UserJourneyLogger.logInterviewProgress({
+          stage: 'error',
+          errorMessage: result.error || 'Failed to extract facts'
+        })
       }
     } catch (err) {
-      console.error('Facts extraction error:', err)
+      if (import.meta.env.DEV) {
+        console.error('Facts extraction error:', err)
+      }
       setError('An error occurred while processing your responses')
+      UserJourneyLogger.logError(err as Error, {
+        action: 'facts_extraction_error',
+        responsesCount: sessionData.length
+      })
     } finally {
       setIsLoading(false)
     }
@@ -283,7 +337,9 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
                 sessionData,
                 extractedFacts: facts
               }
-              console.log('Export data:', exportData)
+              if (import.meta.env.DEV) {
+                console.log('Export data:', exportData)
+              }
               // Could download as JSON file
               const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
               const url = URL.createObjectURL(blob)

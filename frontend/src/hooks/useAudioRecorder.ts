@@ -149,7 +149,9 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
       monitorVolume()
 
     } catch (err) {
-      console.error('Failed to start recording:', err)
+      if (import.meta.env.DEV) {
+        console.error('Failed to start recording:', err)
+      }
       setError('Failed to access microphone. Please check permissions.')
     }
   }, [isSupported, onRecordingComplete, recordingState.duration, startTimer, monitorVolume])

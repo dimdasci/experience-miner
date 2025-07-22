@@ -1,3 +1,6 @@
+// IMPORTANT: Import instrument.ts first to initialize Sentry before everything else
+import "./instrument.js";
+
 import { logger } from "@/common/middleware/requestLogger.js";
 import { env } from "@/common/utils/envConfig.js";
 import { app } from "./server.js";

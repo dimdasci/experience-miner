@@ -34,7 +34,9 @@ class ApiService {
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('API request failed:', error)
+      if (import.meta.env.DEV) {
+        console.error('API request failed:', error)
+      }
       return {
         success: false,
         responseObject: {} as T,
@@ -105,7 +107,9 @@ class ApiService {
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Transcription failed:', error)
+      if (import.meta.env.DEV) {
+        console.error('Transcription failed:', error)
+      }
       return {
         success: false,
         responseObject: { transcript: '' },

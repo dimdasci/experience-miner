@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import cors from "cors";
 import type { Application } from "express";
 import express from "express";
@@ -64,6 +65,9 @@ app.get("/", (_req, res) => {
 		},
 	});
 });
+
+// The Sentry error handler must be registered before any other error middleware
+Sentry.setupExpressErrorHandler(app);
 
 // Error handling (must be last)
 app.use(errorHandler);
