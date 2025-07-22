@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import * as Sentry from "@sentry/node";
 import type { IRouter, Request, Response } from "express";
 import { Router } from "express";
