@@ -15,7 +15,8 @@
 		"test:cov": "vitest run --coverage",
 		"clean": "rm -rf dist",
 		"lint": "biome check .",
-		"format": "biome format ."
+		"format": "biome format .",
+		"check-all": "npm run lint && tsc --noEmit && npm test"
 	},
 	"dependencies": {
 		"@google/genai": "^1.10.0",
