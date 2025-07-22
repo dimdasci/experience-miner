@@ -19,6 +19,18 @@ vi.mock("@/services/geminiService.js", () => ({
 	},
 }));
 
+// Mock the authentication middleware - skip auth in tests
+vi.mock("@/common/middleware/auth.js", () => ({
+	authenticateToken: vi.fn((req, _res, next) => {
+		// Mock authenticated user context
+		req.user = {
+			id: "test-user-id",
+			email: "test@example.com",
+		};
+		next();
+	}),
+}));
+
 describe("Interview Router", () => {
 	let app: express.Application;
 	let mockGeminiService: {
