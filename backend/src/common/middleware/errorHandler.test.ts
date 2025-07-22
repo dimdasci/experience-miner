@@ -1,5 +1,6 @@
+import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import {
 	createMockNext,
 	createMockRequest,
@@ -8,9 +9,9 @@ import {
 import { errorHandler } from "./errorHandler.js";
 
 describe("Error Handler Middleware", () => {
-	let req: Record<string, unknown>;
-	let res: Record<string, unknown>;
-	let next: () => void;
+	let req: Request;
+	let res: Response;
+	let next: NextFunction;
 
 	beforeEach(() => {
 		req = createMockRequest();
@@ -114,7 +115,10 @@ describe("Error Handler Middleware", () => {
 
 		errorHandler(error, req, res, next);
 
-		const jsonCall = res.json.mock.calls[0][0];
+		// Access mock calls in a way that works with our typed Response
+		const mockJson = res.json as Mock;
+		expect(mockJson.mock.calls.length).toBeGreaterThan(0);
+		const jsonCall = mockJson.mock.calls[0]?.[0];
 		expect(jsonCall).toHaveProperty("success", false);
 		expect(jsonCall).toHaveProperty("message");
 		expect(jsonCall).toHaveProperty("responseObject");

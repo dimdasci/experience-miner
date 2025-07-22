@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import "dotenv/config";
+import type { NextFunction, Request, Response } from "express";
 
 // Mock environment variables for tests
 process.env.NODE_ENV = "test";
@@ -34,14 +35,24 @@ export const createMockFile = (content: string, mimetype = "audio/webm") => ({
 	size: Buffer.from(content).length,
 });
 
-export const createMockRequest = (overrides = {}) => ({
-	body: {},
-	params: {},
-	query: {},
-	headers: {},
-	file: null,
-	...overrides,
-});
+export const createMockRequest = (overrides = {}) => {
+	const req = {
+		body: {},
+		params: {},
+		query: {},
+		headers: {},
+		file: null,
+		get: vi.fn(),
+		header: vi.fn(),
+		accepts: vi.fn(),
+		acceptsCharsets: vi.fn(),
+		acceptsEncodings: vi.fn(),
+		acceptsLanguages: vi.fn(),
+		// Add other required Request properties as needed
+		...overrides,
+	} as unknown as Request;
+	return req;
+};
 
 export const createMockResponse = () => {
 	const res = {
@@ -49,14 +60,15 @@ export const createMockResponse = () => {
 		json: vi.fn().mockReturnThis(),
 		send: vi.fn().mockReturnThis(),
 		getHeaders: vi.fn().mockReturnValue({}),
-	} as {
-		status: ReturnType<typeof vi.fn>;
-		json: ReturnType<typeof vi.fn>;
-		send: ReturnType<typeof vi.fn>;
-		getHeaders: ReturnType<typeof vi.fn>;
-		[key: string]: unknown;
+		sendStatus: vi.fn().mockReturnThis(),
+		links: vi.fn().mockReturnThis(),
+		jsonp: vi.fn().mockReturnThis(),
+		sendFile: vi.fn().mockReturnThis(),
+		// Add other required Response properties as needed
+	} as unknown as Response & {
+		[key: string]: unknown; // Allow for mock properties like .mock
 	};
 	return res;
 };
 
-export const createMockNext = () => vi.fn();
+export const createMockNext = () => vi.fn() as unknown as NextFunction;
