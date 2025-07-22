@@ -61,7 +61,12 @@ export const createTestAudioBuffer = () => Buffer.from("mock audio data");
 
 // Assertion helpers
 export const expectServiceResponse = (
-	response: Record<string, unknown>,
+	response: {
+		success: boolean;
+		message: string;
+		responseObject: unknown;
+		statusCode: number;
+	},
 	success: boolean,
 ) => {
 	expect(response).toHaveProperty("success", success);

@@ -48,5 +48,4 @@ export interface CareerFact {
 	userId: string;
 	type: "company" | "role" | "project" | "achievement" | "skill";
 	data: Record<string, unknown>;
-	extractedAt: string;
 }

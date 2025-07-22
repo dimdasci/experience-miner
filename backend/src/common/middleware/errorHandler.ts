@@ -20,7 +20,10 @@ export const errorHandler = (
 	} else if (error.name === "UnauthorizedError") {
 		statusCode = StatusCodes.UNAUTHORIZED;
 		message = "Unauthorized access";
-	} else if (error.message.includes("Gemini") || error.message.includes("AI")) {
+	} else if (
+		error.message &&
+		(error.message.includes("Gemini") || error.message.includes("AI"))
+	) {
 		statusCode = StatusCodes.SERVICE_UNAVAILABLE;
 		message = "AI service temporarily unavailable";
 	}

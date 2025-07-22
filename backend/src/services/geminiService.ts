@@ -2,12 +2,12 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { ExtractedFacts } from "@/common/types/interview.js";
 import { env } from "@/common/utils/envConfig.js";
 
-class GeminiService {
+export class GeminiService {
 	private ai: GoogleGenAI;
 	private readonly model = "gemini-2.5-flash";
 
-	constructor() {
-		this.ai = new GoogleGenAI({ apiKey: env.API_KEY });
+	constructor(aiClient?: GoogleGenAI) {
+		this.ai = aiClient || new GoogleGenAI({ apiKey: env.API_KEY });
 	}
 
 	async transcribeAudio(
@@ -148,4 +148,5 @@ ${transcript}`;
 	}
 }
 
+// Export the singleton instance for production use
 export const geminiService = new GeminiService();
