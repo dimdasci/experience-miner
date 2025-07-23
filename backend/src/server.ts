@@ -13,6 +13,9 @@ import { env } from "@/common/utils/envConfig.js";
 
 const app: Application = express();
 
+// Trust proxy for Railway deployment (fixes rate limiting and IP detection)
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(
 	helmet({
