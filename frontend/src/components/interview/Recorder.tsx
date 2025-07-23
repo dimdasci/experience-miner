@@ -4,6 +4,7 @@ import { useAudioRecorder } from '../../hooks/useAudioRecorder'
 import { apiService } from '../../services/apiService'
 import { INTERVIEW_QUESTIONS } from '../../constants'
 import { UserJourneyLogger } from '../../utils/logger'
+import { useCredits } from '../../contexts/CreditsContext'
 
 interface RecorderProps {
   onDataUpdate: (data: any) => void
@@ -14,6 +15,7 @@ const Recorder = ({ onDataUpdate, onSessionComplete }: RecorderProps) => {
   const [transcript, setTranscript] = useState('')
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isTranscribing, setIsTranscribing] = useState(false)
+  const { updateCredits } = useCredits()
 
   const currentQuestion = INTERVIEW_QUESTIONS[currentQuestionIndex] || INTERVIEW_QUESTIONS[0]
 
@@ -25,9 +27,6 @@ const Recorder = ({ onDataUpdate, onSessionComplete }: RecorderProps) => {
     stopRecording 
   } = useAudioRecorder({
     onRecordingComplete: async (recording) => {
-      if (import.meta.env.DEV) {
-        console.log('Recording completed, transcribing...')
-      }
       
       // Log recording completion
       UserJourneyLogger.logInterviewProgress({
@@ -39,9 +38,19 @@ const Recorder = ({ onDataUpdate, onSessionComplete }: RecorderProps) => {
       setIsTranscribing(true)
       
       try {
-        const result = await apiService.transcribeAudio(recording.blob)
+        const result = await apiService.transcribeAudio(
+          recording.blob,
+          currentQuestion.text,
+          3, // hardcoded interviewId for testing
+          recording.duration
+        )
         if (result.success && result.responseObject?.transcript) {
           setTranscript(result.responseObject.transcript)
+          
+          // Update credits in the global context
+          if (typeof result.responseObject.credits === 'number') {
+            updateCredits(result.responseObject.credits)
+          }
           
           // Log successful transcription
           UserJourneyLogger.logUserAction({
@@ -50,17 +59,27 @@ const Recorder = ({ onDataUpdate, onSessionComplete }: RecorderProps) => {
             data: {
               questionId: currentQuestion.id,
               transcriptLength: result.responseObject.transcript.length,
-              duration: recording.duration
+              duration: recording.duration,
+              remainingCredits: result.responseObject.credits
             }
           })
         } else {
           if (import.meta.env.DEV) {
             console.error('Transcription failed:', result.error)
           }
+          
+          // Handle specific error types
+          if (result.statusCode === 402) {
+            alert('Not enough credits to process this request. Please purchase more credits.')
+          } else if (result.statusCode === 409) {
+            alert('Another operation is in progress, please wait and try again.')
+          }
+          
           UserJourneyLogger.logInterviewProgress({
             stage: 'error',
             questionId: currentQuestion.id,
-            errorMessage: 'Transcription failed'
+            errorMessage: result.message || 'Transcription failed',
+            data: { statusCode: result.statusCode }
           })
         }
       } catch (error) {

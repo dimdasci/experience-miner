@@ -32,6 +32,8 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
   const animationRef = useRef<number | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
+  const currentDurationRef = useRef<number>(0)
+  const stopRecordingRef = useRef<(() => void) | null>(null)
 
   // Check browser support
   useEffect(() => {
@@ -66,10 +68,11 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
     intervalRef.current = setInterval(() => {
       setRecordingState(prev => {
         const newDuration = prev.duration + 1
+        currentDurationRef.current = newDuration
         
         // Auto-stop at max duration
         if (autoStop && newDuration >= maxDuration) {
-          stopRecording()
+          stopRecordingRef.current?.()
           return prev
         }
         
@@ -125,7 +128,7 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
         const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType })
         const recording: AudioRecording = {
           blob,
-          duration: recordingState.duration,
+          duration: currentDurationRef.current,
           size: blob.size
         }
         onRecordingComplete?.(recording)
@@ -143,6 +146,7 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
 
       // Start recording
       mediaRecorder.start(100) // Collect data every 100ms
+      currentDurationRef.current = 0
       setRecordingState(prev => ({ ...prev, isRecording: true, duration: 0 }))
       
       startTimer()
@@ -154,7 +158,7 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
       }
       setError('Failed to access microphone. Please check permissions.')
     }
-  }, [isSupported, onRecordingComplete, recordingState.duration, startTimer, monitorVolume])
+  }, [isSupported, onRecordingComplete, startTimer, monitorVolume])
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -164,6 +168,11 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
     stopTimer()
     setRecordingState(prev => ({ ...prev, isRecording: false, isPaused: false }))
   }, [stopTimer])
+
+  // Update ref whenever stopRecording changes
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording
+  }, [stopRecording])
 
   const pauseRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -183,6 +192,7 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
 
   const resetRecording = useCallback(() => {
     stopRecording()
+    currentDurationRef.current = 0
     setRecordingState({
       isRecording: false,
       isPaused: false,
