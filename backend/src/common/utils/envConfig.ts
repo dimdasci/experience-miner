@@ -26,6 +26,25 @@ const envSchema = z.object({
 	SENTRY_DSN_BACKEND: z.string().optional(),
 	SENTRY_ENVIRONMENT: z.string().default("development"),
 	SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(1.0),
+
+	// Credits Configuration
+	TRANSCRIBER_CREDIT_RATE: z.coerce.number().positive().default(2.5),
+	EXTRACTOR_CREDIT_RATE: z.coerce.number().positive().default(1.0),
+
+	// Supabase Postgres Direct Connection
+	SUPABASE_POSTGRESS_HOST: z
+		.string()
+		.min(1, "Supabase Postgres host is required"),
+	SUPABASE_POSTGRESS_PORT: z.coerce.number().int().positive().default(5432),
+	SUPABASE_POSTGRESS_PASSWORD: z
+		.string()
+		.min(1, "Supabase Postgres password is required"),
+	SUPABASE_POSTGRESS_USER: z
+		.string()
+		.min(1, "Supabase Postgres user is required"),
+	SUPABASE_POSTGRESS_DATABASE: z
+		.string()
+		.min(1, "Supabase Postgres database is required"),
 });
 
 type BaseEnvConfig = z.infer<typeof envSchema>;
@@ -87,6 +106,14 @@ console.log(
 );
 console.log(`  - SENTRY_ENVIRONMENT: ${env.SENTRY_ENVIRONMENT}`);
 console.log(`  - SENTRY_TRACES_SAMPLE_RATE: ${env.SENTRY_TRACES_SAMPLE_RATE}`);
+console.log(`  - TRANSCRIBER_CREDIT_RATE: ${env.TRANSCRIBER_CREDIT_RATE}`);
+console.log(`  - EXTRACTOR_CREDIT_RATE: ${env.EXTRACTOR_CREDIT_RATE}`);
+console.log(
+	`  - SUPABASE_POSTGRESS_HOST: ${env.SUPABASE_POSTGRESS_HOST ? "✅ Set" : "❌ Missing"}`,
+);
+console.log(
+	`  - SUPABASE_POSTGRESS_DATABASE: ${env.SUPABASE_POSTGRESS_DATABASE ? "✅ Set" : "❌ Missing"}`,
+);
 
 if (env.NODE_ENV !== "development" && !env.FRONTEND_URL) {
 	console.warn(

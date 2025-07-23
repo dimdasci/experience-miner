@@ -1,6 +1,17 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, type UsageMetadata } from "@google/genai";
+
+// Extended interface for usage metadata with all possible properties
+interface ExtendedUsageMetadata extends UsageMetadata {
+	candidatesTokenCount?: number;
+}
+
 import type { ExtractedFacts } from "@/common/types/interview.js";
 import { env } from "@/common/utils/envConfig.js";
+
+export interface GeminiResponse<T> {
+	data: T;
+	usageMetadata?: ExtendedUsageMetadata;
+}
 
 export class GeminiService {
 	private ai: GoogleGenAI;
@@ -13,7 +24,7 @@ export class GeminiService {
 	async transcribeAudio(
 		audioBuffer: Buffer,
 		mimeType: string,
-	): Promise<string> {
+	): Promise<GeminiResponse<string>> {
 		try {
 			const base64Audio = audioBuffer.toString("base64");
 
@@ -30,7 +41,7 @@ export class GeminiService {
 					{
 						parts: [
 							{
-								text: "Transcribe the following audio recording clearly and accurately.",
+								text: "Transcribe the following audio recording clearly and accurately. Clean up any language issues but keep the speaker style intact.",
 							},
 							audioPart,
 						],
@@ -44,7 +55,10 @@ export class GeminiService {
 				throw new Error("No transcription received from Gemini");
 			}
 
-			return response.text;
+			return {
+				data: response.text,
+				usageMetadata: response.usageMetadata,
+			};
 		} catch (error) {
 			console.error("Gemini transcription error:", error);
 			throw new Error(
@@ -53,7 +67,9 @@ export class GeminiService {
 		}
 	}
 
-	async extractFacts(transcript: string): Promise<ExtractedFacts> {
+	async extractFacts(
+		transcript: string,
+	): Promise<GeminiResponse<ExtractedFacts>> {
 		const responseSchema = {
 			type: Type.OBJECT,
 			properties: {
@@ -138,7 +154,10 @@ ${transcript}`;
 				throw new Error("Invalid response format from Gemini");
 			}
 
-			return parsedJson;
+			return {
+				data: parsedJson,
+				usageMetadata: response.usageMetadata,
+			};
 		} catch (error) {
 			console.error("Gemini extraction error:", error);
 			throw new Error(

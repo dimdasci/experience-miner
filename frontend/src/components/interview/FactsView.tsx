@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Building2, User, Briefcase, Award, Code, Target, Loader2, AlertCircle } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { UserJourneyLogger } from '../../utils/logger'
+import { useCredits } from '../../contexts/CreditsContext'
 
 interface ExtractedFacts {
   summary: string
@@ -29,6 +30,7 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
   const [facts, setFacts] = useState<ExtractedFacts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { updateCredits } = useCredits()
 
   // Log when FactsView loads
   useEffect(() => {
@@ -66,14 +68,20 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
         .map(item => `Q: ${item.question}\nA: ${item.response}`)
         .join('\n\n')
 
-      if (import.meta.env.DEV) {
-        console.log('Processing transcript:', combinedTranscript)
-      }
       
-      const result = await apiService.extractFacts(combinedTranscript)
+      const result = await apiService.extractFacts(
+        combinedTranscript,
+        'Complete Career Interview Analysis',
+        3 // hardcoded interviewId for testing
+      )
       
       if (result.success && result.responseObject) {
         setFacts(result.responseObject)
+        
+        // Update credits in the global context
+        if (typeof result.responseObject.credits === 'number') {
+          updateCredits(result.responseObject.credits)
+        }
         
         // Log successful extraction
         UserJourneyLogger.logInterviewProgress({
@@ -85,6 +93,7 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
           component: 'FactsView',
           data: {
             responsesCount: sessionData.length,
+            remainingCredits: result.responseObject.credits,
             extractedFacts: {
               companies: result.responseObject.companies?.length || 0,
               roles: result.responseObject.roles?.length || 0,
@@ -95,10 +104,19 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
           }
         })
       } else {
-        setError(result.error || 'Failed to extract facts from your responses')
+        // Handle specific error types
+        if (result.statusCode === 402) {
+          setError('Not enough credits to process this request. Please purchase more credits.')
+        } else if (result.statusCode === 409) {
+          setError('Another operation is in progress, please wait and try again.')
+        } else {
+          setError(result.error || 'Failed to extract facts from your responses')
+        }
+        
         UserJourneyLogger.logInterviewProgress({
           stage: 'error',
-          errorMessage: result.error || 'Failed to extract facts'
+          errorMessage: result.error || 'Failed to extract facts',
+          data: { statusCode: result.statusCode }
         })
       }
     } catch (err) {
@@ -336,9 +354,6 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
                 timestamp: new Date().toISOString(),
                 sessionData,
                 extractedFacts: facts
-              }
-              if (import.meta.env.DEV) {
-                console.log('Export data:', exportData)
               }
               // Could download as JSON file
               const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })

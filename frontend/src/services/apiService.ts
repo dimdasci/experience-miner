@@ -104,10 +104,25 @@ class ApiService {
     return this.request(`${API_ENDPOINTS.INTERVIEW.GET_FACTS}/${sessionId}`)
   }
 
+  // Get user credits
+  async getCredits(): Promise<ApiResponse<{ credits: number }>> {
+    return this.request('/credits')
+  }
+
   // Audio transcription (matches our backend)
-  async transcribeAudio(audioBlob: Blob): Promise<ApiResponse<{ transcript: string }>> {
+  async transcribeAudio(
+    audioBlob: Blob, 
+    question: string, 
+    interviewId: number,
+    recordingDuration?: number
+  ): Promise<ApiResponse<{ transcript: string; credits: number }>> {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'recording.webm')
+    formData.append('question', question)
+    formData.append('interviewId', interviewId.toString())
+    if (recordingDuration !== undefined) {
+      formData.append('recordingDuration', recordingDuration.toString())
+    }
 
     try {
       // Get auth token for FormData requests
@@ -136,7 +151,7 @@ class ApiService {
       }
       return {
         success: false,
-        responseObject: { transcript: '' },
+        responseObject: { transcript: '', credits: 0 },
         message: error instanceof Error ? error.message : 'Transcription failed',
         statusCode: 500,
         error: error instanceof Error ? error.message : 'Transcription failed'
@@ -145,10 +160,14 @@ class ApiService {
   }
 
   // Extract facts from transcript (matches our backend)
-  async extractFacts(transcript: string): Promise<ApiResponse<any>> {
+  async extractFacts(
+    transcript: string, 
+    question: string, 
+    interviewId: number
+  ): Promise<ApiResponse<any>> {
     return this.request('/interview/extract', {
       method: 'POST',
-      body: JSON.stringify({ transcript }),
+      body: JSON.stringify({ transcript, question, interviewId }),
     })
   }
 }

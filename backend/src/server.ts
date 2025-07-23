@@ -3,6 +3,7 @@ import cors from "cors";
 import type { Application } from "express";
 import express from "express";
 import helmet from "helmet";
+import { creditsRouter } from "@/api/credits/creditsRouter.js";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter.js";
 import { interviewRouter } from "@/api/interview/interviewRouter.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
@@ -51,6 +52,7 @@ app.use(rateLimiter);
 
 // Routes
 app.use("/health", healthCheckRouter);
+app.use("/api/credits", creditsRouter);
 app.use("/api/interview", aiRateLimiter, interviewRouter);
 
 // Root endpoint
@@ -60,6 +62,7 @@ app.get("/", (_req, res) => {
 		version: "0.1.0",
 		health: "/health",
 		endpoints: {
+			credits: "GET /api/credits",
 			transcribe: "POST /api/interview/transcribe",
 			extract: "POST /api/interview/extract",
 		},
