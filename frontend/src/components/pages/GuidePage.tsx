@@ -43,6 +43,11 @@ const GuidePage = () => {
                 localStorage.removeItem('readyForExtraction');
                 handleComplete();
               }}
+              onComplete={() => {
+                // After extraction, go to Experience page (n1e -> n3w)
+                navigate('/experience');
+              }}
+              autoStart={true}
             />
           </div>
         );

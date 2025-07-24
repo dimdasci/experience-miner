@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { useInterviewSession } from '../../hooks/useInterviewSession';
+import { QuestionService } from '../../services/questionService';
 
 interface ReviewViewProps {
   onExtract: () => void;
@@ -19,15 +20,6 @@ const ReviewView = ({ onExtract, onDraft }: ReviewViewProps) => {
     }
   }, [loadSession]);
 
-  const getTopicTitle = (topicId: string) => {
-    const titles: Record<string, string> = {
-      'career-overview': 'Career Overview',
-      'key-achievements': 'Key Achievements', 
-      'career-goals': 'Career Goals and Aspirations'
-    };
-    return titles[topicId] || topicId;
-  };
-
   const handleExtract = () => {
     // Mark interview as ready for extraction
     localStorage.setItem('readyForExtraction', 'true');
@@ -41,7 +33,7 @@ const ReviewView = ({ onExtract, onDraft }: ReviewViewProps) => {
           Review Your Responses
         </h1>
         <p className="text-gray-600">
-          Review your answers for {getTopicTitle(selectedTopic)} before processing
+          Review your answers for {QuestionService.getTopicTitle(selectedTopic)} before processing
         </p>
       </div>
 

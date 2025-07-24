@@ -30,7 +30,22 @@ export const useInterviewSession = (storageKey: string = 'interviewSession') => 
 
   const addResponse = useCallback((data: SessionItem) => {
     setSessionData(prev => {
-      const updated = [...prev, data];
+      // Check if response for this question already exists
+      const existingIndex = prev.findIndex(item => 
+        item.questionId === data.questionId || 
+        item.questionIndex === data.questionIndex
+      );
+      
+      let updated;
+      if (existingIndex >= 0) {
+        // Update existing response
+        updated = [...prev];
+        updated[existingIndex] = data;
+      } else {
+        // Add new response
+        updated = [...prev, data];
+      }
+      
       localStorage.setItem(storageKey, JSON.stringify(updated));
       return updated;
     });

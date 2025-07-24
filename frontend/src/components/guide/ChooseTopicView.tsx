@@ -1,33 +1,12 @@
 import { Button } from '../ui/button';
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string;
-}
+import { QuestionService } from '../../services/questionService';
 
 interface ChooseTopicViewProps {
   onTopicSelect: (step: string) => void;
 }
 
 const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
-  const topics: Topic[] = [
-    {
-      id: 'career-overview',
-      title: 'Career Overview',
-      description: 'To provide a comprehensive summary of the candidate\'s career trajectory, highlighting key roles, industries, and transitions.'
-    },
-    {
-      id: 'key-achievements',
-      title: 'Key Achievements', 
-      description: 'To identify and discuss major accomplishments and successes in the candidate\'s career, emphasizing outcomes and impacts.'
-    },
-    {
-      id: 'career-goals',
-      title: 'Career Goals and Aspirations',
-      description: 'To articulate short-term and long-term career goals, and the steps the candidate plans to take to achieve them.'
-    }
-  ];
+  const topics = QuestionService.getAvailableTopics();
 
   const handleTopicSelect = (topicId: string) => {
     // Store selected topic for the interview session
@@ -54,8 +33,11 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {topic.title}
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-2">
                   {topic.description}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {topic.questionCount} questions
                 </p>
               </div>
               <Button 
