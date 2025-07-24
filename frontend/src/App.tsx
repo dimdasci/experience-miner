@@ -1,28 +1,33 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { CreditsProvider } from './contexts/CreditsContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { UserMenu } from './components/auth/UserMenu';
-import InterviewView from './components/interview/InterviewView';
+import Layout from './components/layout/Layout';
+import GuidePage from './components/pages/GuidePage';
+import InterviewsPage from './components/pages/InterviewsPage';
+import ExperiencePage from './components/pages/ExperiencePage';
 
 function App() {
   return (
-    <AuthProvider>
-      <CreditsProvider>
-        <div className="min-h-screen bg-background font-sans antialiased">
-          <ProtectedRoute>
-            <div className="border-b bg-background">
-              <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-                <h1 className="text-lg font-semibold">Experience Miner</h1>
-                <UserMenu />
-              </div>
-            </div>
-            <div className="bg-gray-50 min-h-[calc(100vh-60px)]">
-              <InterviewView />
-            </div>
-          </ProtectedRoute>
-        </div>
-      </CreditsProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <CreditsProvider>
+          <div className="min-h-screen bg-background font-sans antialiased">
+            <ProtectedRoute>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<GuidePage />} />
+                  <Route path="/guide" element={<GuidePage />} />
+                  <Route path="/guide/:step" element={<GuidePage />} />
+                  <Route path="/interviews" element={<InterviewsPage />} />
+                  <Route path="/experience" element={<ExperiencePage />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          </div>
+        </CreditsProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

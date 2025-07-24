@@ -14,10 +14,10 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center space-x-4">
-      <span className="text-sm text-muted-foreground">
-        Welcome, {userPrefix}
-      </span>
       <CreditsDisplay ref={creditsRef} />
+      <span className="text-sm text-muted-foreground">
+        {userPrefix}
+      </span>      
       <Button
         variant="ghost"
         size="sm"

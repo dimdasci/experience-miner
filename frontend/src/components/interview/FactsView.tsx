@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Building2, User, Briefcase, Award, Code, Target, Loader2, AlertCircle } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { UserJourneyLogger } from '../../utils/logger'
@@ -24,25 +24,17 @@ interface ExtractedFacts {
 interface FactsViewProps {
   sessionData: any[]
   onRestart: () => void
+  autoStart?: boolean
+  onComplete?: () => void
 }
 
-const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
+const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart, autoStart = false, onComplete }) => {
   const [facts, setFacts] = useState<ExtractedFacts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { updateCredits } = useCredits()
 
-  // Log when FactsView loads
-  useEffect(() => {
-    UserJourneyLogger.logNavigation('InterviewView', 'FactsView')
-    UserJourneyLogger.logUserAction({
-      action: 'facts_view_loaded',
-      component: 'FactsView',
-      data: { responsesCount: sessionData.length }
-    })
-  }, [])
-
-  const handleProcessFacts = async () => {
+  const handleProcessFacts = useCallback(async () => {
     if (sessionData.length === 0) {
       setError('No interview responses to process')
       return
@@ -103,6 +95,14 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
             }
           }
         })
+        
+        // Store extracted facts and navigate to Experience page
+        localStorage.setItem('extractedFacts', JSON.stringify(result.responseObject))
+        
+        // Call onComplete to navigate to Experience page (n1e -> n3w)
+        if (onComplete) {
+          setTimeout(() => onComplete(), 2000) // Show results briefly, then navigate
+        }
       } else {
         // Handle specific error types
         if (result.statusCode === 402) {
@@ -131,7 +131,22 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [sessionData, updateCredits])
+
+  // Log when FactsView loads and auto-start if requested
+  useEffect(() => {
+    UserJourneyLogger.logNavigation('InterviewView', 'FactsView')
+    UserJourneyLogger.logUserAction({
+      action: 'facts_view_loaded',
+      component: 'FactsView',
+      data: { responsesCount: sessionData.length }
+    })
+    
+    // Auto-start extraction if requested
+    if (autoStart && sessionData.length > 0) {
+      handleProcessFacts()
+    }
+  }, [autoStart, sessionData.length, handleProcessFacts])
 
   if (!facts && !isLoading && !error) {
     return (
