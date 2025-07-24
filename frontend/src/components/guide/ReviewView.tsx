@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
+import { useInterviewSession } from '../../hooks/useInterviewSession';
 
 interface ReviewViewProps {
   onExtract: () => void;
@@ -7,20 +8,16 @@ interface ReviewViewProps {
 }
 
 const ReviewView = ({ onExtract, onDraft }: ReviewViewProps) => {
-  const [sessionData, setSessionData] = useState<any[]>([]);
+  const { sessionData, loadSession } = useInterviewSession();
   const [selectedTopic, setSelectedTopic] = useState<string>('');
 
   useEffect(() => {
-    const session = localStorage.getItem('interviewSession');
+    loadSession();
     const topic = localStorage.getItem('selectedTopic');
-    
-    if (session) {
-      setSessionData(JSON.parse(session));
-    }
     if (topic) {
       setSelectedTopic(topic);
     }
-  }, []);
+  }, [loadSession]);
 
   const getTopicTitle = (topicId: string) => {
     const titles: Record<string, string> = {

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ChooseTopicView from '../guide/ChooseTopicView';
 import InterviewSessionView from '../guide/InterviewSessionView';
 import ReviewView from '../guide/ReviewView';
-import ExtractView from '../guide/ExtractView';
+import FactsView from '../interview/FactsView';
 
 const GuidePage = () => {
   const { step } = useParams();
@@ -33,7 +33,19 @@ const GuidePage = () => {
           />
         );
       case 'extract':
-        return <ExtractView onComplete={handleComplete} />;
+        return (
+          <div className="max-w-6xl mx-auto">
+            <FactsView 
+              sessionData={JSON.parse(localStorage.getItem('interviewSession') || '[]')} 
+              onRestart={() => {
+                localStorage.removeItem('interviewSession');
+                localStorage.removeItem('selectedTopic');
+                localStorage.removeItem('readyForExtraction');
+                handleComplete();
+              }}
+            />
+          </div>
+        );
       default:
         return <ChooseTopicView onTopicSelect={handleNavigateToStep} />;
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import Recorder from '../interview/Recorder';
+import { useInterviewSession } from '../../hooks/useInterviewSession';
 
 interface InterviewSessionViewProps {
   onComplete: () => void;
@@ -9,7 +10,7 @@ interface InterviewSessionViewProps {
 const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [sessionData, setSessionData] = useState<any[]>([]);
+  const { sessionData, addResponse, persistSession } = useInterviewSession();
 
   // Sample questions for each topic
   const topicQuestions: Record<string, string[]> = {
@@ -59,13 +60,12 @@ const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
       question: questions[currentQuestion],
       questionIndex: currentQuestion
     };
-    setSessionData(prev => [...prev, questionData]);
+    addResponse(questionData);
   };
 
   const handleNextQuestion = () => {
     if (isLastQuestion) {
-      // Store session data for review
-      localStorage.setItem('interviewSession', JSON.stringify(sessionData));
+      persistSession();
       onComplete();
     } else {
       setCurrentQuestion(prev => prev + 1);
@@ -73,7 +73,7 @@ const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
   };
 
   const handleSessionComplete = () => {
-    localStorage.setItem('interviewSession', JSON.stringify(sessionData));
+    persistSession();
     onComplete();
   };
 

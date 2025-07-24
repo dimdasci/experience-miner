@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { UserMenu } from '../auth/UserMenu';
-import { CreditsDisplay } from '../credits/CreditsDisplay';
 
 interface LayoutProps {
   children: ReactNode;
