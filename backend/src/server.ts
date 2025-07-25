@@ -6,6 +6,7 @@ import helmet from "helmet";
 import { creditsRouter } from "@/api/credits/creditsRouter.js";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter.js";
 import { interviewRouter } from "@/api/interview/interviewRouter.js";
+import { topicsRouter } from "@/api/topics/topicsRouter.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
 import { aiRateLimiter, rateLimiter } from "@/common/middleware/rateLimiter.js";
 import { requestLogger } from "@/common/middleware/requestLogger.js";
@@ -56,6 +57,7 @@ app.use(rateLimiter);
 // Routes
 app.use("/health", healthCheckRouter);
 app.use("/api/credits", creditsRouter);
+app.use("/api/topics", topicsRouter);
 app.use("/api/interview", aiRateLimiter, interviewRouter);
 
 // Root endpoint
@@ -66,6 +68,7 @@ app.get("/", (_req, res) => {
 		health: "/health",
 		endpoints: {
 			credits: "GET /api/credits",
+			topics: "GET /api/topics, POST /api/topics/{id}/select",
 			transcribe: "POST /api/interview/transcribe",
 			extract: "POST /api/interview/extract",
 		},

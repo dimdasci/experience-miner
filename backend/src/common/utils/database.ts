@@ -52,6 +52,10 @@ class DatabaseService {
 		}
 	}
 
+	async getClient(): Promise<PoolClient> {
+		return await this.pool.connect();
+	}
+
 	async transaction<T>(
 		callback: (client: PoolClient) => Promise<T>,
 	): Promise<T> {
