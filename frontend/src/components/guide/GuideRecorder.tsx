@@ -9,10 +9,12 @@ interface GuideRecorderProps {
   onDataUpdate: (data: any) => void
   questionId: string
   questionText: string
+  questionNumber: number
+  interviewId: number
   existingResponse?: string
 }
 
-const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingResponse }: GuideRecorderProps) => {
+const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber, interviewId, existingResponse }: GuideRecorderProps) => {
   const [transcript, setTranscript] = useState('')
   const [isTranscribing, setIsTranscribing] = useState(false)
   const { updateCredits } = useCredits()
@@ -41,10 +43,12 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
       setIsTranscribing(true)
       
       try {
+        
         const result = await apiService.transcribeAudio(
           recording.blob,
           questionText,
-          3, // hardcoded interviewId for testing
+          interviewId,
+          questionNumber,
           recording.duration
         )
         if (result.success && result.responseObject?.transcript) {
@@ -159,6 +163,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
       })
     }
   }
+
 
   const isRecording = recordingState.isRecording
   const hasTranscript = transcript.trim().length > 0

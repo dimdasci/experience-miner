@@ -36,7 +36,7 @@ vi.mock("@/services/creditsService.js", () => ({
 
 vi.mock("@/services/databaseService.js", () => ({
 	databaseService: {
-		saveAnswer: vi.fn(),
+		// saveAnswer removed - use updateAnswerByQuestionNumber for updates
 	},
 }));
 

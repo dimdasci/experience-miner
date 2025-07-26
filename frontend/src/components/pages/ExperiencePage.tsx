@@ -2,18 +2,12 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 
 const ExperiencePage = () => {
-  const [extractedFacts, setExtractedFacts] = useState<any>(null);
+  const [extractedFacts] = useState<any>(null);
 
-  // Load extracted facts from localStorage
+  // TODO: Load extracted facts from database instead of localStorage  
   useEffect(() => {
-    const stored = localStorage.getItem('extractedFacts');
-    if (stored) {
-      try {
-        setExtractedFacts(JSON.parse(stored));
-      } catch (error) {
-        console.error('Failed to parse extracted facts:', error);
-      }
-    }
+    // For now, just use mock data
+    // In future: load from database via API call
   }, []);
 
   // Use extracted facts or fallback to mock data

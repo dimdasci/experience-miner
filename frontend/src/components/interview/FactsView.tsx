@@ -22,17 +22,46 @@ interface ExtractedFacts {
 }
 
 interface FactsViewProps {
-  sessionData: any[]
+  interviewId: number
   onRestart: () => void
   autoStart?: boolean
   onComplete?: () => void
 }
 
-const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart, autoStart = false, onComplete }) => {
+const FactsView: React.FC<FactsViewProps> = ({ interviewId, onRestart, autoStart = false, onComplete }) => {
   const [facts, setFacts] = useState<ExtractedFacts | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sessionData, setSessionData] = useState<any[]>([])
   const { updateCredits } = useCredits()
+
+  // Load interview data from database
+  const loadInterviewData = useCallback(async () => {
+    try {
+      setError(null)
+      const response = await apiService.getInterview(interviewId)
+      
+      if (response.success) {
+        // Convert database answers to sessionData format for processing
+        const answers = response.responseObject.answers || []
+        const sessionItems = answers
+          .filter(answer => answer.answer && answer.answer.trim() !== '')
+          .map(answer => ({
+            question: answer.question,
+            response: answer.answer,
+            questionId: answer.id,
+            timestamp: answer.created_at || new Date().toISOString()
+          }))
+        
+        setSessionData(sessionItems)
+      } else {
+        setError(response.message || 'Failed to load interview data')
+      }
+    } catch (err) {
+      setError('Failed to load interview data')
+      console.error('Error loading interview:', err)
+    }
+  }, [interviewId])
 
   const handleProcessFacts = useCallback(async () => {
     if (sessionData.length === 0) {
@@ -64,7 +93,7 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart, autoStart
       const result = await apiService.extractFacts(
         combinedTranscript,
         'Complete Career Interview Analysis',
-        3 // hardcoded interviewId for testing
+        interviewId
       )
       
       if (result.success && result.responseObject) {
@@ -97,7 +126,7 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart, autoStart
         })
         
         // Store extracted facts and navigate to Experience page
-        localStorage.setItem('extractedFacts', JSON.stringify(result.responseObject))
+        // Facts are now stored in database, no need for localStorage
         
         // Call onComplete to navigate to Experience page (n1e -> n3w)
         if (onComplete) {
@@ -132,6 +161,11 @@ const FactsView: React.FC<FactsViewProps> = ({ sessionData, onRestart, autoStart
       setIsLoading(false)
     }
   }, [sessionData, updateCredits])
+
+  // Load interview data when component mounts
+  useEffect(() => {
+    loadInterviewData()
+  }, [loadInterviewData])
 
   // Log when FactsView loads and auto-start if requested
   useEffect(() => {

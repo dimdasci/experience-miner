@@ -20,7 +20,7 @@ export interface TopicQuestion {
 export type TopicStatus = "available" | "used" | "irrelevant";
 
 export interface Interview {
-	id: string;
+	id: number;
 	user_id: string;
 	title: string;
 	motivational_quote: string;
@@ -33,7 +33,7 @@ export type InterviewStatus = "draft" | "completed";
 
 export interface Answer {
 	id: string;
-	interview_id: string;
+	interview_id: number;
 	user_id: string;
 	question_number: number;
 	question: string;
@@ -151,7 +151,7 @@ export interface CreateInterviewParams {
 }
 
 export interface CreateAnswerParams {
-	interviewId: string;
+	interviewId: number;
 	userId: string;
 	questionNumber: number;
 	question: string;

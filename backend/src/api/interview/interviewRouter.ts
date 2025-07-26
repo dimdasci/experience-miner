@@ -16,6 +16,220 @@ import { geminiService } from "@/services/geminiService.js";
 
 export const interviewRouter: IRouter = Router();
 
+// Get all interviews for the authenticated user
+interviewRouter.get(
+	"/",
+	authenticateToken,
+	async (req: AuthenticatedRequest, res: Response) => {
+		const userId = req.user?.id;
+
+		if (!userId) {
+			const serviceResponse = ServiceResponse.failure(
+				"Invalid user authentication",
+				null,
+				StatusCodes.UNAUTHORIZED,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		try {
+			const interviews = await databaseService.getAllInterviewsByUserId(userId);
+
+			const serviceResponse = ServiceResponse.success(
+				"Interviews retrieved successfully",
+				interviews,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		} catch (error) {
+			console.error("Error in GET /api/interview:", error);
+
+			const serviceResponse = ServiceResponse.failure(
+				`Failed to get interviews: ${error instanceof Error ? error.message : "Unknown error"}`,
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+	},
+);
+
+// Get interview by ID with all answers
+interviewRouter.get(
+	"/:id",
+	authenticateToken,
+	async (req: AuthenticatedRequest, res: Response) => {
+		const { id: interviewId } = req.params;
+		const userId = req.user?.id;
+
+		if (!userId) {
+			const serviceResponse = ServiceResponse.failure(
+				"Invalid user authentication",
+				null,
+				StatusCodes.UNAUTHORIZED,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		if (!interviewId) {
+			const serviceResponse = ServiceResponse.failure(
+				"Interview ID is required",
+				null,
+				StatusCodes.BAD_REQUEST,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		try {
+			// Get interview details
+			const interview = await databaseService.getInterviewById(interviewId);
+
+			if (!interview) {
+				const serviceResponse = ServiceResponse.failure(
+					"Interview not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			// Verify user owns this interview
+			if (interview.user_id !== userId) {
+				const serviceResponse = ServiceResponse.failure(
+					"Access denied",
+					null,
+					StatusCodes.FORBIDDEN,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			// Get all answers for this interview
+			const answers =
+				await databaseService.getAnswersByInterviewIdBusiness(interviewId);
+
+			const serviceResponse = ServiceResponse.success(
+				"Interview retrieved successfully",
+				{
+					interview,
+					answers,
+				},
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		} catch (error) {
+			console.error("Error in GET /api/interview/:id:", error);
+
+			const serviceResponse = ServiceResponse.failure(
+				`Failed to get interview: ${error instanceof Error ? error.message : "Unknown error"}`,
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+	},
+);
+
+// Update answer by question number
+interviewRouter.put(
+	"/:id/answers/:questionNumber",
+	authenticateToken,
+	async (req: AuthenticatedRequest, res: Response) => {
+		const { id: interviewId, questionNumber } = req.params;
+		const { answer, recording_duration_seconds } = req.body;
+		const userId = req.user?.id;
+
+		if (!userId) {
+			const serviceResponse = ServiceResponse.failure(
+				"Invalid user authentication",
+				null,
+				StatusCodes.UNAUTHORIZED,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		if (!interviewId || !questionNumber) {
+			const serviceResponse = ServiceResponse.failure(
+				"Interview ID and question number are required",
+				null,
+				StatusCodes.BAD_REQUEST,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		if (answer === undefined || answer === null) {
+			const serviceResponse = ServiceResponse.failure(
+				"Answer is required",
+				null,
+				StatusCodes.BAD_REQUEST,
+			);
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+
+		try {
+			// Verify interview exists and user owns it
+			const interview = await databaseService.getInterviewById(interviewId);
+
+			if (!interview) {
+				const serviceResponse = ServiceResponse.failure(
+					"Interview not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			if (interview.user_id !== userId) {
+				const serviceResponse = ServiceResponse.failure(
+					"Access denied",
+					null,
+					StatusCodes.FORBIDDEN,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			const questionNum = parseInt(questionNumber, 10);
+			if (Number.isNaN(questionNum)) {
+				const serviceResponse = ServiceResponse.failure(
+					"Invalid question number",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			// Update the answer
+			const updatedAnswer = await databaseService.updateAnswerByQuestionNumber(
+				parseInt(interviewId, 10),
+				questionNum,
+				answer,
+				recording_duration_seconds,
+			);
+
+			const serviceResponse = ServiceResponse.success(
+				"Answer updated successfully",
+				updatedAnswer,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		} catch (error) {
+			console.error(
+				"Error in PUT /api/interview/:id/answers/:questionNumber:",
+				error,
+			);
+
+			const serviceResponse = ServiceResponse.failure(
+				`Failed to update answer: ${error instanceof Error ? error.message : "Unknown error"}`,
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+
+			return res.status(serviceResponse.statusCode).json(serviceResponse);
+		}
+	},
+);
+
 // Configure multer for audio file uploads
 const upload = multer({
 	storage: multer.memoryStorage(),
@@ -35,7 +249,7 @@ interviewRouter.post(
 		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
 		const userId = req.user?.id;
 
-		const { question, interviewId, recordingDuration } = req.body;
+		const { question, interviewId, recordingDuration, questionNumber } = req.body;
 
 		logger.debug("Transcribe endpoint called", {
 			requestId,
@@ -45,6 +259,7 @@ interviewRouter.post(
 			question: question ? "present" : "missing",
 			interviewId,
 			recordingDuration,
+			questionNumber,
 		});
 
 		if (!userId) {
@@ -56,9 +271,9 @@ interviewRouter.post(
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		}
 
-		if (!question || !interviewId) {
+		if (!question || !interviewId || questionNumber === undefined) {
 			const serviceResponse = ServiceResponse.failure(
-				"Question and interviewId are required",
+				"Question, interviewId, and questionNumber are required",
 				null,
 				StatusCodes.BAD_REQUEST,
 			);
@@ -155,11 +370,10 @@ interviewRouter.post(
 					}
 				}
 
-				await databaseService.saveAnswer(
-					userId,
-					question,
-					transcriptResult.data,
+				await databaseService.updateAnswerByQuestionNumber(
 					parseInt(interviewId, 10),
+					parseInt(questionNumber, 10),
+					transcriptResult.data,
 					parsedDuration,
 				);
 			});
@@ -359,15 +573,7 @@ interviewRouter.post(
 			const totalTokenCount =
 				extractionResult.usageMetadata?.totalTokenCount || 0;
 
-			// Save to database with retry logic - use transcript as the answer for extraction
-			await creditsService.retryOperation(async () => {
-				await databaseService.saveAnswer(
-					userId,
-					question,
-					transcript,
-					parseInt(interviewId, 10),
-				);
-			});
+			// Note: Extract endpoint processes existing answers, doesn't create new ones
 
 			// Consume credits based on token usage
 			const { remainingCredits } = await creditsService.consumeCredits(

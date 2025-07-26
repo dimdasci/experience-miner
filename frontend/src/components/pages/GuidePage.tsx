@@ -1,15 +1,19 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import ChooseTopicView from '../guide/ChooseTopicView';
 import InterviewSessionView from '../guide/InterviewSessionView';
-import ReviewView from '../guide/ReviewView';
+import ReviewView from '../interview/ReviewView';
 import FactsView from '../interview/FactsView';
 
 const GuidePage = () => {
-  const { step } = useParams();
+  const { step, id } = useParams();
   const navigate = useNavigate();
 
-  const handleNavigateToStep = (newStep: string) => {
-    navigate(`/guide/${newStep}`);
+  const handleNavigateToStep = (newStep: string, interviewId?: string) => {
+    if (interviewId) {
+      navigate(`/guide/${newStep}/${interviewId}`);
+    } else {
+      navigate(`/guide/${newStep}`);
+    }
   };
 
   const handleComplete = () => {
@@ -24,27 +28,25 @@ const GuidePage = () => {
       case 'topics':
         return <ChooseTopicView onTopicSelect={handleNavigateToStep} />;
       case 'interview':
-        return <InterviewSessionView onComplete={() => handleNavigateToStep('review')} />;
+        return <InterviewSessionView onComplete={(interviewId) => handleNavigateToStep('review', String(interviewId))} interviewId={id} />;
       case 'review':
         return (
           <ReviewView 
             onExtract={() => handleNavigateToStep('extract')} 
-            onDraft={handleComplete}
+            onDraft={() => navigate('/interviews')}
+            interviewId={id}
           />
         );
       case 'extract':
         return (
           <div className="max-w-6xl mx-auto">
             <FactsView 
-              sessionData={JSON.parse(localStorage.getItem('interviewSession') || '[]')} 
+              interviewId={parseInt(id || '0', 10)}
               onRestart={() => {
-                localStorage.removeItem('interviewSession');
-                localStorage.removeItem('selectedTopic');
-                localStorage.removeItem('readyForExtraction');
                 handleComplete();
               }}
               onComplete={() => {
-                // After extraction, go to Experience page (n1e -> n3w)
+                // After extraction, go to Experience page
                 navigate('/experience');
               }}
               autoStart={true}

@@ -69,6 +69,8 @@ app.get("/", (_req, res) => {
 		endpoints: {
 			credits: "GET /api/credits",
 			topics: "GET /api/topics, POST /api/topics/{id}/select",
+			interviews:
+				"GET /api/interview, GET /api/interview/{id}, PUT /api/interview/{id}/answers/{questionNumber}",
 			transcribe: "POST /api/interview/transcribe",
 			extract: "POST /api/interview/extract",
 		},

@@ -5,6 +5,13 @@ import {
   CareerFact, 
   ProcessingResult 
 } from '../types'
+import {
+  Topic,
+  TopicSelectionResponse,
+  Interview,
+  Answer,
+  UpdateAnswerRequest
+} from '../types/business'
 import { API_ENDPOINTS } from '../constants'
 import { supabase } from '../lib/supabase'
 
@@ -114,12 +121,14 @@ class ApiService {
     audioBlob: Blob, 
     question: string, 
     interviewId: number,
+    questionNumber: number,
     recordingDuration?: number
   ): Promise<ApiResponse<{ transcript: string; credits: number }>> {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'recording.webm')
     formData.append('question', question)
     formData.append('interviewId', interviewId.toString())
+    formData.append('questionNumber', questionNumber.toString())
     if (recordingDuration !== undefined) {
       formData.append('recordingDuration', recordingDuration.toString())
     }
@@ -168,6 +177,38 @@ class ApiService {
     return this.request('/interview/extract', {
       method: 'POST',
       body: JSON.stringify({ transcript, question, interviewId }),
+    })
+  }
+
+  // Topic Management
+  async getTopics(): Promise<ApiResponse<Topic[]>> {
+    return this.request('/topics')
+  }
+
+  async selectTopic(topicId: string): Promise<ApiResponse<TopicSelectionResponse>> {
+    return this.request(`/topics/${topicId}/select`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+  }
+
+  // Interview Management
+  async getInterviews(): Promise<ApiResponse<Interview[]>> {
+    return this.request('/interview')
+  }
+
+  async getInterview(interviewId: number): Promise<ApiResponse<{ interview: Interview; answers: Answer[] }>> {
+    return this.request(`/interview/${interviewId}`)
+  }
+
+  async updateAnswer(
+    interviewId: number, 
+    questionNumber: number, 
+    data: UpdateAnswerRequest
+  ): Promise<ApiResponse<Answer>> {
+    return this.request(`/interview/${interviewId}/answers/${questionNumber}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     })
   }
 }

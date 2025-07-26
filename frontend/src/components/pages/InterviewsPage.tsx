@@ -1,47 +1,66 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
-
-interface Interview {
-  id: string;
-  date: string;
-  topic: string;
-  status: 'completed' | 'draft';
-}
+import { apiService } from '../../services/apiService';
+import { Interview } from '../../types/business';
 
 const InterviewsPage = () => {
-  // Mock data for interviews list
-  const [interviews] = useState<Interview[]>([
-    {
-      id: '1',
-      date: '19.07.25',
-      topic: 'Career Overview',
-      status: 'completed'
-    },
-    {
-      id: '2', 
-      date: '19.07.25',
-      topic: 'Key Achievements',
-      status: 'completed'
-    },
-    {
-      id: '3',
-      date: '21.07.25',
-      topic: 'Challenges and Learning Experiences',
-      status: 'draft'
+  const navigate = useNavigate();
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadInterviews();
+  }, []);
+
+  const loadInterviews = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.getInterviews();
+      
+      if (response.success) {
+        setInterviews(response.responseObject);
+      } else {
+        setError(response.message || 'Failed to load interviews');
+      }
+    } catch (err) {
+      setError('Failed to load interviews');
+      console.error('Error loading interviews:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const handleInterviewSelect = (interviewId: string) => {
-    // Mock navigation to interview review
-    console.log('Selected interview:', interviewId);
-    // In real implementation, this would navigate to interview details
   };
 
-  const handleExtractFromInterview = (interviewId: string) => {
-    // Mock extract functionality
-    console.log('Extract from interview:', interviewId);
-    // In real implementation, this would trigger extraction process
+  const handleInterviewSelect = (interviewId: number) => {
+    // Navigate to interview review with interview ID in URL
+    navigate(`/guide/review/${interviewId}`);
   };
+
+  const handleExtractFromInterview = (interviewId: number) => {
+    // Navigate to extraction process with interview ID in URL
+    navigate(`/guide/extract/${interviewId}`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-600">Loading interviews...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -54,13 +73,25 @@ const InterviewsPage = () => {
         </p>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-800">{error}</div>
+          <button 
+            onClick={loadInterviews}
+            className="mt-2 text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       <div className="space-y-4">
         {interviews.map((interview) => (
           <div key={interview.id} className="bg-white border rounded-lg p-6 hover:border-blue-300 transition-colors">
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-sm text-gray-500">{interview.date}</span>
+                  <span className="text-sm text-gray-500">{formatDate(interview.updated_at)}</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     interview.status === 'completed' 
                       ? 'bg-green-100 text-green-800' 
@@ -70,8 +101,11 @@ const InterviewsPage = () => {
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                  {interview.topic}
+                  {interview.title}
                 </h3>
+                <p className="text-sm text-gray-600 italic">
+                  "{interview.motivational_quote}"
+                </p>
               </div>
               
               <div className="flex gap-2 ml-4">
@@ -88,7 +122,7 @@ const InterviewsPage = () => {
                     onClick={() => handleExtractFromInterview(interview.id)}
                     className="bg-green-600 hover:bg-green-700"
                   >
-                    Extract
+                    Re-extract
                   </Button>
                 )}
               </div>
@@ -106,7 +140,7 @@ const InterviewsPage = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No interviews yet</h3>
           <p className="text-gray-500 mb-4">Start your first interview in the Guide section</p>
-          <Button onClick={() => window.location.href = '/guide'}>
+          <Button onClick={() => navigate('/guide')}>
             Start Interview
           </Button>
         </div>

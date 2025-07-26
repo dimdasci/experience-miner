@@ -139,7 +139,7 @@ describe("Topics Router", () => {
 			};
 
 			const mockInterview = {
-				id: "interview-1",
+				id: 1,
 				user_id: "test-user-id",
 				title: "Test Topic",
 				motivational_quote: "Test quote",
