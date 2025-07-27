@@ -596,7 +596,10 @@ interviewRouter.post(
 				.join("\n\n");
 
 			// Step 3: Process AI extraction with existing logic
-			const extractionResult = await geminiService.extractFacts(transcript);
+			const extractionResult = await geminiService.extractFacts(
+				transcript,
+				interviewId,
+			);
 			const totalTokenCount =
 				extractionResult.usageMetadata?.totalTokenCount || 0;
 
@@ -604,69 +607,66 @@ interviewRouter.post(
 			const currentTimestamp = new Date().toISOString();
 			const extractedFacts = {
 				achievements: (extractionResult.data.achievements || []).map(
-					(achievement: string, index: number) => ({
-						description: achievement,
+					(achievement: {
+						description: string;
+						sourceQuestionNumber: number;
+					}) => ({
+						description: achievement.description,
 						sourceInterviewId: interviewId,
-						sourceQuestionNumber:
-							answeredQuestions[index % answeredQuestions.length]
-								?.question_number || 1,
+						sourceQuestionNumber: achievement.sourceQuestionNumber,
 						extractedAt: currentTimestamp,
 					}),
 				),
 				companies: (extractionResult.data.companies || []).map(
-					(company: string, index: number) => ({
-						name: company,
+					(company: { name: string; sourceQuestionNumber: number }) => ({
+						name: company.name,
 						sourceInterviewId: interviewId,
-						sourceQuestionNumber:
-							answeredQuestions[index % answeredQuestions.length]
-								?.question_number || 1,
+						sourceQuestionNumber: company.sourceQuestionNumber,
 						extractedAt: currentTimestamp,
 					}),
 				),
 				projects: (extractionResult.data.projects || []).map(
-					(
-						project: {
-							name?: string;
-							description?: string;
-							role?: string;
-							company?: string;
-						},
-						index: number,
-					) => ({
+					(project: {
+						name: string;
+						description: string;
+						role: string;
+						company?: string;
+						sourceQuestionNumber: number;
+					}) => ({
 						name: project.name || "Unnamed Project",
 						description: project.description || "",
 						role: project.role || "",
 						company: project.company || undefined,
 						sourceInterviewId: interviewId,
-						sourceQuestionNumber:
-							answeredQuestions[index % answeredQuestions.length]
-								?.question_number || 1,
+						sourceQuestionNumber: project.sourceQuestionNumber,
 						extractedAt: currentTimestamp,
 					}),
 				),
 				roles: (extractionResult.data.roles || []).map(
-					(
-						role: { title?: string; company?: string; duration?: string },
-						index: number,
-					) => ({
+					(role: {
+						title: string;
+						company: string;
+						duration: string;
+						sourceQuestionNumber: number;
+					}) => ({
 						title: role.title || "Unknown Role",
 						company: role.company || "Unknown Company",
 						duration: role.duration || "",
 						sourceInterviewId: interviewId,
-						sourceQuestionNumber:
-							answeredQuestions[index % answeredQuestions.length]
-								?.question_number || 1,
+						sourceQuestionNumber: role.sourceQuestionNumber,
 						extractedAt: currentTimestamp,
 					}),
 				),
 				skills: (extractionResult.data.skills || []).map(
-					(skill: string, index: number) => ({
-						name: skill,
-						category: undefined, // Will be enhanced in future iterations
+					(skill: {
+						name: string;
+						category?: string;
+						sourceQuestionNumber: number;
+					}) => ({
+						name: skill.name,
+						category: skill.category, // Will be enhanced in future iterations
 						sourceInterviewId: interviewId,
-						sourceQuestionNumber:
-							answeredQuestions[index % answeredQuestions.length]
-								?.question_number || 1,
+						sourceQuestionNumber: skill.sourceQuestionNumber,
 						extractedAt: currentTimestamp,
 					}),
 				),

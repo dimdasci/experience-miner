@@ -6,8 +6,24 @@ interface ExtendedUsageMetadata extends UsageMetadata {
 	candidatesTokenCount?: number;
 }
 
-import type { ExtractedFacts } from "@/common/types/interview.js";
+import type {
+	Achievement,
+	Company,
+	Project,
+	Role,
+	Skill,
+} from "@/common/types/business.js";
 import { env } from "@/common/utils/envConfig.js";
+
+// Create a custom ExtractedFacts interface that represents the structure returned by Gemini
+export interface ExtractedFacts {
+	summary: string;
+	companies: Company[];
+	roles: Role[];
+	projects: Project[];
+	achievements: Achievement[];
+	skills: Skill[];
+}
 
 export interface GeminiResponse<T> {
 	data: T;
@@ -85,7 +101,10 @@ export class GeminiService {
 
 	async extractFacts(
 		transcript: string,
+		interviewId: string, // Not used directly but kept for API consistency - will be added by caller
 	): Promise<GeminiResponse<ExtractedFacts>> {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		void interviewId; // Acknowledge parameter to suppress warning
 		const responseSchema = {
 			type: Type.OBJECT,
 			properties: {
@@ -96,8 +115,19 @@ export class GeminiService {
 				},
 				companies: {
 					type: Type.ARRAY,
-					description: "List of unique company names the user has worked for.",
-					items: { type: Type.STRING },
+					description: "List of unique companies the user has worked for.",
+					items: {
+						type: Type.OBJECT,
+						properties: {
+							name: { type: Type.STRING },
+							sourceQuestionNumber: {
+								type: Type.NUMBER,
+								description:
+									"The question number from the transcript where this information was found",
+							},
+						},
+						required: ["name", "sourceQuestionNumber"],
+					},
 				},
 				roles: {
 					type: Type.ARRAY,
@@ -107,7 +137,13 @@ export class GeminiService {
 							title: { type: Type.STRING },
 							company: { type: Type.STRING },
 							duration: { type: Type.STRING },
+							sourceQuestionNumber: {
+								type: Type.NUMBER,
+								description:
+									"The question number from the transcript where this information was found",
+							},
 						},
+						required: ["title", "company", "duration", "sourceQuestionNumber"],
 					},
 				},
 				projects: {
@@ -118,16 +154,54 @@ export class GeminiService {
 							name: { type: Type.STRING },
 							description: { type: Type.STRING },
 							role: { type: Type.STRING },
+							company: {
+								type: Type.STRING,
+								description:
+									"Optional company name associated with this project",
+							},
+							sourceQuestionNumber: {
+								type: Type.NUMBER,
+								description:
+									"The question number from the transcript where this information was found",
+							},
 						},
+						required: ["name", "description", "role", "sourceQuestionNumber"],
 					},
 				},
 				achievements: {
 					type: Type.ARRAY,
-					items: { type: Type.STRING },
+					items: {
+						type: Type.OBJECT,
+						properties: {
+							description: { type: Type.STRING },
+							sourceQuestionNumber: {
+								type: Type.NUMBER,
+								description:
+									"The question number from the transcript where this information was found",
+							},
+						},
+						required: ["description", "sourceQuestionNumber"],
+					},
 				},
 				skills: {
 					type: Type.ARRAY,
-					items: { type: Type.STRING },
+					items: {
+						type: Type.OBJECT,
+						properties: {
+							name: { type: Type.STRING },
+							category: {
+								type: Type.STRING,
+								description:
+									"Optional category like 'technical', 'leadership', etc.",
+							},
+							sourceQuestionNumber: {
+								type: Type.NUMBER,
+								description:
+									"The question number from the transcript where this information was found",
+							},
+						},
+						required: ["name", "sourceQuestionNumber"],
+					},
 				},
 			},
 			required: [
@@ -141,10 +215,13 @@ export class GeminiService {
 		};
 
 		try {
-			const prompt = `Based on the following interview transcript, act as a professional career coach and extract the key information. The user is a job seeker trying to build their resume. Clean up the language and present it professionally.
+			const prompt = `Based on the following interview transcript, act as a professional career coach and extract the key information. The user is a job seeker trying to build their resume. Clean up the language and present it professionally on a user behalf.
 
-TRANSCRIPT:
-${transcript}`;
+For each extracted item (company, role, project, achievement, skill), include a 'sourceQuestionNumber' field indicating which question number in the transcript the information came from.
+
+<transcript>
+${transcript}
+</transcript>`;
 
 			const request = {
 				model: this.model,
@@ -163,18 +240,20 @@ ${transcript}`;
 			}
 
 			const jsonText = response.text.trim();
-			const parsedJson = JSON.parse(jsonText) as ExtractedFacts;
+			const rawData = JSON.parse(jsonText);
 
 			// Validate required fields
-			if (!parsedJson.summary || !Array.isArray(parsedJson.companies)) {
+			if (!rawData.summary || !Array.isArray(rawData.companies)) {
 				throw new Error("Invalid response format from Gemini");
 			}
 
+			// Return the raw data directly without any post-processing
+			// Let the caller handle all necessary transformations and additions
 			return {
-				data: parsedJson,
+				data: rawData as ExtractedFacts,
 				usageMetadata: response.usageMetadata,
 			};
-		} catch (error) {
+		} catch (error: unknown) {
 			// Track extraction error with context
 			Sentry.captureException(error, {
 				tags: { service: "gemini", operation: "extraction" },

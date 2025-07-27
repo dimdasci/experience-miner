@@ -1,24 +1,78 @@
 import { vi } from "vitest";
-import type { ExtractedFacts } from "@/common/types/interview.js";
+import type { ExtractedFacts } from "@/services/geminiService.js";
+
+// Define the raw types returned by Gemini without the metadata fields
+interface RawCompany {
+	name: string;
+	sourceQuestionNumber: number;
+}
+
+interface RawRole {
+	title: string;
+	company: string;
+	duration: string;
+	sourceQuestionNumber: number;
+}
+
+interface RawProject {
+	name: string;
+	description: string;
+	role: string;
+	company?: string;
+	sourceQuestionNumber: number;
+}
+
+interface RawAchievement {
+	description: string;
+	sourceQuestionNumber: number;
+}
+
+interface RawSkill {
+	name: string;
+	category?: string;
+	sourceQuestionNumber: number;
+}
+
+// Define the structure of the raw Gemini response
+export interface RawGeminiResponse {
+	summary: string;
+	companies: RawCompany[];
+	roles: RawRole[];
+	projects: RawProject[];
+	achievements: RawAchievement[];
+	skills: RawSkill[];
+}
 
 // Mock Gemini service responses
 export const mockTranscriptionResponse = {
 	text: "This is a test transcription of the audio file.",
 };
 
-export const mockExtractionResponse: ExtractedFacts = {
+// This represents the raw response from Gemini without metadata
+export const mockRawGeminiResponse: RawGeminiResponse = {
 	summary: "Experienced software developer with 5+ years in web development.",
-	companies: ["TechCorp", "StartupXYZ"],
+	companies: [
+		{
+			name: "TechCorp",
+			sourceQuestionNumber: 1,
+		},
+		{
+			name: "StartupXYZ",
+			sourceQuestionNumber: 1,
+		},
+	],
 	roles: [
 		{
 			title: "Senior Developer",
 			company: "TechCorp",
 			duration: "2021-Present",
+			sourceQuestionNumber: 1,
 		},
 		{
 			title: "Full Stack Developer",
 			company: "StartupXYZ",
 			duration: "2019-2021",
+			sourceQuestionNumber: 1,
 		},
 	],
 	projects: [
@@ -26,13 +80,134 @@ export const mockExtractionResponse: ExtractedFacts = {
 			name: "E-commerce Platform",
 			description: "Built scalable e-commerce solution serving 10k+ users",
 			role: "Lead Developer",
+			sourceQuestionNumber: 1,
 		},
 	],
 	achievements: [
-		"Reduced page load times by 40%",
-		"Mentored 5 junior developers",
+		{
+			description: "Reduced page load times by 40%",
+			sourceQuestionNumber: 1,
+		},
+		{
+			description: "Mentored 5 junior developers",
+			sourceQuestionNumber: 1,
+		},
 	],
-	skills: ["JavaScript", "TypeScript", "React", "Node.js", "PostgreSQL"],
+	skills: [
+		{
+			name: "JavaScript",
+			sourceQuestionNumber: 1,
+		},
+		{
+			name: "TypeScript",
+			sourceQuestionNumber: 1,
+		},
+		{
+			name: "React",
+			sourceQuestionNumber: 1,
+		},
+		{
+			name: "Node.js",
+			sourceQuestionNumber: 1,
+		},
+		{
+			name: "PostgreSQL",
+			sourceQuestionNumber: 1,
+		},
+	],
+};
+
+// This represents the final processed response after the router adds metadata
+export const mockExtractionResponse: ExtractedFacts = {
+	summary: "Experienced software developer with 5+ years in web development.",
+	companies: [
+		{
+			name: "TechCorp",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			name: "StartupXYZ",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+	],
+	roles: [
+		{
+			title: "Senior Developer",
+			company: "TechCorp",
+			duration: "2021-Present",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			title: "Full Stack Developer",
+			company: "StartupXYZ",
+			duration: "2019-2021",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+	],
+	projects: [
+		{
+			name: "E-commerce Platform",
+			description: "Built scalable e-commerce solution serving 10k+ users",
+			role: "Lead Developer",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+	],
+	achievements: [
+		{
+			description: "Reduced page load times by 40%",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			description: "Mentored 5 junior developers",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+	],
+	skills: [
+		{
+			name: "JavaScript",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			name: "TypeScript",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			name: "React",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			name: "Node.js",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+		{
+			name: "PostgreSQL",
+			sourceInterviewId: "1",
+			sourceQuestionNumber: 1,
+			extractedAt: new Date().toISOString(),
+		},
+	],
 };
 
 // Mock GoogleGenAI class
@@ -44,8 +219,14 @@ export const createMockGoogleGenAI = () => ({
 
 // Mock Gemini service
 export const createMockGeminiService = () => ({
-	transcribeAudio: vi.fn().mockResolvedValue(mockTranscriptionResponse.text),
-	extractFacts: vi.fn().mockResolvedValue(mockExtractionResponse),
+	transcribeAudio: vi.fn().mockResolvedValue({
+		data: mockTranscriptionResponse.text,
+		usageMetadata: { totalTokenCount: 100 },
+	}),
+	extractFacts: vi.fn().mockResolvedValue({
+		data: mockRawGeminiResponse,
+		usageMetadata: { totalTokenCount: 200 },
+	}),
 });
 
 // Test data generators
@@ -75,7 +256,9 @@ export const expectServiceResponse = (
 	expect(response).toHaveProperty("statusCode");
 };
 
-export const expectValidExtractedFacts = (facts: ExtractedFacts) => {
+export const expectValidExtractedFacts = (
+	facts: ExtractedFacts | RawGeminiResponse,
+) => {
 	expect(facts).toHaveProperty("summary");
 	expect(facts).toHaveProperty("companies");
 	expect(facts).toHaveProperty("roles");
