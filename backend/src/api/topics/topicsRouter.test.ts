@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expectServiceResponse } from "../../test/helpers.js";
@@ -7,7 +7,7 @@ import { topicsRouter } from "./topicsRouter.js";
 // Mock external dependencies
 vi.mock("@/common/middleware/auth.js", () => ({
 	authenticateToken: vi.fn((req, _res, next) => {
-		(req as any).user = {
+		(req as Request & { user?: { id: string; email: string } }).user = {
 			id: "test-user-id",
 			email: "test@example.com",
 		};
@@ -37,7 +37,10 @@ import { databaseService } from "@/services/databaseService.js";
 
 describe("Topics Router", () => {
 	let app: express.Application;
-	let mockClient: any;
+	let mockClient: {
+		query: ReturnType<typeof vi.fn>;
+		release: ReturnType<typeof vi.fn>;
+	};
 
 	beforeEach(() => {
 		app = express();
@@ -50,7 +53,9 @@ describe("Topics Router", () => {
 			query: vi.fn(),
 			release: vi.fn(),
 		};
-		vi.mocked(database.getClient).mockResolvedValue(mockClient);
+		vi.mocked(database.getClient).mockResolvedValue(
+			mockClient as unknown as Awaited<ReturnType<typeof database.getClient>>,
+		);
 	});
 
 	describe("GET /topics", () => {
@@ -149,8 +154,28 @@ describe("Topics Router", () => {
 			};
 
 			const mockAnswers = [
-				{ id: "answer-1", question_number: 1, question: "Question 1" },
-				{ id: "answer-2", question_number: 2, question: "Question 2" },
+				{
+					id: "answer-1",
+					interview_id: 1,
+					user_id: "test-user-id",
+					question_number: 1,
+					question: "Question 1",
+					answer: "",
+					recording_duration_seconds: null,
+					created_at: "2023-01-01",
+					updated_at: "2023-01-01",
+				},
+				{
+					id: "answer-2",
+					interview_id: 1,
+					user_id: "test-user-id",
+					question_number: 2,
+					question: "Question 2",
+					answer: "",
+					recording_duration_seconds: null,
+					created_at: "2023-01-01",
+					updated_at: "2023-01-01",
+				},
 			];
 
 			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
@@ -158,8 +183,12 @@ describe("Topics Router", () => {
 				databaseService.createInterviewWithTransaction,
 			).mockResolvedValue(mockInterview);
 			vi.mocked(databaseService.createAnswerWithTransaction)
-				.mockResolvedValueOnce(mockAnswers[0] as any)
-				.mockResolvedValueOnce(mockAnswers[1] as any);
+				.mockResolvedValueOnce(
+					mockAnswers[0] as unknown as import("@/common/types/business.js").Answer,
+				)
+				.mockResolvedValueOnce(
+					mockAnswers[1] as unknown as import("@/common/types/business.js").Answer,
+				);
 
 			const response = await request(app).post("/topics/topic-1/select");
 
@@ -186,12 +215,15 @@ describe("Topics Router", () => {
 			const mockTopic = {
 				id: "topic-1",
 				user_id: "different-user-id", // Different user
+				title: "Test Topic",
+				motivational_quote: "Test quote",
 				status: "available" as const,
+				questions: [],
+				created_at: "2023-01-01",
+				updated_at: "2023-01-01",
 			};
 
-			vi.mocked(databaseService.getTopicById).mockResolvedValue(
-				mockTopic as any,
-			);
+			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
 
 			const response = await request(app).post("/topics/topic-1/select");
 
@@ -203,12 +235,15 @@ describe("Topics Router", () => {
 			const mockTopic = {
 				id: "topic-1",
 				user_id: "test-user-id",
+				title: "Test Topic",
+				motivational_quote: "Test quote",
 				status: "used" as const, // Already used
+				questions: [],
+				created_at: "2023-01-01",
+				updated_at: "2023-01-01",
 			};
 
-			vi.mocked(databaseService.getTopicById).mockResolvedValue(
-				mockTopic as any,
-			);
+			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
 
 			const response = await request(app).post("/topics/topic-1/select");
 
@@ -220,13 +255,15 @@ describe("Topics Router", () => {
 			const mockTopic = {
 				id: "topic-1",
 				user_id: "test-user-id",
+				title: "Test Topic",
+				motivational_quote: "Test quote",
 				status: "available" as const,
 				questions: [{ text: "Q1", order: 1 }],
+				created_at: "2023-01-01",
+				updated_at: "2023-01-01",
 			};
 
-			vi.mocked(databaseService.getTopicById).mockResolvedValue(
-				mockTopic as any,
-			);
+			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
 			vi.mocked(
 				databaseService.markTopicAsUsedWithTransaction,
 			).mockRejectedValue(new Error("Database error"));

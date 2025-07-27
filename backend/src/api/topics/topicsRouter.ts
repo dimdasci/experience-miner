@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import express from "express";
 import {
 	type AuthenticatedRequest,
@@ -20,20 +21,23 @@ topicsRouter.get(
 	"/",
 	authenticateToken,
 	async (req: AuthenticatedRequest, res) => {
-		try {
-			const userId = req.user?.id;
-			if (!userId) {
-				return res
-					.status(401)
-					.json(ServiceResponse.failure("User not authenticated", null, 401));
-			}
+		const userId = req.user?.id;
+		if (!userId) {
+			return res
+				.status(401)
+				.json(ServiceResponse.failure("User not authenticated", null, 401));
+		}
 
+		try {
 			// Get existing topics for user
 			let topics = await databaseService.getTopicsByUserId(userId);
 
 			// If no topics exist, seed with initial topics
 			if (topics.length === 0) {
-				console.log(`Seeding initial topics for user ${userId}`);
+				Sentry.logger?.info?.("Seeding initial topics for new user", {
+					user_id: userId,
+					topic_count: INITIAL_TOPICS.length,
+				});
 
 				const seededTopics: Topic[] = [];
 				for (const initialTopic of INITIAL_TOPICS) {
@@ -64,7 +68,16 @@ topicsRouter.get(
 				),
 			);
 		} catch (error) {
-			console.error("Error retrieving topics:", error);
+			// Track error with context
+			Sentry.captureException(error, {
+				tags: { endpoint: "topics", operation: "get_topics" },
+				contexts: { user: { id: userId } },
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Failed to retrieve topics", {
+				user_id: userId,
+				error: error instanceof Error ? error.message : String(error),
+			});
 			return res
 				.status(500)
 				.json(ServiceResponse.failure("Failed to retrieve topics", null, 500));
@@ -165,7 +178,20 @@ topicsRouter.post(
 			);
 		} catch (error) {
 			await client.query("ROLLBACK");
-			console.error("Error in topic selection:", error);
+			// Track error with context
+			Sentry.captureException(error, {
+				tags: { endpoint: "topics", operation: "select_topic" },
+				contexts: {
+					user: { id: userId },
+					request: { topicId },
+				},
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Failed to select topic", {
+				user_id: userId,
+				topic_id: topicId,
+				error: error instanceof Error ? error.message : String(error),
+			});
 			return res
 				.status(500)
 				.json(ServiceResponse.failure("Failed to select topic", null, 500));

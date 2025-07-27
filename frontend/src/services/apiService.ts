@@ -5,6 +5,7 @@ import {
   CareerFact, 
   ProcessingResult 
 } from '../types'
+import { UserJourneyLogger } from '../utils/logger'
 import {
   Topic,
   TopicSelectionResponse,
@@ -56,6 +57,13 @@ class ApiService {
       const data = await response.json()
       return data
     } catch (error) {
+      // Track API errors with full context
+      UserJourneyLogger.logError(error as Error, {
+        endpoint,
+        method: options.method || 'GET',
+        action: 'api_request_failed'
+      });
+      
       if (import.meta.env.DEV) {
         console.error('API request failed:', error)
       }
@@ -155,6 +163,13 @@ class ApiService {
       const data = await response.json()
       return data
     } catch (error) {
+      // Track transcription errors with context
+      UserJourneyLogger.logError(error as Error, {
+        endpoint: '/api/interview/transcribe',
+        operation: 'audio_transcription',
+        action: 'transcription_failed'
+      });
+      
       if (import.meta.env.DEV) {
         console.error('Transcription failed:', error)
       }
@@ -168,16 +183,16 @@ class ApiService {
     }
   }
 
-  // Extract facts from transcript (matches our backend)
-  async extractFacts(
-    transcript: string, 
-    question: string, 
-    interviewId: number
-  ): Promise<ApiResponse<any>> {
-    return this.request('/interview/extract', {
+  // Extract facts from interview and complete full workflow
+  async extractInterviewData(interviewId: number): Promise<ApiResponse<any>> {
+    return this.request(`/interview/${interviewId}/extract`, {
       method: 'POST',
-      body: JSON.stringify({ transcript, question, interviewId }),
     })
+  }
+
+  // Get user's experience data
+  async getExperienceData(): Promise<ApiResponse<any>> {
+    return this.request('/experience')
   }
 
   // Topic Management

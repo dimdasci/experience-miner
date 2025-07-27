@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type, type UsageMetadata } from "@google/genai";
+import * as Sentry from "@sentry/node";
 
 // Extended interface for usage metadata with all possible properties
 interface ExtendedUsageMetadata extends UsageMetadata {
@@ -60,7 +61,22 @@ export class GeminiService {
 				usageMetadata: response.usageMetadata,
 			};
 		} catch (error) {
-			console.error("Gemini transcription error:", error);
+			// Track transcription error with context
+			Sentry.captureException(error, {
+				tags: { service: "gemini", operation: "transcription" },
+				contexts: {
+					request: {
+						mimeType,
+						bufferSize: audioBuffer.length,
+					},
+				},
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Gemini transcription failed", {
+				mime_type: mimeType,
+				buffer_size: audioBuffer.length,
+				error: error instanceof Error ? error.message : String(error),
+			});
 			throw new Error(
 				`Failed to transcribe audio: ${error instanceof Error ? error.message : "Unknown error"}`,
 			);
@@ -159,7 +175,20 @@ ${transcript}`;
 				usageMetadata: response.usageMetadata,
 			};
 		} catch (error) {
-			console.error("Gemini extraction error:", error);
+			// Track extraction error with context
+			Sentry.captureException(error, {
+				tags: { service: "gemini", operation: "extraction" },
+				contexts: {
+					request: {
+						transcriptLength: transcript.length,
+					},
+				},
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Gemini extraction failed", {
+				transcript_length: transcript.length,
+				error: error instanceof Error ? error.message : String(error),
+			});
 			throw new Error(
 				`Failed to extract facts: ${error instanceof Error ? error.message : "Unknown error"}`,
 			);

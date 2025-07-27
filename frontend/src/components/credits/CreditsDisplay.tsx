@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useImperativeHandle, forwardRef } fro
 import { Coins } from 'lucide-react';
 import { apiService } from '../../services/apiService';
 import { useCredits } from '../../contexts/CreditsContext';
+import { UserJourneyLogger } from '../../utils/logger';
 
 interface CreditsDisplayProps {
   onCreditsUpdate?: (credits: number) => void;
@@ -52,7 +53,12 @@ export const CreditsDisplay = forwardRef<CreditsDisplayHandle, CreditsDisplayPro
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch credits';
       setError(errorMessage);
-      console.error('Credits fetch error:', err);
+      // Track credits fetch errors
+      UserJourneyLogger.logError(err as Error, {
+        action: 'credits_fetch_failed',
+        component: 'CreditsDisplay'
+      })
+      
       return credits;
     } finally {
       setLoading(false);

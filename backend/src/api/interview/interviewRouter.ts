@@ -13,6 +13,7 @@ import { ServiceResponse } from "@/common/models/serviceResponse.js";
 import { creditsService } from "@/services/creditsService.js";
 import { databaseService } from "@/services/databaseService.js";
 import { geminiService } from "@/services/geminiService.js";
+import { topicService } from "@/services/topicService.js";
 
 export const interviewRouter: IRouter = Router();
 
@@ -42,7 +43,16 @@ interviewRouter.get(
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		} catch (error) {
-			console.error("Error in GET /api/interview:", error);
+			// Track error with context
+			Sentry.captureException(error, {
+				tags: { endpoint: "interview", operation: "get_all_interviews" },
+				contexts: { user: { id: userId } },
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Failed to get interviews", {
+				user_id: userId,
+				error: error instanceof Error ? error.message : String(error),
+			});
 
 			const serviceResponse = ServiceResponse.failure(
 				`Failed to get interviews: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -118,7 +128,20 @@ interviewRouter.get(
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		} catch (error) {
-			console.error("Error in GET /api/interview/:id:", error);
+			// Track error with context
+			Sentry.captureException(error, {
+				tags: { endpoint: "interview", operation: "get_interview_by_id" },
+				contexts: {
+					user: { id: userId },
+					request: { interviewId },
+				},
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Failed to get interview by ID", {
+				user_id: userId,
+				interview_id: interviewId,
+				error: error instanceof Error ? error.message : String(error),
+			});
 
 			const serviceResponse = ServiceResponse.failure(
 				`Failed to get interview: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -214,10 +237,21 @@ interviewRouter.put(
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		} catch (error) {
-			console.error(
-				"Error in PUT /api/interview/:id/answers/:questionNumber:",
-				error,
-			);
+			// Track error with context
+			Sentry.captureException(error, {
+				tags: { endpoint: "interview", operation: "update_answer" },
+				contexts: {
+					user: { id: userId },
+					request: { interviewId, questionNumber },
+				},
+			});
+			// Supplementary logging for development
+			Sentry.logger?.error?.("Failed to update answer", {
+				user_id: userId,
+				interview_id: interviewId,
+				question_number: questionNumber,
+				error: error instanceof Error ? error.message : String(error),
+			});
 
 			const serviceResponse = ServiceResponse.failure(
 				`Failed to update answer: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -249,7 +283,8 @@ interviewRouter.post(
 		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
 		const userId = req.user?.id;
 
-		const { question, interviewId, recordingDuration, questionNumber } = req.body;
+		const { question, interviewId, recordingDuration, questionNumber } =
+			req.body;
 
 		logger.debug("Transcribe endpoint called", {
 			requestId,
@@ -318,26 +353,21 @@ interviewRouter.post(
 			});
 
 			if (!req.file) {
-				// Log warning (structured logs if available, fallback to issues)
-				if (Sentry.logger?.warn) {
-					Sentry.logger.warn("Transcription failed - no file", {
-						requestId,
-						user_id: userId,
-						user: userPrefix,
-					});
-				} else {
-					Sentry.captureMessage(
-						"Transcription failed - no audio file provided",
-						{
-							level: "warning",
-							tags: { endpoint: "transcribe", error: "no_file" },
-							contexts: {
-								request: { id: requestId },
-								user: { id: userId, email_prefix: userPrefix },
-							},
-						},
-					);
-				}
+				// Track missing file as warning
+				Sentry.captureMessage("Transcription failed - no audio file provided", {
+					level: "warning",
+					tags: { endpoint: "transcribe", error: "no_file" },
+					contexts: {
+						request: { id: requestId },
+						user: { id: userId, email_prefix: userPrefix },
+					},
+				});
+				// Supplementary logging for user journey analysis
+				Sentry.logger?.warn?.("Transcription failed - no file", {
+					requestId,
+					user_id: userId,
+					user: userPrefix,
+				});
 
 				const serviceResponse = ServiceResponse.failure(
 					"No audio file provided",
@@ -424,36 +454,29 @@ interviewRouter.post(
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		} catch (error) {
 			const duration = Date.now() - startTime;
-			console.error("Error in /api/interview/transcribe:", error);
-			console.error(
-				"Error stack:",
-				error instanceof Error ? error.stack : "No stack trace",
-			);
+			// Already properly logged with Sentry.captureException above
 
-			// Log transcription error
-			if (Sentry.logger?.error) {
-				Sentry.logger.error("Transcription failed", {
-					requestId,
-					user_id: userId,
-					user: userPrefix,
-					fileSize: req.file?.size,
-					processingTime: duration,
-					error: error instanceof Error ? error.message : String(error),
-					errorStack: error instanceof Error ? error.stack : "No stack trace",
-				});
-			} else {
-				Sentry.captureException(error, {
-					tags: { endpoint: "transcribe", status: "error" },
-					contexts: {
-						request: {
-							id: requestId,
-							fileSize: req.file?.size,
-							processingTime: duration,
-						},
-						user: { id: userId, email_prefix: userPrefix },
+			// Track transcription error with full context
+			Sentry.captureException(error, {
+				tags: { endpoint: "transcribe", status: "error" },
+				contexts: {
+					request: {
+						id: requestId,
+						fileSize: req.file?.size,
+						processingTime: duration,
 					},
-				});
-			}
+					user: { id: userId, email_prefix: userPrefix },
+				},
+			});
+			// Supplementary logging for user journey analysis
+			Sentry.logger?.error?.("Transcription failed", {
+				requestId,
+				user_id: userId,
+				user: userPrefix,
+				fileSize: req.file?.size,
+				processingTime: duration,
+				error: error instanceof Error ? error.message : String(error),
+			});
 
 			const serviceResponse = ServiceResponse.failure(
 				`Failed to transcribe audio: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -469,12 +492,12 @@ interviewRouter.post(
 	},
 );
 
-// Extract structured facts from transcript
+// Extract structured facts from interview and complete full workflow
 interviewRouter.post(
-	"/extract",
+	"/:id/extract",
 	authenticateToken,
 	async (req: AuthenticatedRequest, res: Response) => {
-		const { transcript, question, interviewId } = req.body;
+		const { id: interviewId } = req.params;
 		const requestId = crypto.randomUUID();
 		const startTime = Date.now();
 		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
@@ -489,9 +512,9 @@ interviewRouter.post(
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		}
 
-		if (!question || !interviewId) {
+		if (!interviewId) {
 			const serviceResponse = ServiceResponse.failure(
-				"Question and interviewId are required",
+				"Interview ID is required",
 				null,
 				StatusCodes.BAD_REQUEST,
 			);
@@ -508,7 +531,7 @@ interviewRouter.post(
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		}
 
-		// Set user lock
+		// Set user lock for entire workflow
 		creditsService.setUserLock(userId);
 
 		try {
@@ -523,59 +546,160 @@ interviewRouter.post(
 				return res.status(serviceResponse.statusCode).json(serviceResponse);
 			}
 
-			// Log extraction request
-			Sentry.logger?.info?.("Facts extraction request started", {
+			// Log extraction workflow start
+			Sentry.logger?.info?.("Interview extraction workflow started", {
 				requestId,
 				user_id: userId,
 				user: userPrefix,
-				transcriptLength: transcript?.length || 0,
-				hasTranscript: !!transcript,
-				question,
 				interviewId,
 			});
 
-			if (!transcript || typeof transcript !== "string") {
-				// Log warning (structured logs if available, fallback to issues)
-				if (Sentry.logger?.warn) {
-					Sentry.logger.warn("Facts extraction failed - invalid transcript", {
-						requestId,
-						user_id: userId,
-						user: userPrefix,
-						transcriptType: typeof transcript,
-					});
-				} else {
-					Sentry.captureMessage(
-						"Facts extraction failed - no transcript provided",
-						{
-							level: "warning",
-							tags: { endpoint: "extract", error: "no_transcript" },
-							contexts: {
-								request: {
-									id: requestId,
-									transcriptType: typeof transcript,
-								},
-								user: { id: userId, email_prefix: userPrefix },
-							},
-						},
-					);
-				}
-
+			// Step 1: Get interview and verify ownership
+			const interview = await databaseService.getInterviewById(interviewId);
+			if (!interview) {
 				const serviceResponse = ServiceResponse.failure(
-					"No transcript provided or invalid format",
+					"Interview not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			if (interview.user_id !== userId) {
+				const serviceResponse = ServiceResponse.failure(
+					"Access denied",
+					null,
+					StatusCodes.FORBIDDEN,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			// Step 2: Get all answers and build transcript
+			const answers =
+				await databaseService.getAnswersByInterviewIdBusiness(interviewId);
+			const answeredQuestions = answers.filter(
+				(a) => a.answer && a.answer.trim() !== "",
+			);
+
+			if (answeredQuestions.length === 0) {
+				const serviceResponse = ServiceResponse.failure(
+					"No answered questions found for extraction",
 					null,
 					StatusCodes.BAD_REQUEST,
 				);
 				return res.status(serviceResponse.statusCode).json(serviceResponse);
 			}
 
-			// Process AI extraction
+			// Build combined transcript for extraction
+			const transcript = answeredQuestions
+				.map((answer) => `Q: ${answer.question}\nA: ${answer.answer}`)
+				.join("\n\n");
+
+			// Step 3: Process AI extraction with existing logic
 			const extractionResult = await geminiService.extractFacts(transcript);
 			const totalTokenCount =
 				extractionResult.usageMetadata?.totalTokenCount || 0;
 
-			// Note: Extract endpoint processes existing answers, doesn't create new ones
+			// Step 4: Transform extraction data to include source tracking
+			const currentTimestamp = new Date().toISOString();
+			const extractedFacts = {
+				achievements: (extractionResult.data.achievements || []).map(
+					(achievement: string, index: number) => ({
+						description: achievement,
+						sourceInterviewId: interviewId,
+						sourceQuestionNumber:
+							answeredQuestions[index % answeredQuestions.length]
+								?.question_number || 1,
+						extractedAt: currentTimestamp,
+					}),
+				),
+				companies: (extractionResult.data.companies || []).map(
+					(company: string, index: number) => ({
+						name: company,
+						sourceInterviewId: interviewId,
+						sourceQuestionNumber:
+							answeredQuestions[index % answeredQuestions.length]
+								?.question_number || 1,
+						extractedAt: currentTimestamp,
+					}),
+				),
+				projects: (extractionResult.data.projects || []).map(
+					(
+						project: {
+							name?: string;
+							description?: string;
+							role?: string;
+							company?: string;
+						},
+						index: number,
+					) => ({
+						name: project.name || "Unnamed Project",
+						description: project.description || "",
+						role: project.role || "",
+						company: project.company || undefined,
+						sourceInterviewId: interviewId,
+						sourceQuestionNumber:
+							answeredQuestions[index % answeredQuestions.length]
+								?.question_number || 1,
+						extractedAt: currentTimestamp,
+					}),
+				),
+				roles: (extractionResult.data.roles || []).map(
+					(
+						role: { title?: string; company?: string; duration?: string },
+						index: number,
+					) => ({
+						title: role.title || "Unknown Role",
+						company: role.company || "Unknown Company",
+						duration: role.duration || "",
+						sourceInterviewId: interviewId,
+						sourceQuestionNumber:
+							answeredQuestions[index % answeredQuestions.length]
+								?.question_number || 1,
+						extractedAt: currentTimestamp,
+					}),
+				),
+				skills: (extractionResult.data.skills || []).map(
+					(skill: string, index: number) => ({
+						name: skill,
+						category: undefined, // Will be enhanced in future iterations
+						sourceInterviewId: interviewId,
+						sourceQuestionNumber:
+							answeredQuestions[index % answeredQuestions.length]
+								?.question_number || 1,
+						extractedAt: currentTimestamp,
+					}),
+				),
+				summary: {
+					text: extractionResult.data.summary || "",
+					lastUpdated: currentTimestamp,
+					basedOnInterviews: [interviewId],
+				},
+				metadata: {
+					totalExtractions: 1,
+					lastExtractionAt: currentTimestamp,
+					creditsUsed: totalTokenCount,
+				},
+			};
 
-			// Consume credits based on token usage
+			// Step 5: Save/update professional summary in experience table
+			await databaseService.saveExperienceRecord(userId, { extractedFacts });
+
+			// Step 6: Generate topic candidates and rerank (stub implementation)
+			const existingTopics = await databaseService.getAvailableTopics(userId);
+			const updatedTopics = await topicService.processTopicWorkflow(
+				extractedFacts,
+				userId,
+				existingTopics,
+			);
+
+			// Step 7: Update interview status to completed
+			await databaseService.updateInterviewStatus(
+				parseInt(interviewId, 10),
+				"completed",
+			);
+
+			// Step 8: Consume credits based on token usage
 			const { remainingCredits } = await creditsService.consumeCredits(
 				userId,
 				totalTokenCount,
@@ -584,74 +708,76 @@ interviewRouter.post(
 
 			const duration = Date.now() - startTime;
 
-			// Log successful extraction with detailed metrics
+			// Log successful extraction workflow completion
 			const factsCounts = {
-				companies: extractionResult.data.companies?.length || 0,
-				roles: extractionResult.data.roles?.length || 0,
-				projects: extractionResult.data.projects?.length || 0,
-				achievements: extractionResult.data.achievements?.length || 0,
-				skills: extractionResult.data.skills?.length || 0,
+				companies: extractedFacts.companies.length,
+				roles: extractedFacts.roles.length,
+				projects: extractedFacts.projects.length,
+				achievements: extractedFacts.achievements.length,
+				skills: extractedFacts.skills.length,
 			};
 
-			Sentry.logger?.info?.("Facts extraction completed successfully", {
-				requestId,
-				user_id: userId,
-				user: userPrefix,
-				transcriptLength: transcript.length,
-				processingTime: duration,
-				extractedCounts: factsCounts,
-				totalFacts: Object.values(factsCounts).reduce(
-					(sum, count) => sum + count,
-					0,
-				),
-				totalTokenCount,
-				promptTokenCount: extractionResult.usageMetadata?.promptTokenCount,
-				candidatesTokenCount:
-					extractionResult.usageMetadata?.candidatesTokenCount,
-				cachedContentTokenCount:
-					extractionResult.usageMetadata?.cachedContentTokenCount,
-				remainingCredits,
-			});
+			Sentry.logger?.info?.(
+				"Interview extraction workflow completed successfully",
+				{
+					requestId,
+					user_id: userId,
+					user: userPrefix,
+					interviewId,
+					transcriptLength: transcript.length,
+					processingTime: duration,
+					extractedCounts: factsCounts,
+					totalFacts: Object.values(factsCounts).reduce(
+						(sum, count) => sum + count,
+						0,
+					),
+					totalTokenCount,
+					remainingCredits,
+					newTopicsGenerated: updatedTopics.filter((t) =>
+						t.id.startsWith("generated_"),
+					).length,
+				},
+			);
 
 			const serviceResponse = ServiceResponse.success(
-				"Facts extracted successfully",
+				"Interview extraction completed successfully",
 				{
-					...extractionResult.data,
+					extractedFacts,
 					credits: remainingCredits,
+					interviewStatus: "completed",
+					topicsUpdated: updatedTopics.length,
 				},
 			);
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);
 		} catch (error) {
 			const duration = Date.now() - startTime;
-			console.error("Error in /api/interview/extract:", error);
+			// Already properly logged with Sentry.captureException above
 
-			// Log extraction error
-			if (Sentry.logger?.error) {
-				Sentry.logger.error("Facts extraction failed", {
-					requestId,
-					user_id: userId,
-					user: userPrefix,
-					transcriptLength: transcript?.length || 0,
-					processingTime: duration,
-					error: error instanceof Error ? error.message : String(error),
-				});
-			} else {
-				Sentry.captureException(error, {
-					tags: { endpoint: "extract", status: "error" },
-					contexts: {
-						request: {
-							id: requestId,
-							transcriptLength: transcript?.length || 0,
-							processingTime: duration,
-						},
-						user: { id: userId, email_prefix: userPrefix },
+			// Track extraction workflow error with full context
+			Sentry.captureException(error, {
+				tags: { endpoint: "extract", status: "error" },
+				contexts: {
+					request: {
+						id: requestId,
+						interviewId,
+						processingTime: duration,
 					},
-				});
-			}
+					user: { id: userId, email_prefix: userPrefix },
+				},
+			});
+			// Supplementary logging for user journey analysis
+			Sentry.logger?.error?.("Interview extraction workflow failed", {
+				requestId,
+				user_id: userId,
+				user: userPrefix,
+				interviewId,
+				processingTime: duration,
+				error: error instanceof Error ? error.message : String(error),
+			});
 
 			const serviceResponse = ServiceResponse.failure(
-				"Failed to extract facts from transcript",
+				`Failed to extract interview data: ${error instanceof Error ? error.message : "Unknown error"}`,
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);

@@ -3,6 +3,7 @@ import { Button } from '../ui/button';
 import GuideRecorder from './GuideRecorder';
 import { apiService } from '../../services/apiService';
 import { Interview, Answer } from '../../types/business';
+import { UserJourneyLogger } from '../../utils/logger';
 
 interface InterviewSessionViewProps {
   onComplete: (interviewId: number) => void;
@@ -49,7 +50,11 @@ const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: Inte
       }
     } catch (err) {
       setError('Failed to load interview');
-      console.error('Error loading interview:', err);
+      UserJourneyLogger.logError(err as Error, {
+        action: 'interview_loading_failed',
+        component: 'InterviewSessionView',
+        interviewId: propInterviewId
+      });
     } finally {
       setLoading(false);
     }
@@ -91,7 +96,11 @@ const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: Inte
       }
     } catch (err) {
       setError('Failed to save answer');
-      console.error('Error saving answer:', err);
+      UserJourneyLogger.logError(err as Error, {
+        action: 'answer_save_failed',
+        component: 'InterviewSessionView',
+        questionNumber: currentQuestionData.question_number
+      });
     } finally {
       setSaving(false);
     }

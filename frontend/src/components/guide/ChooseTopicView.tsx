@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { apiService } from '../../services/apiService';
 import { Topic } from '../../types/business';
+import { UserJourneyLogger } from '../../utils/logger';
 
 interface ChooseTopicViewProps {
   onTopicSelect: (step: string, interviewId?: string) => void;
@@ -30,7 +31,10 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
       }
     } catch (err) {
       setError('Failed to load topics');
-      console.error('Error loading topics:', err);
+      UserJourneyLogger.logError(err as Error, {
+        action: 'topics_loading_failed',
+        component: 'ChooseTopicView'
+      });
     } finally {
       setLoading(false);
     }
@@ -52,7 +56,11 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
       }
     } catch (err) {
       setError('Failed to select topic');
-      console.error('Error selecting topic:', err);
+      UserJourneyLogger.logError(err as Error, {
+        action: 'select_topic_failed',
+        component: 'ChooseTopicView',
+        topicId
+      });
     } finally {
       setSelecting(null);
     }

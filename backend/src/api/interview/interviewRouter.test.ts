@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { expectServiceResponse } from "../../test/helpers.js";
@@ -8,7 +8,7 @@ import { interviewRouter } from "./interviewRouter.js";
 vi.mock("@/common/middleware/auth.js", () => ({
 	authenticateToken: vi.fn((req, _res, next) => {
 		// Mock authenticated user for most tests
-		(req as any).user = {
+		(req as Request & { user?: { id: string; email: string } }).user = {
 			id: "test-user-id",
 			email: "test@example.com",
 		};
@@ -67,12 +67,13 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 			const response = await request(app)
 				.post("/api/interview/transcribe")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
 				.expect(400);
 
 			expectServiceResponse(response.body, false);
 			expect(response.body.message).toBe(
-				"Question and interviewId are required",
+				"Question, interviewId, and questionNumber are required",
 			);
 		});
 
@@ -80,16 +81,17 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 			const response = await request(app)
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
 				.expect(400);
 
 			expectServiceResponse(response.body, false);
 			expect(response.body.message).toBe(
-				"Question and interviewId are required",
+				"Question, interviewId, and questionNumber are required",
 			);
 		});
 
-		it("should return 400 when both question and interviewId are missing", async () => {
+		it("should return 400 when question, interviewId and questionNumber are missing", async () => {
 			const response = await request(app)
 				.post("/api/interview/transcribe")
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
@@ -97,7 +99,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 
 			expectServiceResponse(response.body, false);
 			expect(response.body.message).toBe(
-				"Question and interviewId are required",
+				"Question, interviewId, and questionNumber are required",
 			);
 		});
 
@@ -106,6 +108,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.expect(400);
 
 			expectServiceResponse(response.body, false);
@@ -118,6 +121,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm");
 
 			// Should not fail due to missing file or params
@@ -139,106 +143,32 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 		});
 	});
 
-	describe("POST /extract - Request Validation", () => {
-		it("should return 400 when question parameter is missing", async () => {
-			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: "Test transcript",
-					interviewId: "1",
-				})
-				.expect(400);
-
-			expectServiceResponse(response.body, false);
-			expect(response.body.message).toBe(
-				"Question and interviewId are required",
-			);
+	describe("POST /:id/extract - Request Validation", () => {
+		it("should return 404 when interviewId parameter is missing", async () => {
+			await request(app).post("/api/interview//extract").expect(404); // Express returns 404 for empty path params
 		});
 
-		it("should return 400 when interviewId parameter is missing", async () => {
-			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: "Test transcript",
-					question: "Test question",
-				})
-				.expect(400);
+		it("should accept valid interviewId in path", async () => {
+			// This will fail at credits/auth check, but validates path parsing
+			const response = await request(app).post("/api/interview/123/extract");
 
-			expectServiceResponse(response.body, false);
-			expect(response.body.message).toBe(
-				"Question and interviewId are required",
-			);
+			// Should not fail due to missing interviewId
+			expect(response.status).not.toBe(404);
 		});
 
-		it("should return 400 when transcript is missing", async () => {
-			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					question: "Test question",
-					interviewId: "1",
-				})
-				.expect(400);
-
-			expectServiceResponse(response.body, false);
-			expect(response.body.message).toBe(
-				"No transcript provided or invalid format",
-			);
-		});
-
-		it("should return 400 when transcript is not a string", async () => {
-			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: 123,
-					question: "Test question",
-					interviewId: "1",
-				})
-				.expect(400);
-
-			expectServiceResponse(response.body, false);
-			expect(response.body.message).toBe(
-				"No transcript provided or invalid format",
-			);
-		});
-
-		it("should return 400 when transcript is empty string", async () => {
-			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: "",
-					question: "Test question",
-					interviewId: "1",
-				})
-				.expect(400);
-
-			expectServiceResponse(response.body, false);
-			expect(response.body.message).toBe(
-				"No transcript provided or invalid format",
-			);
-		});
-
-		it("should accept valid transcript data", async () => {
+		it("should accept valid extract request", async () => {
 			// This will fail at credits check, but validates request parsing
-			const response = await request(app).post("/api/interview/extract").send({
-				transcript: "This is a valid transcript with some content",
-				question: "Test question",
-				interviewId: "1",
-			});
+			const response = await request(app).post("/api/interview/123/extract");
 
-			// Should not fail due to missing params or invalid transcript
+			// Should not fail due to missing params
 			expect(response.status).not.toBe(400);
 		});
 
-		it("should handle long transcripts", async () => {
-			const longTranscript = "A".repeat(10000); // Very long transcript
+		it("should handle extract workflow requests", async () => {
+			// This will fail at credits check, but validates workflow parsing
+			const response = await request(app).post("/api/interview/456/extract");
 
-			const response = await request(app).post("/api/interview/extract").send({
-				transcript: longTranscript,
-				question: "Test question",
-				interviewId: "1",
-			});
-
-			// Should not fail due to transcript length
+			// Should not fail due to path or request format
 			expect(response.status).not.toBe(400);
 		});
 	});
@@ -247,8 +177,14 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 		it("should require authentication for transcribe endpoint", async () => {
 			// Mock auth middleware to simulate no user
 			const { authenticateToken } = await import("@/common/middleware/auth.js");
-			(authenticateToken as any).mockImplementationOnce(
-				(req: any, _res: any, next: any) => {
+			(
+				authenticateToken as unknown as ReturnType<typeof vi.fn>
+			).mockImplementationOnce(
+				(
+					req: Request & { user?: unknown },
+					_res: unknown,
+					next: () => void,
+				) => {
 					req.user = null; // Simulate no authenticated user
 					next();
 				},
@@ -258,6 +194,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
 				.expect(401);
 
@@ -268,20 +205,21 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 		it("should require authentication for extract endpoint", async () => {
 			// Mock auth middleware to simulate no user
 			const { authenticateToken } = await import("@/common/middleware/auth.js");
-			(authenticateToken as any).mockImplementationOnce(
-				(req: any, _res: any, next: any) => {
+			(
+				authenticateToken as unknown as ReturnType<typeof vi.fn>
+			).mockImplementationOnce(
+				(
+					req: Request & { user?: unknown },
+					_res: unknown,
+					next: () => void,
+				) => {
 					req.user = null; // Simulate no authenticated user
 					next();
 				},
 			);
 
 			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: "Test transcript",
-					question: "Test question",
-					interviewId: "1",
-				})
+				.post("/api/interview/123/extract")
 				.expect(401);
 
 			expectServiceResponse(response.body, false);
@@ -294,7 +232,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 			const response = await request(app)
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
-				// Missing interviewId
+				// Missing interviewId and questionNumber
 				.attach("audio", Buffer.from("mock audio data"), "test-audio.webm")
 				.expect(400);
 
@@ -307,18 +245,11 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 
 		it("should return proper ServiceResponse format for extract validation errors", async () => {
 			const response = await request(app)
-				.post("/api/interview/extract")
-				.send({
-					transcript: "Test transcript",
-					// Missing question and interviewId
-				})
-				.expect(400);
+				.post("/api/interview//extract")
+				.expect(404); // Empty path param returns 404
 
-			// Verify ServiceResponse structure
-			expect(response.body).toHaveProperty("success", false);
-			expect(response.body).toHaveProperty("message");
-			expect(response.body).toHaveProperty("responseObject", null);
-			expect(response.body).toHaveProperty("statusCode", 400);
+			// 404 doesn't follow ServiceResponse format in Express
+			expect(response.status).toBe(404);
 		});
 	});
 
@@ -328,6 +259,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), {
 					filename: "test-audio.mp3",
 					contentType: "audio/mp3",
@@ -342,6 +274,7 @@ describe("Interview Router - Request Validation & Error Handling", () => {
 				.post("/api/interview/transcribe")
 				.field("question", "Test question")
 				.field("interviewId", "1")
+				.field("questionNumber", "1")
 				.attach("audio", Buffer.from("mock audio data"), {
 					filename: "test-audio.webm",
 					contentType: "audio/webm",

@@ -81,9 +81,14 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
             }
           })
         } else {
-          if (import.meta.env.DEV) {
-            console.error('Transcription failed:', result.error)
-          }
+          // Track transcription API failures  
+          UserJourneyLogger.logError(new Error(result.error || 'Transcription failed'), {
+            action: 'transcription_api_failed',
+            component: 'GuideRecorder',
+            questionId,
+            statusCode: result.statusCode
+          })
+          
           
           // Handle specific error types
           if (result.statusCode === 402) {
@@ -100,13 +105,13 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
           })
         }
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('Transcription error:', error)
-        }
+        // Track transcription errors (already properly using UserJourneyLogger.logError)
         UserJourneyLogger.logError(error as Error, {
           action: 'transcription_error',
+          component: 'GuideRecorder',
           questionId: questionId
         })
+        
       } finally {
         setIsTranscribing(false)
       }

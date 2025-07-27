@@ -4,6 +4,7 @@ import type { Application } from "express";
 import express from "express";
 import helmet from "helmet";
 import { creditsRouter } from "@/api/credits/creditsRouter.js";
+import { experienceRouter } from "@/api/experience/experienceRouter.js";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter.js";
 import { interviewRouter } from "@/api/interview/interviewRouter.js";
 import { topicsRouter } from "@/api/topics/topicsRouter.js";
@@ -59,6 +60,7 @@ app.use("/health", healthCheckRouter);
 app.use("/api/credits", creditsRouter);
 app.use("/api/topics", topicsRouter);
 app.use("/api/interview", aiRateLimiter, interviewRouter);
+app.use("/api/experience", experienceRouter);
 
 // Root endpoint
 app.get("/", (_req, res) => {
@@ -72,7 +74,8 @@ app.get("/", (_req, res) => {
 			interviews:
 				"GET /api/interview, GET /api/interview/{id}, PUT /api/interview/{id}/answers/{questionNumber}",
 			transcribe: "POST /api/interview/transcribe",
-			extract: "POST /api/interview/extract",
+			extract: "POST /api/interview/{id}/extract",
+			experience: "GET /api/experience",
 		},
 	});
 });

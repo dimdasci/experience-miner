@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { apiService } from '../../services/apiService';
 import { Interview } from '../../types/business';
+import { UserJourneyLogger } from '../../utils/logger';
 
 const InterviewsPage = () => {
   const navigate = useNavigate();
@@ -28,7 +29,12 @@ const InterviewsPage = () => {
       }
     } catch (err) {
       setError('Failed to load interviews');
-      console.error('Error loading interviews:', err);
+      // Track interviews loading errors
+      UserJourneyLogger.logError(err as Error, {
+        action: 'interviews_loading_failed',
+        component: 'InterviewsPage'
+      })
+      
     } finally {
       setLoading(false);
     }
