@@ -7,7 +7,7 @@ import { logger } from "@/common/middleware/requestLogger.js";
 import { ServiceResponse } from "@/common/models/serviceResponse.js";
 import { creditsService } from "@/services/creditsService.js";
 import { databaseService } from "@/services/databaseService.js";
-import { geminiService } from "@/services/geminiService.js";
+import { transcribeService } from "@/services/transcribeService.js";
 
 export const transcribeAudio = async (
 	req: AuthenticatedRequest,
@@ -112,7 +112,7 @@ export const transcribeAudio = async (
 		}
 
 		// Process AI transcription
-		const transcriptResult = await geminiService.transcribeAudio(
+		const transcriptResult = await transcribeService.transcribeAudio(
 			req.file.buffer,
 			req.file.mimetype,
 		);

@@ -1,4 +1,17 @@
+import { GoogleGenAI, Type, type UsageMetadata } from "@google/genai";
+import * as Sentry from "@sentry/node";
 import type { Topic } from "@/common/types/business.js";
+import { env } from "@/common/utils/envConfig.js";
+
+// Extended interface for usage metadata with all possible properties
+interface ExtendedUsageMetadata extends UsageMetadata {
+	candidatesTokenCount?: number;
+}
+
+export interface TopicServiceResponse<T> {
+	data: T;
+	usageMetadata?: ExtendedUsageMetadata;
+}
 
 interface ExtractedFacts {
 	achievements?: Array<{ description: string }>;
@@ -9,101 +22,221 @@ interface ExtractedFacts {
 	summary?: { text: string };
 }
 
+// AI Response Types for Topic Generation
+interface AITopicQuestion {
+	text: string;
+	order: number;
+}
+
+interface AITopicResponse {
+	title: string;
+	motivational_quote: string;
+	questions: AITopicQuestion[];
+}
+
+interface TopicGenerationResponse {
+	topics: AITopicResponse[];
+}
+
+interface TopicRerankingResponse {
+	rankedIndices: number[];
+	reasoning: string;
+}
+
 /**
  * Service for topic generation and management operations
- * Contains stub implementations for business logic
+ * Contains AI-powered topic generation and ranking logic
  */
 class TopicService {
+	private ai: GoogleGenAI;
+
+	constructor(aiClient?: GoogleGenAI) {
+		this.ai = aiClient || new GoogleGenAI({ apiKey: env.API_KEY });
+	}
 	/**
 	 * Generate new topic candidates based on extracted interview data
 	 * @param extractedFacts - The structured facts extracted from interview
 	 * @param userId - User ID for personalization
-	 * @returns Array of 2-3 new topic candidates
+	 * @returns Response with topic candidates and token usage
 	 */
 	async generateTopicCandidates(
-		_extractedFacts: ExtractedFacts,
-		_userId: string,
-	): Promise<Topic[]> {
-		// STUB: Mock implementation for topic generation
-		// TODO: Implement actual AI-based topic generation logic
+		extractedFacts: ExtractedFacts,
+		userId: string,
+	): Promise<TopicServiceResponse<Topic[]>> {
+		try {
+			// Build context from extracted facts
+			const companiesContext =
+				extractedFacts.companies?.map((c) => c.name).join(", ") ||
+				"None specified";
+			const rolesContext =
+				extractedFacts.roles
+					?.map((r) => `${r.title} at ${r.company}`)
+					.join(", ") || "None specified";
+			const projectsContext =
+				extractedFacts.projects
+					?.map((p) => `${p.name}: ${p.description}`)
+					.slice(0, 3)
+					.join("; ") || "None specified";
+			const skillsContext =
+				extractedFacts.skills
+					?.map((s) => s.name)
+					.slice(0, 10)
+					.join(", ") || "None specified";
+			const achievementsContext =
+				extractedFacts.achievements
+					?.map((a) => a.description)
+					.slice(0, 3)
+					.join("; ") || "None specified";
+			const summaryContext =
+				extractedFacts.summary?.text || "No summary available";
 
-		const mockCandidates: Topic[] = [
-			{
-				id: `generated_${Date.now()}_1`,
-				user_id: _userId,
-				title: "Leadership & Team Management",
-				motivational_quote:
-					"Great leaders inspire others to achieve their best.",
-				status: "available",
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
-				questions: [
-					{
-						text: "Tell me about a time when you had to lead a difficult project or team through a challenging situation.",
-						order: 1,
+			const responseSchema = {
+				type: Type.OBJECT,
+				properties: {
+					topics: {
+						type: Type.ARRAY,
+						description: "Array of 2-3 new topic candidates",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								title: {
+									type: Type.STRING,
+									description:
+										"Clear, engaging topic title (e.g. 'Problem-Solving Under Pressure', 'Building Client Relationships')",
+								},
+								motivational_quote: {
+									type: Type.STRING,
+									description:
+										"Descriptive, encouraging quote that relates to the topic without being prescriptive",
+								},
+								questions: {
+									type: Type.ARRAY,
+									description: "Exactly 3 questions for this topic",
+									items: {
+										type: Type.OBJECT,
+										properties: {
+											text: { type: Type.STRING },
+											order: { type: Type.NUMBER },
+										},
+										required: ["text", "order"],
+									},
+								},
+							},
+							required: ["title", "motivational_quote", "questions"],
+						},
 					},
-					{
-						text: "How do you approach mentoring and developing team members?",
-						order: 2,
-					},
-					{
-						text: "Describe a situation where you had to make a tough decision that affected your team.",
-						order: 3,
-					},
-				],
-			},
-			{
-				id: `generated_${Date.now()}_2`,
-				user_id: _userId,
-				title: "Technical Innovation & Problem Solving",
-				motivational_quote:
-					"Innovation distinguishes between a leader and a follower.",
-				status: "available",
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
-				questions: [
-					{
-						text: "Walk me through a complex technical challenge you solved and your approach.",
-						order: 1,
-					},
-					{
-						text: "How do you stay current with emerging technologies in your field?",
-						order: 2,
-					},
-					{
-						text: "Describe a time when you had to learn a new technology quickly for a project.",
-						order: 3,
-					},
-				],
-			},
-			{
-				id: `generated_${Date.now()}_3`,
-				user_id: _userId,
-				title: "Cross-functional Collaboration",
-				motivational_quote: "Teamwork makes the dream work.",
-				status: "available",
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
-				questions: [
-					{
-						text: "Tell me about a project where you worked closely with other departments or teams.",
-						order: 1,
-					},
-					{
-						text: "How do you handle conflicts or disagreements in cross-functional teams?",
-						order: 2,
-					},
-					{
-						text: "Describe a time when you had to influence without authority.",
-						order: 3,
-					},
-				],
-			},
-		];
+				},
+				required: ["topics"],
+			};
 
-		// Return 2-3 candidates based on extracted facts
-		// In real implementation, would analyze extractedFacts to determine relevant topics
-		return mockCandidates.slice(0, 2);
+			const prompt = `You are a career interview coach helping users mine their professional experiences. Based on the user's career information below, generate 2-3 new interview topics that would help uncover valuable aspects of their experience not fully explored yet.
+
+CAREER CONTEXT:
+Summary: ${summaryContext}
+Companies: ${companiesContext}
+Roles: ${rolesContext}  
+Key Projects: ${projectsContext}
+Skills: ${skillsContext}
+Achievements: ${achievementsContext}
+
+TOPIC GENERATION GUIDELINES:
+- Focus on gaps in their experience story that would be valuable to explore
+- Create topics that work for everyone from students to executives, makers to maintainers
+- Use descriptive, encouraging language that shows everyone contributes value
+- Balance high-level career themes with specific technical/professional areas
+- Ensure topics help build a complete picture of their capabilities and growth
+
+For each topic, create:
+- An engaging title (4-6 words)
+- A motivational quote that's descriptive rather than prescriptive  
+- Exactly 5 questions that mix open storytelling, guided exploration, and broader context
+- Questions should follow natural progression: situation → approach → impact/learnings
+
+EXAMPLE TOPIC STRUCTURE:
+Title: "Learning New Technologies"
+Quote: "Every new skill builds on the foundation of curiosity and determination."
+Questions:
+1. "Tell me about a time when you had to quickly learn something completely new for work."
+2. "How do you approach breaking down complex technical concepts when learning?"
+3. "What strategies have you developed for staying current in your field?"
+
+Generate topics that would reveal important aspects of this person's professional journey not yet fully covered.`;
+
+			const request = {
+				model: env.LLM_TOPIC_GENERATION_MODEL,
+				contents: prompt,
+				config: {
+					responseMimeType: "application/json",
+					responseSchema: responseSchema,
+					temperature: 0.8, // Higher creativity for topic generation
+				},
+			};
+
+			const response = await this.ai.models.generateContent(request);
+
+			if (!response.text) {
+				throw new Error("No topic generation response received from AI");
+			}
+
+			const jsonText = response.text.trim();
+			const aiResponse: TopicGenerationResponse = JSON.parse(jsonText);
+
+			if (!aiResponse.topics || !Array.isArray(aiResponse.topics)) {
+				throw new Error("Invalid topic generation response format");
+			}
+
+			// Transform AI response to Topic objects (no ID until persisted)
+			const currentTimestamp = new Date().toISOString();
+			const topics: Topic[] = aiResponse.topics.map(
+				(topic: AITopicResponse) => ({
+					// id is undefined for new topics - will be set by database
+					user_id: userId,
+					title: topic.title,
+					motivational_quote: topic.motivational_quote,
+					status: "available" as const,
+					created_at: currentTimestamp,
+					updated_at: currentTimestamp,
+					questions: topic.questions.map((q: AITopicQuestion) => ({
+						text: q.text,
+						order: q.order,
+					})),
+				}),
+			);
+
+			return {
+				data: topics,
+				usageMetadata: response.usageMetadata,
+			};
+		} catch (error) {
+			// Track topic generation error with context
+			Sentry.captureException(error, {
+				tags: { service: "topic", operation: "generation" },
+				contexts: {
+					request: {
+						userId,
+						factsAvailable: {
+							companies: extractedFacts.companies?.length || 0,
+							roles: extractedFacts.roles?.length || 0,
+							projects: extractedFacts.projects?.length || 0,
+							skills: extractedFacts.skills?.length || 0,
+							achievements: extractedFacts.achievements?.length || 0,
+						},
+					},
+				},
+			});
+
+			Sentry.logger?.error?.("Topic generation failed", {
+				userId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+
+			// Return empty array on error to allow workflow to continue
+			// The reranking step will work with existing topics only
+			return {
+				data: [],
+				usageMetadata: undefined,
+			};
+		}
 	}
 
 	/**
@@ -111,32 +244,197 @@ class TopicService {
 	 * @param newCandidates - Newly generated topic candidates
 	 * @param existingTopics - All existing topics for the user
 	 * @param extractedFacts - Current extraction context for ranking
-	 * @returns Reranked array of all topics
+	 * @returns Response with reranked topics and token usage
 	 */
 	async rerankAllTopics(
 		newCandidates: Topic[],
 		existingTopics: Topic[],
-		_extractedFacts: ExtractedFacts,
-	): Promise<Topic[]> {
-		// STUB: Mock implementation for topic reranking
-		// TODO: Implement actual AI-based topic relevance scoring
+		extractedFacts: ExtractedFacts,
+	): Promise<TopicServiceResponse<Topic[]>> {
+		try {
+			// Filter only unused existing topics
+			const unusedExisting = existingTopics.filter(
+				(topic) => topic.status === "available",
+			);
 
-		// Filter only unused existing topics
-		const unusedExisting = existingTopics.filter(
-			(topic) => topic.status === "available",
-		);
+			// Combine new candidates with unused existing topics
+			const allTopics = [...newCandidates, ...unusedExisting];
 
-		// Combine new candidates with unused existing topics
-		// const _allTopics = [...newCandidates, ...unusedExisting]; // Will be used in future implementation
+			// If no topics to rank, return empty array
+			if (allTopics.length === 0) {
+				return {
+					data: [],
+					usageMetadata: undefined,
+				};
+			}
 
-		// Mock ranking logic - in reality would use AI scoring
-		// For now, prioritize new candidates and shuffle existing ones
-		const reranked = [
-			...newCandidates, // New topics get priority
-			...unusedExisting.sort(() => Math.random() - 0.5), // Shuffle existing
-		];
+			// If only 1-2 topics, no need for complex ranking
+			if (allTopics.length <= 2) {
+				return {
+					data: allTopics,
+					usageMetadata: undefined,
+				};
+			}
 
-		return reranked;
+			// Build context for AI ranking
+			const companiesContext =
+				extractedFacts.companies?.map((c) => c.name).join(", ") ||
+				"None specified";
+			const rolesContext =
+				extractedFacts.roles
+					?.map((r) => `${r.title} at ${r.company}`)
+					.join(", ") || "None specified";
+			const skillsContext =
+				extractedFacts.skills
+					?.map((s) => s.name)
+					.slice(0, 10)
+					.join(", ") || "None specified";
+			const summaryContext =
+				extractedFacts.summary?.text || "No summary available";
+
+			// Prepare topics for ranking with minimal info to save tokens
+			const topicsForRanking = allTopics.map((topic, index) => ({
+				index,
+				title: topic.title,
+				questions: topic.questions.map((q) => q.text).join("; "),
+			}));
+
+			const responseSchema = {
+				type: Type.OBJECT,
+				properties: {
+					rankedIndices: {
+						type: Type.ARRAY,
+						description:
+							"Array of topic indices ordered by relevance (most relevant first)",
+						items: { type: Type.NUMBER },
+					},
+					reasoning: {
+						type: Type.STRING,
+						description: "Brief explanation of ranking criteria used",
+					},
+				},
+				required: ["rankedIndices", "reasoning"],
+			};
+
+			const prompt = `You are an analytical career coach helping prioritize interview topics for maximum value. 
+
+USER CONTEXT:
+Summary: ${summaryContext}
+Companies: ${companiesContext}
+Roles: ${rolesContext}
+Skills: ${skillsContext}
+
+AVAILABLE TOPICS:
+${topicsForRanking.map((t) => `${t.index}: "${t.title}" - Questions: ${t.questions}`).join("\n")}
+
+RANKING CRITERIA:
+- Most engaging and relevant to mining the complete user experience
+- Balance between high-level career themes and specific professional areas  
+- Topics that would reveal important gaps or add depth to their story
+- Progression that helps build comprehensive career narrative
+- Relevance to their specific background and skills
+
+Rank ALL topics from most valuable (first) to least valuable (last) for this user's career story. Return the indices in your preferred order.
+
+Focus on which topics would be most valuable for this specific person to explore next in their career mining journey.`;
+
+			const request = {
+				model: env.LLM_TOPIC_RERANKING_MODEL,
+				contents: prompt,
+				config: {
+					responseMimeType: "application/json",
+					responseSchema: responseSchema,
+					temperature: 0.2, // Lower temperature for analytical ranking
+				},
+			};
+
+			const response = await this.ai.models.generateContent(request);
+
+			if (!response.text) {
+				throw new Error("No topic reranking response received from AI");
+			}
+
+			const jsonText = response.text.trim();
+			const aiResponse: TopicRerankingResponse = JSON.parse(jsonText);
+
+			if (
+				!aiResponse.rankedIndices ||
+				!Array.isArray(aiResponse.rankedIndices)
+			) {
+				throw new Error("Invalid topic reranking response format");
+			}
+
+			// Validate and apply ranking
+			const validIndices = aiResponse.rankedIndices.filter(
+				(index: number) => index >= 0 && index < allTopics.length,
+			);
+
+			// If AI didn't return valid indices, fall back to original order
+			if (validIndices.length !== allTopics.length) {
+				Sentry.logger?.warn?.(
+					"Topic reranking returned invalid indices, using fallback",
+					{
+						expected: allTopics.length,
+						received: validIndices.length,
+						reasoning: aiResponse.reasoning,
+					},
+				);
+				// Fallback: prioritize new candidates
+				return {
+					data: [...newCandidates, ...unusedExisting],
+					usageMetadata: undefined,
+				};
+			}
+
+			// Return topics in AI-recommended order
+			const rerankedTopics = validIndices
+				.map((index: number) => allTopics[index])
+				.filter((topic): topic is Topic => topic !== undefined);
+
+			// Log successful reranking for monitoring
+			Sentry.logger?.info?.("Topics reranked successfully", {
+				totalTopics: allTopics.length,
+				newCandidates: newCandidates.length,
+				existingTopics: unusedExisting.length,
+				reasoning: aiResponse.reasoning,
+			});
+
+			return {
+				data: rerankedTopics,
+				usageMetadata: response.usageMetadata,
+			};
+		} catch (error) {
+			// Track topic reranking error with context
+			Sentry.captureException(error, {
+				tags: { service: "topic", operation: "reranking" },
+				contexts: {
+					request: {
+						newCandidatesCount: newCandidates.length,
+						existingTopicsCount: existingTopics.length,
+						factsAvailable: {
+							companies: extractedFacts.companies?.length || 0,
+							roles: extractedFacts.roles?.length || 0,
+							skills: extractedFacts.skills?.length || 0,
+						},
+					},
+				},
+			});
+
+			Sentry.logger?.error?.("Topic reranking failed", {
+				newCandidatesCount: newCandidates.length,
+				existingTopicsCount: existingTopics.length,
+				error: error instanceof Error ? error.message : String(error),
+			});
+
+			// Fallback to simple ordering: new candidates first, then existing
+			const unusedExisting = existingTopics.filter(
+				(topic) => topic.status === "available",
+			);
+			return {
+				data: [...newCandidates, ...unusedExisting],
+				usageMetadata: undefined,
+			};
+		}
 	}
 
 	/**
@@ -149,9 +447,6 @@ class TopicService {
 		allTopics: Topic[],
 		keepTopCount: number = 5,
 	): Promise<Topic[]> {
-		// STUB: Simple implementation for topic status management
-		// TODO: Implement database updates for topic status changes
-
 		return allTopics.map((topic, index) => ({
 			...topic,
 			status: index < keepTopCount ? "available" : ("irrelevant" as const),
@@ -163,30 +458,59 @@ class TopicService {
 	 * @param extractedFacts - Structured facts from interview extraction
 	 * @param userId - User ID for context
 	 * @param existingTopics - Current topics for the user
-	 * @returns Final set of active topics
+	 * @returns Response with final topics and combined token usage
 	 */
 	async processTopicWorkflow(
 		extractedFacts: ExtractedFacts,
 		userId: string,
 		existingTopics: Topic[],
-	): Promise<Topic[]> {
+	): Promise<
+		TopicServiceResponse<{
+			topics: Topic[];
+			generationTokens: number;
+			rerankingTokens: number;
+		}>
+	> {
 		// Step 1: Generate new topic candidates
-		const newCandidates = await this.generateTopicCandidates(
+		const generationResult = await this.generateTopicCandidates(
 			extractedFacts,
 			userId,
 		);
 
 		// Step 2: Rerank all topics
-		const rerankedTopics = await this.rerankAllTopics(
-			newCandidates,
+		const rerankingResult = await this.rerankAllTopics(
+			generationResult.data,
 			existingTopics,
 			extractedFacts,
 		);
 
 		// Step 3: Mark irrelevant topics (keep top 5)
-		const finalTopics = await this.markIrrelevantTopics(rerankedTopics, 5);
+		const finalTopics = await this.markIrrelevantTopics(
+			rerankingResult.data,
+			5,
+		);
 
-		return finalTopics;
+		// Calculate token usage for both operations
+		const generationTokens =
+			generationResult.usageMetadata?.totalTokenCount || 0;
+		const rerankingTokens = rerankingResult.usageMetadata?.totalTokenCount || 0;
+
+		return {
+			data: {
+				topics: finalTopics,
+				generationTokens,
+				rerankingTokens,
+			},
+			usageMetadata: {
+				totalTokenCount: generationTokens + rerankingTokens,
+				promptTokenCount:
+					(generationResult.usageMetadata?.promptTokenCount || 0) +
+					(rerankingResult.usageMetadata?.promptTokenCount || 0),
+				candidatesTokenCount:
+					(generationResult.usageMetadata?.candidatesTokenCount || 0) +
+					(rerankingResult.usageMetadata?.candidatesTokenCount || 0),
+			},
+		};
 	}
 }
 

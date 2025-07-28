@@ -14,13 +14,7 @@ import type {
 } from "@/common/types/business.js";
 import { database } from "@/common/utils/database.js";
 
-// Legacy Answer interface removed - use BusinessAnswer from business types
-
 class DatabaseService {
-	// Legacy answer methods removed - use business methods below
-
-	// New business logic methods
-
 	// Topic CRUD operations
 	async createTopic(params: CreateTopicParams): Promise<Topic> {
 		const result = await database.query<Topic>(
@@ -57,7 +51,7 @@ class DatabaseService {
 		return result;
 	}
 
-	async getTopicById(topicId: string): Promise<Topic | null> {
+	async getTopicById(topicId: number): Promise<Topic | null> {
 		const result = await database.query<Topic>(
 			"SELECT * FROM topics WHERE id = $1",
 			[topicId],
@@ -73,7 +67,7 @@ class DatabaseService {
 		return item;
 	}
 
-	async markTopicAsUsed(topicId: string): Promise<Topic> {
+	async markTopicAsUsed(topicId: number): Promise<Topic> {
 		const result = await database.query<Topic>(
 			`UPDATE topics 
 			 SET status = 'used', updated_at = NOW()
@@ -95,7 +89,7 @@ class DatabaseService {
 
 	async markTopicAsUsedWithTransaction(
 		client: PoolClient,
-		topicId: string,
+		topicId: number,
 	): Promise<Topic> {
 		const result = await client.query<Topic>(
 			`UPDATE topics 
@@ -423,6 +417,50 @@ class DatabaseService {
 		);
 
 		return result;
+	}
+
+	async saveGeneratedTopics(topics: Topic[]): Promise<Topic[]> {
+		if (topics.length === 0) return [];
+
+		const savedTopics: Topic[] = [];
+
+		for (const topic of topics) {
+			// Only save topics that don't have IDs (new topics)
+			if (!topic.id) {
+				const result = await database.query<Topic>(
+					`INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
+					 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+					 RETURNING *`,
+					[
+						topic.user_id,
+						topic.title,
+						topic.motivational_quote,
+						JSON.stringify(topic.questions),
+						topic.status,
+					],
+				);
+
+				if (result.length > 0 && result[0]) {
+					savedTopics.push(result[0]);
+				}
+			}
+		}
+
+		return savedTopics;
+	}
+
+	async updateTopicStatuses(
+		topicStatusUpdates: Array<{
+			id: number;
+			status: "available" | "used" | "irrelevant";
+		}>,
+	): Promise<void> {
+		for (const update of topicStatusUpdates) {
+			await database.query(
+				"UPDATE topics SET status = $1, updated_at = NOW() WHERE id = $2",
+				[update.status, update.id],
+			);
+		}
 	}
 }
 

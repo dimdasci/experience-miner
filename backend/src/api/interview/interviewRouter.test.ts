@@ -16,8 +16,8 @@ vi.mock("@/common/middleware/auth.js", () => ({
 	}),
 }));
 
-vi.mock("@/services/geminiService.js", () => ({
-	geminiService: {
+vi.mock("@/services/transcribeService.js", () => ({
+	transcribeService: {
 		transcribeAudio: vi.fn(),
 		extractFacts: vi.fn(),
 	},

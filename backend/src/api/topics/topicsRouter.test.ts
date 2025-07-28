@@ -62,7 +62,7 @@ describe("Topics Router", () => {
 		it("should return existing topics when user has topics", async () => {
 			const mockTopics = [
 				{
-					id: "topic-1",
+					id: 1,
 					user_id: "test-user-id",
 					title: "Test Topic",
 					motivational_quote: "Test quote",
@@ -93,7 +93,7 @@ describe("Topics Router", () => {
 
 		it("should seed initial topics for new users", async () => {
 			const mockSeededTopic = {
-				id: "seeded-topic-1",
+				id: 2,
 				user_id: "test-user-id",
 				title:
 					"Career Story: share your professional journey in your own words",
@@ -130,7 +130,7 @@ describe("Topics Router", () => {
 	describe("POST /topics/:id/select", () => {
 		it("should successfully select topic and create interview with atomic transaction", async () => {
 			const mockTopic = {
-				id: "topic-1",
+				id: 1,
 				user_id: "test-user-id",
 				title: "Test Topic",
 				motivational_quote: "Test quote",
@@ -190,7 +190,7 @@ describe("Topics Router", () => {
 					mockAnswers[1] as unknown as import("@/common/types/business.js").Answer,
 				);
 
-			const response = await request(app).post("/topics/topic-1/select");
+			const response = await request(app).post("/topics/1/select");
 
 			expect(response.status).toBe(200);
 			expectServiceResponse(response.body, true);
@@ -203,9 +203,7 @@ describe("Topics Router", () => {
 		it("should return 404 when topic not found", async () => {
 			vi.mocked(databaseService.getTopicById).mockResolvedValue(null);
 
-			const response = await request(app).post(
-				"/topics/nonexistent-topic/select",
-			);
+			const response = await request(app).post("/topics/999/select");
 
 			expect(response.status).toBe(404);
 			expectServiceResponse(response.body, false);
@@ -213,7 +211,7 @@ describe("Topics Router", () => {
 
 		it("should return 403 when topic belongs to different user", async () => {
 			const mockTopic = {
-				id: "topic-1",
+				id: 1,
 				user_id: "different-user-id", // Different user
 				title: "Test Topic",
 				motivational_quote: "Test quote",
@@ -225,7 +223,7 @@ describe("Topics Router", () => {
 
 			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
 
-			const response = await request(app).post("/topics/topic-1/select");
+			const response = await request(app).post("/topics/1/select");
 
 			expect(response.status).toBe(403);
 			expectServiceResponse(response.body, false);
@@ -233,7 +231,7 @@ describe("Topics Router", () => {
 
 		it("should return 400 when topic already used", async () => {
 			const mockTopic = {
-				id: "topic-1",
+				id: 1,
 				user_id: "test-user-id",
 				title: "Test Topic",
 				motivational_quote: "Test quote",
@@ -245,7 +243,7 @@ describe("Topics Router", () => {
 
 			vi.mocked(databaseService.getTopicById).mockResolvedValue(mockTopic);
 
-			const response = await request(app).post("/topics/topic-1/select");
+			const response = await request(app).post("/topics/1/select");
 
 			expect(response.status).toBe(400);
 			expectServiceResponse(response.body, false);
@@ -253,7 +251,7 @@ describe("Topics Router", () => {
 
 		it("should handle database errors gracefully", async () => {
 			const mockTopic = {
-				id: "topic-1",
+				id: 1,
 				user_id: "test-user-id",
 				title: "Test Topic",
 				motivational_quote: "Test quote",
@@ -268,7 +266,7 @@ describe("Topics Router", () => {
 				databaseService.markTopicAsUsedWithTransaction,
 			).mockRejectedValue(new Error("Database error"));
 
-			const response = await request(app).post("/topics/topic-1/select");
+			const response = await request(app).post("/topics/1/select");
 
 			expect(response.status).toBe(500);
 			expectServiceResponse(response.body, false);

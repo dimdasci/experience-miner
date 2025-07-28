@@ -33,7 +33,7 @@ describe("DatabaseService - Business Logic Error Handling", () => {
 		it("should return null when topic not found", async () => {
 			vi.mocked(database.query).mockResolvedValue([]);
 
-			const result = await databaseService.getTopicById("nonexistent");
+			const result = await databaseService.getTopicById(999);
 
 			expect(result).toBeNull();
 		});
@@ -41,7 +41,7 @@ describe("DatabaseService - Business Logic Error Handling", () => {
 		it("should throw error when topic update fails", async () => {
 			vi.mocked(database.query).mockResolvedValue([]);
 
-			await expect(databaseService.markTopicAsUsed("topic-1")).rejects.toThrow(
+			await expect(databaseService.markTopicAsUsed(1)).rejects.toThrow(
 				"Topic update failed - no rows returned",
 			);
 		});

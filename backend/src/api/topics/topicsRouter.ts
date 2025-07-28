@@ -90,13 +90,20 @@ topicsRouter.post(
 	"/:id/select",
 	authenticateToken,
 	async (req: AuthenticatedRequest, res) => {
-		const topicId = req.params.id;
+		const topicIdParam = req.params.id;
 		const userId = req.user?.id;
 
-		if (!topicId) {
+		if (!topicIdParam) {
 			return res
 				.status(400)
 				.json(ServiceResponse.failure("Topic ID is required", null, 400));
+		}
+
+		const topicId = parseInt(topicIdParam, 10);
+		if (Number.isNaN(topicId)) {
+			return res
+				.status(400)
+				.json(ServiceResponse.failure("Valid topic ID is required", null, 400));
 		}
 
 		if (!userId) {

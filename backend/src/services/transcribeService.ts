@@ -30,9 +30,8 @@ export interface GeminiResponse<T> {
 	usageMetadata?: ExtendedUsageMetadata;
 }
 
-export class GeminiService {
+export class TranscribeService {
 	private ai: GoogleGenAI;
-	private readonly model = "gemini-2.5-flash";
 
 	constructor(aiClient?: GoogleGenAI) {
 		this.ai = aiClient || new GoogleGenAI({ apiKey: env.API_KEY });
@@ -53,7 +52,7 @@ export class GeminiService {
 			};
 
 			const request = {
-				model: this.model,
+				model: env.LLM_TRANSCRIPTION_MODEL,
 				contents: [
 					{
 						parts: [
@@ -224,7 +223,7 @@ ${transcript}
 </transcript>`;
 
 			const request = {
-				model: this.model,
+				model: env.LLM_EXTRACTION_MODEL,
 				contents: prompt,
 				config: {
 					responseMimeType: "application/json",
@@ -276,4 +275,4 @@ ${transcript}
 }
 
 // Export the singleton instance for production use
-export const geminiService = new GeminiService();
+export const transcribeService = new TranscribeService();

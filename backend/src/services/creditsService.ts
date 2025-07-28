@@ -17,6 +17,8 @@ export type SourceType =
 	| "welcome"
 	| "transcriber"
 	| "extractor"
+	| "topic_generator"
+	| "topic_ranker"
 	| "purchase"
 	| "promo";
 
@@ -79,13 +81,30 @@ class CreditsService {
 	async consumeCredits(
 		userId: string,
 		tokensUsed: number,
-		sourceType: "transcriber" | "extractor",
+		sourceType:
+			| "transcriber"
+			| "extractor"
+			| "topic_generator"
+			| "topic_ranker",
 	): Promise<{ transaction: CreditTransaction; remainingCredits: number }> {
 		// Calculate credits based on token usage and rate
-		const rate =
-			sourceType === "transcriber"
-				? env.TRANSCRIBER_CREDIT_RATE
-				: env.EXTRACTOR_CREDIT_RATE;
+		let rate: number;
+		switch (sourceType) {
+			case "transcriber":
+				rate = env.TRANSCRIBER_CREDIT_RATE;
+				break;
+			case "extractor":
+				rate = env.EXTRACTOR_CREDIT_RATE;
+				break;
+			case "topic_generator":
+				rate = env.TOPIC_GENERATION_RATE;
+				break;
+			case "topic_ranker":
+				rate = env.TOPIC_RERANKING_RATE;
+				break;
+			default:
+				throw new Error(`Unknown source type: ${sourceType}`);
+		}
 
 		const sourceAmount = tokensUsed / 1000; // Convert to K_TOKENS
 		const creditsToConsume = Math.max(1, Math.ceil(sourceAmount * rate)); // Minimum 1 credit

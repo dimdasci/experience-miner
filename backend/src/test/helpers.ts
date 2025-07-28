@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { ExtractedFacts } from "@/services/geminiService.js";
+import type { ExtractedFacts } from "@/services/transcribeService.js";
 
 // Define the raw types returned by Gemini without the metadata fields
 interface RawCompany {

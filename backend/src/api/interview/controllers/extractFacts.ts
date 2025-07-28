@@ -4,10 +4,11 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceResponse } from "@/common/models/serviceResponse.js";
+import type { Topic } from "@/common/types/business.js";
 import { creditsService } from "@/services/creditsService.js";
 import { databaseService } from "@/services/databaseService.js";
-import { geminiService } from "@/services/geminiService.js";
 import { topicService } from "@/services/topicService.js";
+import { transcribeService } from "@/services/transcribeService.js";
 
 export const extractFacts = async (
 	req: AuthenticatedRequest,
@@ -115,7 +116,7 @@ export const extractFacts = async (
 			.join("\n\n");
 
 		// Step 3: Process AI extraction with existing logic
-		const extractionResult = await geminiService.extractFacts(
+		const extractionResult = await transcribeService.extractFacts(
 			transcript,
 			interviewId,
 		);
@@ -204,13 +205,55 @@ export const extractFacts = async (
 		// Step 5: Save/update professional summary in experience table
 		await databaseService.saveExperienceRecord(userId, { extractedFacts });
 
-		// Step 6: Generate topic candidates and rerank (stub implementation)
+		// Step 6: Generate topic candidates and rerank with credit tracking
 		const existingTopics = await databaseService.getAvailableTopics(userId);
-		const updatedTopics = await topicService.processTopicWorkflow(
+		const topicWorkflowResult = await topicService.processTopicWorkflow(
 			extractedFacts,
 			userId,
 			existingTopics,
 		);
+
+		const {
+			topics: updatedTopics,
+			generationTokens,
+			rerankingTokens,
+		} = topicWorkflowResult.data;
+
+		// Log topic workflow results for debugging
+		Sentry.logger?.info?.("Topic workflow completed", {
+			requestId,
+			user_id: userId,
+			user: userPrefix,
+			interviewId,
+			totalTopicsAfterWorkflow: updatedTopics.length,
+			generationTokens,
+			rerankingTokens,
+			newTopicsGenerated: updatedTopics.filter((t) => !t.id).length,
+			existingTopics: existingTopics.length,
+		});
+
+		// Step 6.1: Save new generated topics to database
+		const newTopics = updatedTopics.filter((t) => !t.id);
+		let savedNewTopics: Topic[] = [];
+		if (newTopics.length > 0) {
+			savedNewTopics = await databaseService.saveGeneratedTopics(newTopics);
+		}
+
+		// Step 6.2: Update topic statuses in database (only for existing topics with IDs)
+		const existingTopicsToUpdate = updatedTopics.filter(
+			(topic) => topic.id !== undefined,
+		);
+		if (existingTopicsToUpdate.length > 0) {
+			const statusUpdates = existingTopicsToUpdate
+				.filter(
+					(topic): topic is Topic & { id: number } => topic.id !== undefined,
+				)
+				.map((topic) => ({
+					id: topic.id,
+					status: topic.status as "available" | "used" | "irrelevant",
+				}));
+			await databaseService.updateTopicStatuses(statusUpdates);
+		}
 
 		// Step 7: Update interview status to completed
 		await databaseService.updateInterviewStatus(
@@ -218,12 +261,29 @@ export const extractFacts = async (
 			"completed",
 		);
 
-		// Step 8: Consume credits based on token usage
-		const { remainingCredits } = await creditsService.consumeCredits(
-			userId,
-			totalTokenCount,
-			"extractor",
-		);
+		// Step 8: Consume credits for extraction
+		await creditsService.consumeCredits(userId, totalTokenCount, "extractor");
+
+		// Step 9: Consume credits for topic generation (if tokens were used)
+		if (generationTokens > 0) {
+			await creditsService.consumeCredits(
+				userId,
+				generationTokens,
+				"topic_generator",
+			);
+		}
+
+		// Step 10: Consume credits for topic reranking (if tokens were used)
+		if (rerankingTokens > 0) {
+			await creditsService.consumeCredits(
+				userId,
+				rerankingTokens,
+				"topic_ranker",
+			);
+		}
+
+		// Final remaining credits after all operations
+		const remainingCredits = await creditsService.getCurrentBalance(userId);
 
 		const duration = Date.now() - startTime;
 
@@ -251,9 +311,13 @@ export const extractFacts = async (
 					0,
 				),
 				totalTokenCount,
+				topicGenerationTokens: generationTokens,
+				topicRerankingTokens: rerankingTokens,
+				totalTopicTokens: generationTokens + rerankingTokens,
 				remainingCredits,
-				newTopicsGenerated: updatedTopics.filter((t) =>
-					t.id.startsWith("generated_"),
+				newTopicsGenerated: savedNewTopics.length,
+				topicsMarkedIrrelevant: updatedTopics.filter(
+					(t) => t.status === "irrelevant",
 				).length,
 			},
 		);
@@ -265,6 +329,12 @@ export const extractFacts = async (
 				credits: remainingCredits,
 				interviewStatus: "completed",
 				topicsUpdated: updatedTopics.length,
+				creditsConsumed: {
+					extraction: totalTokenCount,
+					topicGeneration: generationTokens,
+					topicReranking: rerankingTokens,
+					total: totalTokenCount + generationTokens + rerankingTokens,
+				},
 			},
 		);
 

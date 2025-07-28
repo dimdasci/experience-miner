@@ -9,6 +9,12 @@ const envSchema = z.object({
 	// Gemini AI Configuration
 	API_KEY: z.string().min(1, "Gemini API key is required"),
 
+	// AI Model Configuration
+	LLM_TRANSCRIPTION_MODEL: z.string().default("gemini-2.5-flash"),
+	LLM_EXTRACTION_MODEL: z.string().default("gemini-2.5-flash"),
+	LLM_TOPIC_GENERATION_MODEL: z.string().default("gemini-2.5-flash"),
+	LLM_TOPIC_RERANKING_MODEL: z.string().default("gemini-2.5-flash"),
+
 	// CORS Configuration - Frontend URL (set via Railway service reference)
 	FRONTEND_URL: z.string().optional(),
 
@@ -30,6 +36,8 @@ const envSchema = z.object({
 	// Credits Configuration
 	TRANSCRIBER_CREDIT_RATE: z.coerce.number().positive().default(2.5),
 	EXTRACTOR_CREDIT_RATE: z.coerce.number().positive().default(1.0),
+	TOPIC_GENERATION_RATE: z.coerce.number().positive().default(0.8),
+	TOPIC_RERANKING_RATE: z.coerce.number().positive().default(0.8),
 
 	// Supabase Postgres Direct Connection
 	SUPABASE_POSTGRESS_HOST: z
@@ -91,6 +99,12 @@ console.log(`  - NODE_ENV: ${env.NODE_ENV}`);
 console.log(`  - PORT: ${env.PORT}`);
 console.log(`  - LOG_LEVEL: ${env.LOG_LEVEL}`);
 console.log(`  - API_KEY: ${env.API_KEY ? "✅ Set" : "❌ Missing"}`);
+console.log(`  - LLM_TRANSCRIPTION_MODEL: ${env.LLM_TRANSCRIPTION_MODEL}`);
+console.log(`  - LLM_EXTRACTION_MODEL: ${env.LLM_EXTRACTION_MODEL}`);
+console.log(
+	`  - LLM_TOPIC_GENERATION_MODEL: ${env.LLM_TOPIC_GENERATION_MODEL}`,
+);
+console.log(`  - LLM_TOPIC_RERANKING_MODEL: ${env.LLM_TOPIC_RERANKING_MODEL}`);
 console.log(
 	`  - FRONTEND_URL: ${env.FRONTEND_URL || "⚠️  Not set (using localhost)"}`,
 );
@@ -108,6 +122,8 @@ console.log(`  - SENTRY_ENVIRONMENT: ${env.SENTRY_ENVIRONMENT}`);
 console.log(`  - SENTRY_TRACES_SAMPLE_RATE: ${env.SENTRY_TRACES_SAMPLE_RATE}`);
 console.log(`  - TRANSCRIBER_CREDIT_RATE: ${env.TRANSCRIBER_CREDIT_RATE}`);
 console.log(`  - EXTRACTOR_CREDIT_RATE: ${env.EXTRACTOR_CREDIT_RATE}`);
+console.log(`  - TOPIC_GENERATION_RATE: ${env.TOPIC_GENERATION_RATE}`);
+console.log(`  - TOPIC_RERANKING_RATE: ${env.TOPIC_RERANKING_RATE}`);
 console.log(
 	`  - SUPABASE_POSTGRESS_HOST: ${env.SUPABASE_POSTGRESS_HOST ? "✅ Set" : "❌ Missing"}`,
 );

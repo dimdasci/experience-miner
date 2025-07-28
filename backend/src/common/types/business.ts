@@ -2,7 +2,7 @@
 // Based on the database schema and business logic specification
 
 export interface Topic {
-	id: string;
+	id?: number; // Optional - only set after database persistence
 	user_id: string;
 	title: string;
 	motivational_quote: string;
@@ -112,7 +112,7 @@ export interface Skill {
 
 // API Request/Response types
 export interface TopicSelectionRequest {
-	topicId: string;
+	topicId: number;
 }
 
 export interface TopicSelectionResponse {
