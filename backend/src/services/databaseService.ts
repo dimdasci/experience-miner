@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import type { PoolClient } from "pg";
+import { database } from "@/common/connections/databaseConnection.js";
 import type {
 	Answer as BusinessAnswer,
 	CreateAnswerParams,
@@ -11,8 +12,7 @@ import type {
 	ProfessionalSummary,
 	Topic,
 	UpdateAnswerParams,
-} from "@/common/types/business.js";
-import { database } from "@/common/utils/database.js";
+} from "@/types/database/index.js";
 
 class DatabaseService {
 	// Topic CRUD operations

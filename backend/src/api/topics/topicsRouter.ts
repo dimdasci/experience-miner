@@ -1,18 +1,17 @@
 import * as Sentry from "@sentry/node";
 import express from "express";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { database } from "@/common/connections/databaseConnection.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
 } from "@/common/middleware/auth.js";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
+import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
+import { databaseService } from "@/services/databaseService.js";
 import type {
 	Answer as BusinessAnswer,
 	Topic,
-	TopicSelectionResponse,
-} from "@/common/types/business.js";
-import { database } from "@/common/utils/database.js";
-import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
-import { databaseService } from "@/services/databaseService.js";
+} from "@/types/database/index.js";
 
 const topicsRouter = express.Router();
 
@@ -172,16 +171,11 @@ topicsRouter.post(
 
 			await client.query("COMMIT");
 
-			const response: TopicSelectionResponse = {
-				interview,
-				answers,
-			};
-
 			return res.json(
-				ServiceResponse.success(
-					"Topic selected and interview created",
-					response,
-				),
+				ServiceResponse.success("Topic selected and interview created", {
+					interview,
+					answers,
+				}),
 			);
 		} catch (error) {
 			await client.query("ROLLBACK");

@@ -1,12 +1,12 @@
 import type { IRouter, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
 } from "@/common/middleware/auth.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
 import { creditsService } from "@/services/creditsService.js";
 
 export const creditsRouter: IRouter = Router();

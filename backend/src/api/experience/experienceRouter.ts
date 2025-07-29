@@ -2,9 +2,9 @@ import * as Sentry from "@sentry/node";
 import type { IRouter } from "express";
 import { type Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { authenticateToken } from "@/common/middleware/auth.js";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
 import { databaseService } from "@/services/databaseService.js";
 
 export const experienceRouter: IRouter = Router();
@@ -72,13 +72,12 @@ experienceRouter.get(
 				user_id: userId,
 				hasData: true,
 				extractionCount:
-					experienceRecord.summary?.extractedFacts?.metadata
-						?.totalExtractions || 0,
+					experienceRecord.summary?.metadata?.totalExtractions || 0,
 			});
 
 			const serviceResponse = ServiceResponse.success(
 				"Experience data retrieved successfully",
-				experienceRecord.summary,
+				{ extractedFacts: experienceRecord.summary },
 			);
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);

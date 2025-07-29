@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { serverConfig } from "@/config/index.js";
 
 // General API rate limiting
 export const rateLimiter = rateLimit({
@@ -22,6 +23,6 @@ export const aiRateLimiter = rateLimit({
 	legacyHeaders: false,
 	skip: (_req) => {
 		// Skip rate limiting in development
-		return process.env.NODE_ENV === "development";
+		return serverConfig.nodeEnv === "development";
 	},
 });

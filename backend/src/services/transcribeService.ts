@@ -1,19 +1,14 @@
-import { GoogleGenAI, Type, type UsageMetadata } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import * as Sentry from "@sentry/node";
-
-// Extended interface for usage metadata with all possible properties
-interface ExtendedUsageMetadata extends UsageMetadata {
-	candidatesTokenCount?: number;
-}
-
+import { aiConfig } from "@/config/ai.js";
+import type { AIResponse } from "@/types/ai/index.js";
 import type {
 	Achievement,
 	Company,
 	Project,
 	Role,
 	Skill,
-} from "@/common/types/business.js";
-import { env } from "@/common/utils/envConfig.js";
+} from "@/types/database/index.js";
 
 // Create a custom ExtractedFacts interface that represents the structure returned by Gemini
 export interface ExtractedFacts {
@@ -25,16 +20,14 @@ export interface ExtractedFacts {
 	skills: Skill[];
 }
 
-export interface GeminiResponse<T> {
-	data: T;
-	usageMetadata?: ExtendedUsageMetadata;
-}
+// Use the generic AIResponse type for consistency
+export type GeminiResponse<T> = AIResponse<T>;
 
 export class TranscribeService {
 	private ai: GoogleGenAI;
 
 	constructor(aiClient?: GoogleGenAI) {
-		this.ai = aiClient || new GoogleGenAI({ apiKey: env.API_KEY });
+		this.ai = aiClient || new GoogleGenAI({ apiKey: aiConfig.apiKey });
 	}
 
 	async transcribeAudio(
@@ -52,7 +45,7 @@ export class TranscribeService {
 			};
 
 			const request = {
-				model: env.LLM_TRANSCRIPTION_MODEL,
+				model: aiConfig.models.transcription,
 				contents: [
 					{
 						parts: [
@@ -223,7 +216,7 @@ ${transcript}
 </transcript>`;
 
 			const request = {
-				model: env.LLM_EXTRACTION_MODEL,
+				model: aiConfig.models.extraction,
 				contents: prompt,
 				config: {
 					responseMimeType: "application/json",

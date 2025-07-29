@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/node";
-import { env } from "@/common/utils/envConfig.js";
+import { monitoringConfig } from "@/config/index.js";
 
 Sentry.init({
-	dsn: env.SENTRY_DSN_BACKEND,
-	environment: env.SENTRY_ENVIRONMENT,
+	dsn: monitoringConfig.sentry.dsn,
+	environment: monitoringConfig.sentry.environment,
 	// Tracing
-	tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
+	tracesSampleRate: monitoringConfig.sentry.tracesSampleRate,
 	// Setting this option to true will send default PII data to Sentry.
 	// For example, automatic IP address collection on events
 	sendDefaultPii: true,

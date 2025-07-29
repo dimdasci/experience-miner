@@ -7,7 +7,7 @@ import {
 	getInterviewById,
 	transcribeAudio,
 	updateAnswer,
-} from "./controllers/index.js";
+} from "./handlers/index.js";
 import { upload } from "./utils/fileUpload.js";
 
 export const interviewRouter: IRouter = Router();

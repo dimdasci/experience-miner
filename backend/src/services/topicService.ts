@@ -1,47 +1,15 @@
-import { GoogleGenAI, Type, type UsageMetadata } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import * as Sentry from "@sentry/node";
-import type { Topic } from "@/common/types/business.js";
-import { env } from "@/common/utils/envConfig.js";
-
-// Extended interface for usage metadata with all possible properties
-interface ExtendedUsageMetadata extends UsageMetadata {
-	candidatesTokenCount?: number;
-}
-
-export interface TopicServiceResponse<T> {
-	data: T;
-	usageMetadata?: ExtendedUsageMetadata;
-}
-
-interface ExtractedFacts {
-	achievements?: Array<{ description: string }>;
-	companies?: Array<{ name: string }>;
-	projects?: Array<{ name: string; description: string; role: string }>;
-	roles?: Array<{ title: string; company: string; duration: string }>;
-	skills?: Array<{ name: string }>;
-	summary?: { text: string };
-}
-
-// AI Response Types for Topic Generation
-interface AITopicQuestion {
-	text: string;
-	order: number;
-}
-
-interface AITopicResponse {
-	title: string;
-	motivational_quote: string;
-	questions: AITopicQuestion[];
-}
-
-interface TopicGenerationResponse {
-	topics: AITopicResponse[];
-}
-
-interface TopicRerankingResponse {
-	rankedIndices: number[];
-	reasoning: string;
-}
+import { aiConfig } from "@/config/ai.js";
+import type {
+	AITopicQuestion,
+	AITopicResponse,
+	ExtractedFactsAI,
+	TopicGenerationResponse,
+	TopicRerankingResponse,
+	TopicServiceResponse,
+} from "@/types/ai/index.js";
+import type { Topic } from "@/types/database/index.js";
 
 /**
  * Service for topic generation and management operations
@@ -51,7 +19,7 @@ class TopicService {
 	private ai: GoogleGenAI;
 
 	constructor(aiClient?: GoogleGenAI) {
-		this.ai = aiClient || new GoogleGenAI({ apiKey: env.API_KEY });
+		this.ai = aiClient || new GoogleGenAI({ apiKey: aiConfig.apiKey });
 	}
 	/**
 	 * Generate new topic candidates based on extracted interview data
@@ -60,7 +28,7 @@ class TopicService {
 	 * @returns Response with topic candidates and token usage
 	 */
 	async generateTopicCandidates(
-		extractedFacts: ExtractedFacts,
+		extractedFacts: ExtractedFactsAI,
 		userId: string,
 	): Promise<TopicServiceResponse<Topic[]>> {
 		try {
@@ -163,7 +131,7 @@ Questions:
 Generate topics that would reveal important aspects of this person's professional journey not yet fully covered.`;
 
 			const request = {
-				model: env.LLM_TOPIC_GENERATION_MODEL,
+				model: aiConfig.models.topicGeneration,
 				contents: prompt,
 				config: {
 					responseMimeType: "application/json",
@@ -249,7 +217,7 @@ Generate topics that would reveal important aspects of this person's professiona
 	async rerankAllTopics(
 		newCandidates: Topic[],
 		existingTopics: Topic[],
-		extractedFacts: ExtractedFacts,
+		extractedFacts: ExtractedFactsAI,
 	): Promise<TopicServiceResponse<Topic[]>> {
 		try {
 			// Filter only unused existing topics
@@ -339,7 +307,7 @@ Rank ALL topics from most valuable (first) to least valuable (last) for this use
 Focus on which topics would be most valuable for this specific person to explore next in their career mining journey.`;
 
 			const request = {
-				model: env.LLM_TOPIC_RERANKING_MODEL,
+				model: aiConfig.models.topicReranking,
 				contents: prompt,
 				config: {
 					responseMimeType: "application/json",
@@ -461,7 +429,7 @@ Focus on which topics would be most valuable for this specific person to explore
 	 * @returns Response with final topics and combined token usage
 	 */
 	async processTopicWorkflow(
-		extractedFacts: ExtractedFacts,
+		extractedFacts: ExtractedFactsAI,
 		userId: string,
 		existingTopics: Topic[],
 	): Promise<

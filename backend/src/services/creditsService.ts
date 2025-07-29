@@ -1,26 +1,8 @@
 import type { PoolClient } from "pg";
+import { database } from "@/common/connections/databaseConnection.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import { database } from "@/common/utils/database.js";
-import { env } from "@/common/utils/envConfig.js";
-
-export interface CreditTransaction {
-	id: string;
-	created_at: string;
-	user_id: string;
-	amount: number;
-	source_amount: number;
-	source_type: string;
-	source_unit: string;
-}
-
-export type SourceType =
-	| "welcome"
-	| "transcriber"
-	| "extractor"
-	| "topic_generator"
-	| "topic_ranker"
-	| "purchase"
-	| "promo";
+import { creditsConfig } from "@/config/credits.js";
+import type { CreditTransaction, SourceType } from "@/types/services/index.js";
 
 // In-memory user processing locks to prevent concurrent operations
 const userProcessingLocks = new Map<string, number>();
@@ -91,16 +73,16 @@ class CreditsService {
 		let rate: number;
 		switch (sourceType) {
 			case "transcriber":
-				rate = env.TRANSCRIBER_CREDIT_RATE;
+				rate = creditsConfig.rates.transcriber;
 				break;
 			case "extractor":
-				rate = env.EXTRACTOR_CREDIT_RATE;
+				rate = creditsConfig.rates.extractor;
 				break;
 			case "topic_generator":
-				rate = env.TOPIC_GENERATION_RATE;
+				rate = creditsConfig.rates.topicGeneration;
 				break;
 			case "topic_ranker":
-				rate = env.TOPIC_RERANKING_RATE;
+				rate = creditsConfig.rates.topicReranking;
 				break;
 			default:
 				throw new Error(`Unknown source type: ${sourceType}`);

@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
 
 export const errorHandler = (
 	error: Error,

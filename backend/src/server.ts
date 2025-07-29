@@ -11,7 +11,7 @@ import { topicsRouter } from "@/api/topics/topicsRouter.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
 import { aiRateLimiter, rateLimiter } from "@/common/middleware/rateLimiter.js";
 import { requestLogger } from "@/common/middleware/requestLogger.js";
-import { env } from "@/common/utils/envConfig.js";
+import { serverConfig } from "@/config/server.js";
 
 const app: Application = express();
 
@@ -36,18 +36,23 @@ app.use(
 app.use(
 	cors({
 		origin:
-			env.NODE_ENV === "development"
-				? ["http://localhost:3000", "http://localhost:5173"]
-				: env.FRONTEND_URL
-					? [`https://${env.FRONTEND_URL}`]
+			serverConfig.nodeEnv === "development"
+				? serverConfig.cors.allowedOrigins
+				: serverConfig.cors.frontendUrl
+					? [`https://${serverConfig.cors.frontendUrl}`]
 					: false,
 		credentials: true,
 	}),
 );
 
 // Request parsing
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: serverConfig.express.jsonLimit }));
+app.use(
+	express.urlencoded({
+		extended: true,
+		limit: serverConfig.express.urlEncodedLimit,
+	}),
+);
 
 // Request logging
 app.use(requestLogger);
