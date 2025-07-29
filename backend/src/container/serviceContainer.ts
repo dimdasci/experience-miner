@@ -4,6 +4,9 @@ import type {
 	IAIProvider,
 	IDatabaseProvider,
 } from "@/interfaces/providers/index.js";
+import { CreditsService } from "@/services/creditsService.js";
+import { TopicService } from "@/services/topicService.js";
+import { TranscribeService } from "@/services/transcribeService.js";
 
 /**
  * Service Container for dependency injection
@@ -13,12 +16,18 @@ export class ServiceContainer {
 	private static instance: ServiceContainer;
 	private aiProvider: IAIProvider;
 	private databaseProvider: IDatabaseProvider;
+	private creditsService: CreditsService;
+	private topicService: TopicService;
+	private transcribeService: TranscribeService;
 	private initialized = false;
 
 	private constructor() {
-		// Providers will be initialized lazily
+		// Providers and services will be initialized lazily
 		this.aiProvider = null as any;
 		this.databaseProvider = null as any;
+		this.creditsService = null as any;
+		this.topicService = null as any;
+		this.transcribeService = null as any;
 	}
 
 	/**
@@ -47,6 +56,11 @@ export class ServiceContainer {
 
 			// Initialize database provider
 			await this.databaseProvider.initialize();
+
+			// Initialize services
+			this.creditsService = new CreditsService();
+			this.topicService = new TopicService();
+			this.transcribeService = new TranscribeService();
 
 			this.initialized = true;
 
@@ -85,6 +99,42 @@ export class ServiceContainer {
 	}
 
 	/**
+	 * Get credits service instance
+	 */
+	getCreditsService(): CreditsService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		return this.creditsService;
+	}
+
+	/**
+	 * Get topic service instance
+	 */
+	getTopicService(): TopicService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		return this.topicService;
+	}
+
+	/**
+	 * Get transcribe service instance
+	 */
+	getTranscribeService(): TranscribeService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		return this.transcribeService;
+	}
+
+	/**
 	 * Check if container is initialized
 	 */
 	isInitialized(): boolean {
@@ -98,20 +148,33 @@ export class ServiceContainer {
 		this.initialized = false;
 		this.aiProvider = null as any;
 		this.databaseProvider = null as any;
+		this.creditsService = null as any;
+		this.topicService = null as any;
+		this.transcribeService = null as any;
 	}
 
 	/**
-	 * Initialize with custom providers (for testing)
+	 * Initialize with custom providers and services (for testing)
 	 */
 	async initializeWithProviders(
 		aiProvider: IAIProvider,
 		databaseProvider: IDatabaseProvider,
+		services?: {
+			creditsService?: CreditsService;
+			topicService?: TopicService;
+			transcribeService?: TranscribeService;
+		},
 	): Promise<void> {
 		this.aiProvider = aiProvider;
 		this.databaseProvider = databaseProvider;
 
 		// Initialize database provider
 		await this.databaseProvider.initialize();
+
+		// Initialize services (use provided or create new)
+		this.creditsService = services?.creditsService || new CreditsService();
+		this.topicService = services?.topicService || new TopicService();
+		this.transcribeService = services?.transcribeService || new TranscribeService();
 
 		this.initialized = true;
 	}

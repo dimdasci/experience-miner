@@ -7,7 +7,7 @@ import type { CreditTransaction, SourceType } from "@/types/services/index.js";
 // In-memory user processing locks to prevent concurrent operations
 const userProcessingLocks = new Map<string, number>();
 
-class CreditsService {
+export class CreditsService {
 	async getCurrentBalance(userId: string): Promise<number> {
 		const result = await database.query<{ total: string }>(
 			"SELECT COALESCE(SUM(amount), 0) as total FROM credits WHERE user_id = $1",

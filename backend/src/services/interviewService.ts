@@ -14,9 +14,6 @@ import type {
 	InterviewStatus,
 	Topic,
 } from "@/types/database/index.js";
-import { creditsService } from "./creditsService.js";
-import { topicService } from "./topicService.js";
-import { transcribeService } from "./transcribeService.js";
 
 /**
  * Service for interview-related business operations
@@ -28,6 +25,9 @@ export class InterviewService {
 	private interviewRepo: InterviewRepository;
 	private answerRepo: AnswerRepository;
 	private experienceRepo: ExperienceRepository;
+	private creditsService: any;
+	private topicService: any;
+	private transcribeService: any;
 
 	constructor(
 		aiProvider?: IAIProvider,
@@ -37,10 +37,11 @@ export class InterviewService {
 			answerRepo?: AnswerRepository;
 			experienceRepo?: ExperienceRepository;
 		},
+		container?: ServiceContainer,
 	) {
-		const container = ServiceContainer.getInstance();
+		const serviceContainer = container || ServiceContainer.getInstance();
 
-		this.aiProvider = aiProvider || container.getAIProvider();
+		this.aiProvider = aiProvider || serviceContainer.getAIProvider();
 
 		// Initialize repositories (could be moved to container in future iteration)
 		this.topicRepo = repositories?.topicRepo || new TopicRepository();
@@ -49,6 +50,11 @@ export class InterviewService {
 		this.answerRepo = repositories?.answerRepo || new AnswerRepository();
 		this.experienceRepo =
 			repositories?.experienceRepo || new ExperienceRepository();
+
+		// Initialize services from container
+		this.creditsService = serviceContainer.getCreditsService();
+		this.topicService = serviceContainer.getTopicService();
+		this.transcribeService = serviceContainer.getTranscribeService();
 	}
 
 	/**
@@ -138,18 +144,18 @@ export class InterviewService {
 		const userPrefix = userId.split("@")[0] ?? "unknown";
 
 		// Check for concurrent operations
-		if (await creditsService.checkUserLock(userId)) {
+		if (await this.creditsService.checkUserLock(userId)) {
 			throw new Error(
 				"Another operation is in progress, please wait and try again",
 			);
 		}
 
 		// Set user lock
-		creditsService.setUserLock(userId);
+		this.creditsService.setUserLock(userId);
 
 		try {
 			// Check available credits
-			const currentCredits = await creditsService.getCurrentBalance(userId);
+			const currentCredits = await this.creditsService.getCurrentBalance(userId);
 			if (currentCredits <= 0) {
 				throw new Error("Not enough credits");
 			}
@@ -172,14 +178,14 @@ export class InterviewService {
 				transcriptionResult.usageMetadata?.totalTokenCount || 0;
 
 			// Consume credits
-			await creditsService.consumeCredits(
+			await this.creditsService.consumeCredits(
 				userId,
 				totalTokenCount,
 				"transcriber",
 			);
 
 			// Get remaining credits
-			const remainingCredits = await creditsService.getCurrentBalance(userId);
+			const remainingCredits = await this.creditsService.getCurrentBalance(userId);
 
 			const duration = Date.now() - startTime;
 
@@ -222,7 +228,7 @@ export class InterviewService {
 
 			throw error;
 		} finally {
-			creditsService.removeUserLock(userId);
+			this.creditsService.removeUserLock(userId);
 		}
 	}
 
@@ -249,18 +255,18 @@ export class InterviewService {
 		const userPrefix = userId.split("@")[0] ?? "unknown";
 
 		// Check for concurrent operations
-		if (await creditsService.checkUserLock(userId)) {
+		if (await this.creditsService.checkUserLock(userId)) {
 			throw new Error(
 				"Another operation is in progress, please wait and try again",
 			);
 		}
 
 		// Set user lock for entire workflow
-		creditsService.setUserLock(userId);
+		this.creditsService.setUserLock(userId);
 
 		try {
 			// Check available credits
-			const currentCredits = await creditsService.getCurrentBalance(userId);
+			const currentCredits = await this.creditsService.getCurrentBalance(userId);
 			if (currentCredits <= 0) {
 				throw new Error("Not enough credits");
 			}
@@ -297,7 +303,7 @@ export class InterviewService {
 				.join("\n\n");
 
 			// Step 3: Process AI extraction
-			const extractionResult = await transcribeService.extractFacts(
+			const extractionResult = await this.transcribeService.extractFacts(
 				transcript,
 				interviewId,
 			);
@@ -388,7 +394,7 @@ export class InterviewService {
 
 			// Step 6: Generate topic candidates and rerank with credit tracking
 			const existingTopics = await this.topicRepo.getAvailable(userId);
-			const topicWorkflowResult = await topicService.processTopicWorkflow(
+			const topicWorkflowResult = await this.topicService.processTopicWorkflow(
 				extractedFacts,
 				userId,
 				existingTopics,
@@ -430,11 +436,11 @@ export class InterviewService {
 			);
 
 			// Step 8: Consume credits for extraction
-			await creditsService.consumeCredits(userId, totalTokenCount, "extractor");
+			await this.creditsService.consumeCredits(userId, totalTokenCount, "extractor");
 
 			// Step 9: Consume credits for topic generation
 			if (generationTokens > 0) {
-				await creditsService.consumeCredits(
+				await this.creditsService.consumeCredits(
 					userId,
 					generationTokens,
 					"topic_generator",
@@ -443,7 +449,7 @@ export class InterviewService {
 
 			// Step 10: Consume credits for topic reranking
 			if (rerankingTokens > 0) {
-				await creditsService.consumeCredits(
+				await this.creditsService.consumeCredits(
 					userId,
 					rerankingTokens,
 					"topic_ranker",
@@ -451,7 +457,7 @@ export class InterviewService {
 			}
 
 			// Final remaining credits
-			const remainingCredits = await creditsService.getCurrentBalance(userId);
+			const remainingCredits = await this.creditsService.getCurrentBalance(userId);
 
 			const duration = Date.now() - startTime;
 
@@ -528,7 +534,7 @@ export class InterviewService {
 
 			throw error;
 		} finally {
-			creditsService.removeUserLock(userId);
+			this.creditsService.removeUserLock(userId);
 		}
 	}
 }

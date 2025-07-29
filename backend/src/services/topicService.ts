@@ -15,7 +15,7 @@ import type { Topic } from "@/types/database/index.js";
  * Service for topic generation and management operations
  * Contains AI-powered topic generation and ranking logic
  */
-class TopicService {
+export class TopicService {
 	private ai: GoogleGenAI;
 
 	constructor(aiClient?: GoogleGenAI) {
