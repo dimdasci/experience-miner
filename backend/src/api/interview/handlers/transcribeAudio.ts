@@ -1,8 +1,9 @@
+import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { getInterviewService } from "@/services/interviewService.js";
+import { InterviewService } from "@/services/interviewService.js";
 
 /**
  * HTTP handler for transcribing audio to text
@@ -33,7 +34,8 @@ export const transcribeAudio = async (
 	}
 
 	try {
-		const result = await getInterviewService().transcribeAudio(
+		const interviewService = new InterviewService();
+		const result = await interviewService.transcribeAudio(
 			req.file.buffer,
 			req.file.mimetype,
 			userId,
@@ -54,6 +56,22 @@ export const transcribeAudio = async (
 			} else if (error.message.includes("operation is in progress")) {
 				statusCode = StatusCodes.CONFLICT;
 			}
+		}
+
+		// Report to Sentry if it's a real server error (not client errors like insufficient credits)
+		if (statusCode === StatusCodes.INTERNAL_SERVER_ERROR) {
+			Sentry.captureException(error, {
+				tags: { handler: "transcribeAudio", status: "error" },
+				contexts: {
+					request: {
+						path: req.path,
+						method: req.method,
+						userId: userId,
+						fileSize: req.file?.size,
+						mimeType: req.file?.mimetype,
+					},
+				},
+			});
 		}
 
 		const serviceResponse = ServiceResponse.failure(

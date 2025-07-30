@@ -1,4 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import {
+	type GenerateContentParameters,
+	type GenerateContentResponse,
+	GoogleGenAI,
+} from "@google/genai";
 import * as Sentry from "@sentry/node";
 import { aiConfig } from "@/config/ai.js";
 
@@ -132,7 +136,9 @@ export class GeminiConnection {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
-	async generateContent(request: any): Promise<any> {
+	async generateContent(
+		request: GenerateContentParameters,
+	): Promise<GenerateContentResponse> {
 		if (!this.isHealthy) {
 			throw new Error("Gemini AI connection is not healthy");
 		}

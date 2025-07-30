@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { getInterviewService } from "@/services/interviewService.js";
+import { InterviewService } from "@/services/interviewService.js";
 
 /**
  * HTTP handler for getting interview by ID with answers
@@ -34,7 +34,8 @@ export const getInterviewById = async (
 	}
 
 	try {
-		const interview = await getInterviewService().getInterviewById(
+		const interviewService = new InterviewService();
+		const interview = await interviewService.getInterviewById(
 			interviewId,
 			userId,
 		);

@@ -1,11 +1,14 @@
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type {
+	DatabaseClient,
+	IDatabaseProvider,
+} from "@/interfaces/providers/index.js";
 
 /**
  * Mock Database Provider for testing and development
  * Stores data in memory without external database dependencies
  */
 export class MockDatabaseProvider implements IDatabaseProvider {
-	private data: Map<string, any[]>;
+	private data: Map<string, Record<string, unknown>[]>;
 	private sequences: Map<string, number>;
 	private shouldFail: boolean;
 
@@ -26,7 +29,7 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 	/**
 	 * Get current data for a table (for testing/debugging)
 	 */
-	getTableData(tableName: string): any[] {
+	getTableData(tableName: string): Record<string, unknown>[] {
 		return this.data.get(tableName) || [];
 	}
 
@@ -39,7 +42,7 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		this.initializeTestData();
 	}
 
-	async query<T>(sql: string, params: any[] = []): Promise<T[]> {
+	async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
 		if (this.shouldFail) {
 			throw new Error("Mock database query failure");
 		}
@@ -61,7 +64,9 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		return [] as T[];
 	}
 
-	async transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+	async transaction<T>(
+		callback: (client: DatabaseClient) => Promise<T>,
+	): Promise<T> {
 		if (this.shouldFail) {
 			throw new Error("Mock database transaction failure");
 		}
@@ -74,7 +79,7 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		return await callback(mockClient);
 	}
 
-	async getClient(): Promise<any> {
+	async getClient(): Promise<DatabaseClient> {
 		if (this.shouldFail) {
 			throw new Error("Mock database client failure");
 		}
@@ -114,12 +119,13 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		this.sequences.set("interviews", 1);
 	}
 
-	private handleSelect<T>(sql: string, params: any[]): T[] {
+	private handleSelect<T>(sql: string, params: unknown[]): T[] {
 		// Extract table name from SELECT statement
-		const tableMatch = sql.match(/from\\s+(\\w+)/i);
+		const tableMatch = sql.match(/from\s+(\w+)/i);
 		if (!tableMatch) return [];
 
 		const tableName = tableMatch[1];
+		if (!tableName) return [];
 		const tableData = this.data.get(tableName) || [];
 
 		// Simple WHERE clause handling for common patterns
@@ -130,16 +136,17 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		return tableData as T[];
 	}
 
-	private handleInsert<T>(sql: string, params: any[]): T[] {
+	private handleInsert<T>(sql: string, params: unknown[]): T[] {
 		// Extract table name
-		const tableMatch = sql.match(/insert\\s+into\\s+(\\w+)/i);
+		const tableMatch = sql.match(/insert\s+into\s+(\w+)/i);
 		if (!tableMatch) return [];
 
 		const tableName = tableMatch[1];
+		if (!tableName) return [];
 		const tableData = this.data.get(tableName) || [];
 
 		// Create mock record
-		const record: any = {};
+		const record: Record<string, unknown> = {};
 
 		// Handle common patterns for each table
 		if (tableName === "topics") {
@@ -187,24 +194,28 @@ export class MockDatabaseProvider implements IDatabaseProvider {
 		return [record] as T[];
 	}
 
-	private handleUpdate<T>(sql: string, _params: any[]): T[] {
+	private handleUpdate<T>(sql: string, _params: unknown[]): T[] {
 		// Simple update handling - would need more sophisticated parsing for production
-		const tableMatch = sql.match(/update\\s+(\\w+)/i);
+		const tableMatch = sql.match(/update\s+(\w+)/i);
 		if (!tableMatch) return [];
 
 		const tableName = tableMatch[1];
-		const _tableData = this.data.get(tableName) || [];
+		if (!tableName) return [];
 
 		// For mock purposes, just return success
 		return [{ success: true }] as T[];
 	}
 
-	private handleDelete<T>(_sql: string, _params: any[]): T[] {
+	private handleDelete<T>(_sql: string, _params: unknown[]): T[] {
 		// Simple delete handling
 		return [{ success: true }] as T[];
 	}
 
-	private applyWhereClause<T>(data: any[], sql: string, params: any[]): T[] {
+	private applyWhereClause<T>(
+		data: Record<string, unknown>[],
+		sql: string,
+		params: unknown[],
+	): T[] {
 		// Simple WHERE clause handling for common patterns
 		if (sql.includes("user_id = $1")) {
 			return data.filter((row) => row.user_id === params[0]) as T[];

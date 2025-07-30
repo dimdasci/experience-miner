@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type {
 	ExperienceRecord,
 	ProfessionalSummary,
@@ -16,7 +17,7 @@ export class ExperienceRepository implements IExperienceRepository {
 
 	async saveRecord(
 		userId: string,
-		record: { extractedFacts: any },
+		record: { extractedFacts: ExtractedFacts },
 	): Promise<ExperienceRecord> {
 		// Check if record exists
 		const existing = await this.getByUserId(userId);
@@ -84,7 +85,7 @@ export class ExperienceRepository implements IExperienceRepository {
 	async getByUserId(userId: string): Promise<ExperienceRecord | null> {
 		const result = await this.db.query<{
 			user_id: string;
-			summary: any;
+			summary: ProfessionalSummary;
 			updated_at: string;
 		}>("SELECT * FROM experience WHERE user_id = $1", [userId]);
 
@@ -93,6 +94,9 @@ export class ExperienceRepository implements IExperienceRepository {
 		}
 
 		const record = result[0];
+		if (!record) {
+			return null;
+		}
 		return {
 			user_id: record.user_id,
 			summary:
@@ -109,7 +113,7 @@ export class ExperienceRepository implements IExperienceRepository {
 	): Promise<ExperienceRecord> {
 		const result = await this.db.query<{
 			user_id: string;
-			summary: any;
+			summary: ProfessionalSummary;
 			updated_at: string;
 		}>(
 			`UPDATE experience 

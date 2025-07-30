@@ -11,6 +11,8 @@ import type { IAnswerRepository } from "../interfaces/index.js";
  */
 export class MockAnswerRepository implements IAnswerRepository {
 	private answers: Answer[] = [];
+	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Used in create method for ID generation
+	private nextId = 1;
 
 	/**
 	 * Get current answers (for testing/debugging)

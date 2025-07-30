@@ -8,6 +8,11 @@ import {
 	InterviewRepository,
 	TopicRepository,
 } from "@/repositories/index.js";
+import type { CreditsService } from "@/services/creditsService.js";
+import type { TopicService } from "@/services/topicService.js";
+import type { TranscribeService } from "@/services/transcribeService.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
+import type { ExtractedFactsAI } from "@/types/ai/index.js";
 import type {
 	Answer,
 	Interview,
@@ -25,9 +30,9 @@ export class InterviewService {
 	private interviewRepo: InterviewRepository;
 	private answerRepo: AnswerRepository;
 	private experienceRepo: ExperienceRepository;
-	private creditsService: any;
-	private topicService: any;
-	private transcribeService: any;
+	private creditsService: CreditsService;
+	private topicService: TopicService;
+	private transcribeService: TranscribeService;
 
 	constructor(
 		aiProvider?: IAIProvider,
@@ -155,7 +160,8 @@ export class InterviewService {
 
 		try {
 			// Check available credits
-			const currentCredits = await this.creditsService.getCurrentBalance(userId);
+			const currentCredits =
+				await this.creditsService.getCurrentBalance(userId);
 			if (currentCredits <= 0) {
 				throw new Error("Not enough credits");
 			}
@@ -185,7 +191,8 @@ export class InterviewService {
 			);
 
 			// Get remaining credits
-			const remainingCredits = await this.creditsService.getCurrentBalance(userId);
+			const remainingCredits =
+				await this.creditsService.getCurrentBalance(userId);
 
 			const duration = Date.now() - startTime;
 
@@ -239,7 +246,7 @@ export class InterviewService {
 		interviewId: string,
 		userId: string,
 	): Promise<{
-		extractedFacts: any;
+		extractedFacts: ExtractedFacts;
 		credits: number;
 		interviewStatus: InterviewStatus;
 		topicsUpdated: number;
@@ -266,7 +273,8 @@ export class InterviewService {
 
 		try {
 			// Check available credits
-			const currentCredits = await this.creditsService.getCurrentBalance(userId);
+			const currentCredits =
+				await this.creditsService.getCurrentBalance(userId);
 			if (currentCredits <= 0) {
 				throw new Error("Not enough credits");
 			}
@@ -305,97 +313,47 @@ export class InterviewService {
 			// Step 3: Process AI extraction
 			const extractionResult = await this.transcribeService.extractFacts(
 				transcript,
-				interviewId,
+				parseInt(interviewId, 10),
 			);
 			const totalTokenCount =
 				extractionResult.usageMetadata?.totalTokenCount || 0;
 
-			// Step 4: Transform extraction data to include source tracking
-			const currentTimestamp = new Date().toISOString();
-			const extractedFacts = {
-				achievements: (extractionResult.data.achievements || []).map(
-					(achievement: {
-						description: string;
-						sourceQuestionNumber: number;
-					}) => ({
-						description: achievement.description,
-						sourceInterviewId: interviewId,
-						sourceQuestionNumber: achievement.sourceQuestionNumber,
-						extractedAt: currentTimestamp,
-					}),
-				),
-				companies: (extractionResult.data.companies || []).map(
-					(company: { name: string; sourceQuestionNumber: number }) => ({
-						name: company.name,
-						sourceInterviewId: interviewId,
-						sourceQuestionNumber: company.sourceQuestionNumber,
-						extractedAt: currentTimestamp,
-					}),
-				),
-				projects: (extractionResult.data.projects || []).map(
-					(project: {
-						name: string;
-						description: string;
-						role: string;
-						company?: string;
-						sourceQuestionNumber: number;
-					}) => ({
-						name: project.name || "Unnamed Project",
-						description: project.description || "",
-						role: project.role || "",
-						company: project.company || undefined,
-						sourceInterviewId: interviewId,
-						sourceQuestionNumber: project.sourceQuestionNumber,
-						extractedAt: currentTimestamp,
-					}),
-				),
-				roles: (extractionResult.data.roles || []).map(
-					(role: {
-						title: string;
-						company: string;
-						duration: string;
-						sourceQuestionNumber: number;
-					}) => ({
-						title: role.title || "Unknown Role",
-						company: role.company || "Unknown Company",
-						duration: role.duration || "",
-						sourceInterviewId: interviewId,
-						sourceQuestionNumber: role.sourceQuestionNumber,
-						extractedAt: currentTimestamp,
-					}),
-				),
-				skills: (extractionResult.data.skills || []).map(
-					(skill: {
-						name: string;
-						category?: string;
-						sourceQuestionNumber: number;
-					}) => ({
-						name: skill.name,
-						category: skill.category,
-						sourceInterviewId: interviewId,
-						sourceQuestionNumber: skill.sourceQuestionNumber,
-						extractedAt: currentTimestamp,
-					}),
-				),
-				summary: {
-					text: extractionResult.data.summary || "",
-					lastUpdated: currentTimestamp,
-					basedOnInterviews: [interviewId],
-				},
-				metadata: {
-					totalExtractions: 1,
-					lastExtractionAt: currentTimestamp,
-					creditsUsed: totalTokenCount,
-				},
+			// Step 4: Get the complete extracted facts from transcribeService (already enriched with metadata)
+			const extractedFacts = extractionResult.data;
+			
+			// Update credits used in metadata
+			extractedFacts.metadata.creditsUsed = totalTokenCount;
+
+			// Convert to AI format for topic processing
+			const factsForTopicAI: ExtractedFactsAI = {
+				summary: { text: extractedFacts.summary.text },
+				companies: extractedFacts.companies.map((c) => ({ name: c.name })),
+				roles: extractedFacts.roles.map((r) => ({
+					title: r.title,
+					company: r.company,
+					duration: r.duration,
+				})),
+				projects: extractedFacts.projects.map((p) => ({
+					name: p.name,
+					description: p.description,
+					role: p.role,
+				})),
+				achievements: extractedFacts.achievements.map((a) => ({
+					description: a.description,
+				})),
+				skills: extractedFacts.skills.map((s) => ({ name: s.name })),
 			};
 
 			// Step 5: Save/update professional summary in experience table
-			await this.experienceRepo.saveRecord(userId, { extractedFacts });
+			// Save the complete extracted facts
+			await this.experienceRepo.saveRecord(userId, {
+				extractedFacts,
+			});
 
 			// Step 6: Generate topic candidates and rerank with credit tracking
 			const existingTopics = await this.topicRepo.getAvailable(userId);
 			const topicWorkflowResult = await this.topicService.processTopicWorkflow(
-				extractedFacts,
+				factsForTopicAI,
 				userId,
 				existingTopics,
 			);
@@ -407,7 +365,7 @@ export class InterviewService {
 			} = topicWorkflowResult.data;
 
 			// Step 6.1: Save new generated topics to database
-			const newTopics = updatedTopics.filter((t) => !t.id);
+			const newTopics = updatedTopics.filter((t: Topic) => !t.id);
 			let savedNewTopics: Topic[] = [];
 			if (newTopics.length > 0) {
 				savedNewTopics = await this.topicRepo.saveGenerated(newTopics);
@@ -415,14 +373,15 @@ export class InterviewService {
 
 			// Step 6.2: Update topic statuses in database
 			const existingTopicsToUpdate = updatedTopics.filter(
-				(topic) => topic.id !== undefined,
+				(topic: Topic) => topic.id !== undefined,
 			);
 			if (existingTopicsToUpdate.length > 0) {
 				const statusUpdates = existingTopicsToUpdate
 					.filter(
-						(topic): topic is Topic & { id: number } => topic.id !== undefined,
+						(topic: Topic): topic is Topic & { id: number } =>
+							topic.id !== undefined,
 					)
-					.map((topic) => ({
+					.map((topic: Topic & { id: number }) => ({
 						id: topic.id,
 						status: topic.status as "available" | "used" | "irrelevant",
 					}));
@@ -436,7 +395,11 @@ export class InterviewService {
 			);
 
 			// Step 8: Consume credits for extraction
-			await this.creditsService.consumeCredits(userId, totalTokenCount, "extractor");
+			await this.creditsService.consumeCredits(
+				userId,
+				totalTokenCount,
+				"extractor",
+			);
 
 			// Step 9: Consume credits for topic generation
 			if (generationTokens > 0) {
@@ -457,7 +420,8 @@ export class InterviewService {
 			}
 
 			// Final remaining credits
-			const remainingCredits = await this.creditsService.getCurrentBalance(userId);
+			const remainingCredits =
+				await this.creditsService.getCurrentBalance(userId);
 
 			const duration = Date.now() - startTime;
 
@@ -491,7 +455,7 @@ export class InterviewService {
 					remainingCredits,
 					newTopicsGenerated: savedNewTopics.length,
 					topicsMarkedIrrelevant: updatedTopics.filter(
-						(t) => t.status === "irrelevant",
+						(t: Topic) => t.status === "irrelevant",
 					).length,
 				},
 			);
@@ -499,7 +463,7 @@ export class InterviewService {
 			return {
 				extractedFacts,
 				credits: remainingCredits,
-				interviewStatus: "completed",
+				interviewStatus: "completed" as const,
 				topicsUpdated: updatedTopics.length,
 				creditsConsumed: {
 					extraction: totalTokenCount,
@@ -538,13 +502,3 @@ export class InterviewService {
 		}
 	}
 }
-
-// Lazy singleton instance to avoid initialization at module load time
-let _interviewService: InterviewService | null = null;
-
-export const getInterviewService = (): InterviewService => {
-	if (!_interviewService) {
-		_interviewService = new InterviewService();
-	}
-	return _interviewService;
-};

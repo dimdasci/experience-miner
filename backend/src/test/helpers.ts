@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { ExtractedFacts } from "@/services/transcribeService.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 // Define the raw types returned by Gemini without the metadata fields
 interface RawCompany {
@@ -119,7 +119,11 @@ export const mockRawGeminiResponse: RawGeminiResponse = {
 
 // This represents the final processed response after the router adds metadata
 export const mockExtractionResponse: ExtractedFacts = {
-	summary: "Experienced software developer with 5+ years in web development.",
+	summary: {
+		text: "Experienced software developer with 5+ years in web development.",
+		lastUpdated: new Date().toISOString(),
+		basedOnInterviews: ["1"],
+	},
 	companies: [
 		{
 			name: "TechCorp",
@@ -208,6 +212,11 @@ export const mockExtractionResponse: ExtractedFacts = {
 			extractedAt: new Date().toISOString(),
 		},
 	],
+	metadata: {
+		totalExtractions: 1,
+		lastExtractionAt: new Date().toISOString(),
+		creditsUsed: 100,
+	},
 };
 
 // Mock GoogleGenAI class

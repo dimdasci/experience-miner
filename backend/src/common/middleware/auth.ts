@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import type { NextFunction, Request, Response } from "express";
 import { supabaseConnection } from "../connections/supabaseConnection.js";
 import { logger } from "./requestLogger";
@@ -55,6 +56,17 @@ export async function authenticateToken(
 
 		next();
 	} catch (error) {
+		// Report to Sentry with context
+		Sentry.captureException(error, {
+			tags: { middleware: "auth", status: "error" },
+			contexts: {
+				request: {
+					path: req.path,
+					method: req.method,
+				},
+			},
+		});
+
 		logger.error("Authentication error", {
 			path: req.path,
 			method: req.method,

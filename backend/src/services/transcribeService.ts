@@ -2,22 +2,34 @@ import { GoogleGenAI, Type } from "@google/genai";
 import * as Sentry from "@sentry/node";
 import { aiConfig } from "@/config/ai.js";
 import type { AIResponse } from "@/types/ai/index.js";
-import type {
-	Achievement,
-	Company,
-	Project,
-	Role,
-	Skill,
-} from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
-// Create a custom ExtractedFacts interface that represents the structure returned by Gemini
-export interface ExtractedFacts {
+// Internal interface for Gemini LLM response - simple format without metadata
+interface GeminiExtractedFacts {
 	summary: string;
-	companies: Company[];
-	roles: Role[];
-	projects: Project[];
-	achievements: Achievement[];
-	skills: Skill[];
+	companies: Array<{ name: string; sourceQuestionNumber: number }>;
+	roles: Array<{
+		title: string;
+		company: string;
+		duration: string;
+		sourceQuestionNumber: number;
+	}>;
+	projects: Array<{
+		name: string;
+		description: string;
+		role: string;
+		company?: string;
+		sourceQuestionNumber: number;
+	}>;
+	achievements: Array<{
+		description: string;
+		sourceQuestionNumber: number;
+	}>;
+	skills: Array<{
+		name: string;
+		category?: string;
+		sourceQuestionNumber: number;
+	}>;
 }
 
 // Use the generic AIResponse type for consistency
@@ -93,10 +105,8 @@ export class TranscribeService {
 
 	async extractFacts(
 		transcript: string,
-		interviewId: string, // Not used directly but kept for API consistency - will be added by caller
+		interviewId: number, // Interview ID as integer for database consistency
 	): Promise<GeminiResponse<ExtractedFacts>> {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		void interviewId; // Acknowledge parameter to suppress warning
 		const responseSchema = {
 			type: Type.OBJECT,
 			properties: {
@@ -232,17 +242,69 @@ ${transcript}
 			}
 
 			const jsonText = response.text.trim();
-			const rawData = JSON.parse(jsonText);
+			const rawData = JSON.parse(jsonText) as GeminiExtractedFacts;
+
 
 			// Validate required fields
 			if (!rawData.summary || !Array.isArray(rawData.companies)) {
 				throw new Error("Invalid response format from Gemini");
 			}
 
-			// Return the raw data directly without any post-processing
-			// Let the caller handle all necessary transformations and additions
+			// Enrich the simple LLM response with known metadata
+			const timestamp = new Date().toISOString();
+			const interviewIdStr = interviewId.toString();
+			const enrichedFacts: ExtractedFacts = {
+				summary: {
+					text: rawData.summary,
+					lastUpdated: timestamp,
+					basedOnInterviews: [interviewIdStr],
+				},
+				companies: (rawData.companies || []).map((company) => ({
+					name: company.name,
+					sourceInterviewId: interviewIdStr,
+					sourceQuestionNumber: company.sourceQuestionNumber,
+					extractedAt: timestamp,
+				})),
+				roles: (rawData.roles || []).map((role) => ({
+					title: role.title || "Unknown Role",
+					company: role.company || "Unknown Company",
+					duration: role.duration || "",
+					sourceInterviewId: interviewIdStr,
+					sourceQuestionNumber: role.sourceQuestionNumber,
+					extractedAt: timestamp,
+				})),
+				projects: (rawData.projects || []).map((project) => ({
+					name: project.name || "Unnamed Project",
+					description: project.description || "",
+					role: project.role || "",
+					company: project.company || undefined,
+					sourceInterviewId: interviewIdStr,
+					sourceQuestionNumber: project.sourceQuestionNumber,
+					extractedAt: timestamp,
+				})),
+				achievements: (rawData.achievements || []).map((achievement) => ({
+					description: achievement.description,
+					sourceInterviewId: interviewIdStr,
+					sourceQuestionNumber: achievement.sourceQuestionNumber,
+					extractedAt: timestamp,
+				})),
+				skills: (rawData.skills || []).map((skill) => ({
+					name: skill.name,
+					category: skill.category,
+					sourceInterviewId: interviewIdStr,
+					sourceQuestionNumber: skill.sourceQuestionNumber,
+					extractedAt: timestamp,
+				})),
+				metadata: {
+					totalExtractions: 1,
+					lastExtractionAt: timestamp,
+					creditsUsed: 0, // Will be updated by caller
+				},
+			};
+
+
 			return {
-				data: rawData as ExtractedFacts,
+				data: enrichedFacts,
 				usageMetadata: response.usageMetadata,
 			};
 		} catch (error: unknown) {
@@ -268,4 +330,3 @@ ${transcript}
 }
 
 // Export the singleton instance for production use
-export const transcribeService = new TranscribeService();

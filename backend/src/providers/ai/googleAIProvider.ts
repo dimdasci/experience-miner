@@ -2,13 +2,11 @@ import { Type } from "@google/genai";
 import * as Sentry from "@sentry/node";
 import { geminiConnection } from "@/common/connections/geminiConnection.js";
 import type { IAIProvider } from "@/interfaces/providers/index.js";
-import type { ExtractedFacts } from "@/services/transcribeService.js";
-import type { AIResponse, ExtractedUsageMetadata } from "@/types/ai/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
+import type { AIResponse, ExtendedUsageMetadata } from "@/types/ai/index.js";
 import type { Topic } from "@/types/database/index.js";
 
-type ExtendedUsageMetadata = ExtractedUsageMetadata & {
-	totalTokenCount?: number;
-};
+// Remove duplicate type definition - use the one from types/ai/index.ts
 
 /**
  * Google AI Provider implementation using Gemini models
@@ -78,45 +76,123 @@ export class GoogleAIProvider implements IAIProvider {
 		interviewId: string,
 	): Promise<AIResponse<ExtractedFacts>> {
 		try {
-			const extractionSchema = Type.object({
-				summary: Type.string(),
-				companies: Type.array(
-					Type.object({
-						name: Type.string(),
-						sourceQuestionNumber: Type.number(),
-					}),
-				),
-				roles: Type.array(
-					Type.object({
-						title: Type.string(),
-						company: Type.string(),
-						duration: Type.string(),
-						sourceQuestionNumber: Type.number(),
-					}),
-				),
-				projects: Type.array(
-					Type.object({
-						name: Type.string(),
-						description: Type.string(),
-						role: Type.string(),
-						company: Type.optional(Type.string()),
-						sourceQuestionNumber: Type.number(),
-					}),
-				),
-				achievements: Type.array(
-					Type.object({
-						description: Type.string(),
-						sourceQuestionNumber: Type.number(),
-					}),
-				),
-				skills: Type.array(
-					Type.object({
-						name: Type.string(),
-						category: Type.optional(Type.string()),
-						sourceQuestionNumber: Type.number(),
-					}),
-				),
-			});
+			const extractionSchema = {
+				type: Type.OBJECT,
+				properties: {
+					summary: {
+						type: Type.STRING,
+						description:
+							"A 2-3 sentence professional summary of the user's experience based on the interview.",
+					},
+					companies: {
+						type: Type.ARRAY,
+						description: "List of unique companies the user has worked for.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								name: { type: Type.STRING },
+								sourceQuestionNumber: {
+									type: Type.NUMBER,
+									description:
+										"The question number from the transcript where this information was found",
+								},
+							},
+							required: ["name", "sourceQuestionNumber"],
+						},
+					},
+					roles: {
+						type: Type.ARRAY,
+						description: "List of roles/positions the user has held.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								title: { type: Type.STRING },
+								company: { type: Type.STRING },
+								duration: { type: Type.STRING },
+								sourceQuestionNumber: {
+									type: Type.NUMBER,
+									description:
+										"The question number from the transcript where this information was found",
+								},
+							},
+							required: [
+								"title",
+								"company",
+								"duration",
+								"sourceQuestionNumber",
+							],
+						},
+					},
+					projects: {
+						type: Type.ARRAY,
+						description: "List of projects the user has worked on.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								name: { type: Type.STRING },
+								description: { type: Type.STRING },
+								role: { type: Type.STRING },
+								company: {
+									type: Type.STRING,
+									description:
+										"Optional company name associated with this project",
+								},
+								sourceQuestionNumber: {
+									type: Type.NUMBER,
+									description:
+										"The question number from the transcript where this information was found",
+								},
+							},
+							required: ["name", "description", "role", "sourceQuestionNumber"],
+						},
+					},
+					achievements: {
+						type: Type.ARRAY,
+						description: "List of notable achievements and accomplishments.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								description: { type: Type.STRING },
+								sourceQuestionNumber: {
+									type: Type.NUMBER,
+									description:
+										"The question number from the transcript where this information was found",
+								},
+							},
+							required: ["description", "sourceQuestionNumber"],
+						},
+					},
+					skills: {
+						type: Type.ARRAY,
+						description: "List of skills mentioned by the user.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								name: { type: Type.STRING },
+								category: {
+									type: Type.STRING,
+									description:
+										"Optional category like 'technical', 'leadership', etc.",
+								},
+								sourceQuestionNumber: {
+									type: Type.NUMBER,
+									description:
+										"The question number from the transcript where this information was found",
+								},
+							},
+							required: ["name", "sourceQuestionNumber"],
+						},
+					},
+				},
+				required: [
+					"summary",
+					"companies",
+					"roles",
+					"projects",
+					"achievements",
+					"skills",
+				],
+			};
 
 			const prompt = `Extract structured career information from this interview transcript. Focus on concrete facts and experiences only.
 
@@ -187,7 +263,7 @@ Requirements:
 	}
 
 	async generateTopics(
-		extractedFacts: any,
+		extractedFacts: ExtractedFacts,
 		userId: string,
 	): Promise<AIResponse<Topic[]>> {
 		try {
@@ -206,20 +282,48 @@ Requirements:
 				};
 			}
 
-			const topicSchema = Type.object({
-				topics: Type.array(
-					Type.object({
-						title: Type.string(),
-						motivational_quote: Type.string(),
-						questions: Type.array(
-							Type.object({
-								text: Type.string(),
-								order: Type.number(),
-							}),
-						),
-					}),
-				),
-			});
+			const topicSchema = {
+				type: Type.OBJECT,
+				properties: {
+					topics: {
+						type: Type.ARRAY,
+						description: "List of generated interview topics.",
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								title: {
+									type: Type.STRING,
+									description: "The topic title",
+								},
+								motivational_quote: {
+									type: Type.STRING,
+									description: "A motivational quote for the topic",
+								},
+								questions: {
+									type: Type.ARRAY,
+									description: "List of questions for the topic",
+									items: {
+										type: Type.OBJECT,
+										properties: {
+											text: {
+												type: Type.STRING,
+												description: "The question text",
+											},
+											order: {
+												type: Type.NUMBER,
+												description: "The order of the question",
+											},
+										},
+										required: ["text", "order"],
+									},
+								},
+							},
+							required: ["title", "motivational_quote", "questions"],
+						},
+					},
+				},
+				required: ["topics"],
+			};
 
 			const prompt = `Based on the following career information, generate 3-5 new interview topics that would help extract additional valuable career details.
 
@@ -286,7 +390,7 @@ Generate topics that would uncover valuable career information not already cover
 	async rankTopics(
 		newCandidates: Topic[],
 		existingTopics: Topic[],
-		extractedFacts: any,
+		extractedFacts: ExtractedFacts,
 	): Promise<AIResponse<number[]>> {
 		try {
 			if (newCandidates.length === 0) {
@@ -303,10 +407,21 @@ Generate topics that would uncover valuable career information not already cover
 
 			const allTopics = [...newCandidates, ...unusedExisting];
 
-			const rankingSchema = Type.object({
-				rankedIndices: Type.array(Type.number()),
-				reasoning: Type.string(),
-			});
+			const rankingSchema = {
+				type: Type.OBJECT,
+				properties: {
+					rankedIndices: {
+						type: Type.ARRAY,
+						description: "Array of topic indices ranked by relevance",
+						items: { type: Type.NUMBER },
+					},
+					reasoning: {
+						type: Type.STRING,
+						description: "Brief explanation of the ranking decisions",
+					},
+				},
+				required: ["rankedIndices", "reasoning"],
+			};
 
 			const prompt = `Rank these interview topics by relevance to extracting valuable career information based on the user's background.
 
@@ -378,34 +493,34 @@ Requirements:
 		}
 	}
 
-	private buildFactsContext(extractedFacts: any): string {
+	private buildFactsContext(extractedFacts: ExtractedFacts): string {
 		if (!extractedFacts) return "";
 
 		const parts: string[] = [];
 
 		if (extractedFacts.companies?.length > 0) {
 			parts.push(
-				`Companies: ${extractedFacts.companies.map((c: any) => c.name).join(", ")}`,
+				`Companies: ${extractedFacts.companies.map((c) => c.name).join(", ")}`,
 			);
 		}
 
 		if (extractedFacts.roles?.length > 0) {
 			parts.push(
 				`Roles: ${extractedFacts.roles
-					.map((r: any) => `${r.title} at ${r.company}`)
+					.map((r) => `${r.title} at ${r.company}`)
 					.join(", ")}`,
 			);
 		}
 
 		if (extractedFacts.projects?.length > 0) {
 			parts.push(
-				`Projects: ${extractedFacts.projects.map((p: any) => p.name).join(", ")}`,
+				`Projects: ${extractedFacts.projects.map((p) => p.name).join(", ")}`,
 			);
 		}
 
 		if (extractedFacts.skills?.length > 0) {
 			parts.push(
-				`Skills: ${extractedFacts.skills.map((s: any) => s.name).join(", ")}`,
+				`Skills: ${extractedFacts.skills.map((s) => s.name).join(", ")}`,
 			);
 		}
 

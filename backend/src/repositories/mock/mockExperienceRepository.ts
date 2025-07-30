@@ -2,6 +2,7 @@ import type {
 	ExperienceRecord,
 	ProfessionalSummary,
 } from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { IExperienceRepository } from "../interfaces/index.js";
 
 /**
@@ -36,11 +37,13 @@ export class MockExperienceRepository implements IExperienceRepository {
 
 	async saveRecord(
 		userId: string,
-		record: { extractedFacts: any },
+		record: { extractedFacts: ExtractedFacts },
 	): Promise<ExperienceRecord> {
 		const experienceRecord: ExperienceRecord = {
 			user_id: userId,
-			summary: record.extractedFacts as ProfessionalSummary,
+			summary: {
+				extractedFacts: record.extractedFacts,
+			},
 			updated_at: new Date().toISOString(),
 		};
 

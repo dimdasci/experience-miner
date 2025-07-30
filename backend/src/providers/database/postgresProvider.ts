@@ -7,7 +7,7 @@ import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
  * Handles query execution, transactions, and connection management
  */
 export class PostgresProvider implements IDatabaseProvider {
-	async query<T>(sql: string, params?: any[]): Promise<T[]> {
+	async query<T>(sql: string, params?: unknown[]): Promise<T[]> {
 		return await database.query<T>(sql, params);
 	}
 

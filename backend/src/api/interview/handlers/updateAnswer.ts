@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { getInterviewService } from "@/services/interviewService.js";
+import { InterviewService } from "@/services/interviewService.js";
 
 /**
  * HTTP handler for updating answer by question number
@@ -44,7 +44,8 @@ export const updateAnswer = async (
 	}
 
 	try {
-		const updatedAnswer = await getInterviewService().updateAnswer(
+		const interviewService = new InterviewService();
+		const updatedAnswer = await interviewService.updateAnswer(
 			interviewId,
 			parseInt(questionNumber, 10),
 			userId,

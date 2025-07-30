@@ -54,7 +54,7 @@ export class TopicRepository implements ITopicRepository {
 			[topicId],
 		);
 
-		return result.length > 0 ? result[0] : null;
+		return result.length > 0 ? (result[0] ?? null) : null;
 	}
 
 	async markAsUsed(topicId: number): Promise<Topic> {

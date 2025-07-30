@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { getInterviewService } from "@/services/interviewService.js";
+import { InterviewService } from "@/services/interviewService.js";
 
 /**
  * HTTP handler for getting all interviews for authenticated user
@@ -24,7 +24,8 @@ export const getAllInterviews = async (
 	}
 
 	try {
-		const interviews = await getInterviewService().getAllInterviews(userId);
+		const interviewService = new InterviewService();
+		const interviews = await interviewService.getAllInterviews(userId);
 
 		const serviceResponse = ServiceResponse.success(
 			"Interviews retrieved successfully",

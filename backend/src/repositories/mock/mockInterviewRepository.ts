@@ -11,6 +11,8 @@ import type { IInterviewRepository } from "../interfaces/index.js";
  */
 export class MockInterviewRepository implements IInterviewRepository {
 	private interviews: Interview[] = [];
+	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Used in create method for ID generation
+	private nextId = 1;
 
 	/**
 	 * Get current interviews (for testing/debugging)

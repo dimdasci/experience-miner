@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { getInterviewService } from "@/services/interviewService.js";
+import { InterviewService } from "@/services/interviewService.js";
 
 /**
  * HTTP handler for extracting structured facts from interview
@@ -34,10 +34,8 @@ export const extractFacts = async (
 	}
 
 	try {
-		const result = await getInterviewService().extractFacts(
-			interviewId,
-			userId,
-		);
+		const interviewService = new InterviewService();
+		const result = await interviewService.extractFacts(interviewId, userId);
 
 		const serviceResponse = ServiceResponse.success(
 			"Interview extraction completed successfully",

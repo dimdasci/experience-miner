@@ -7,7 +7,7 @@ import {
 	authenticateToken,
 } from "@/common/middleware/auth.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import { creditsService } from "@/services/creditsService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 export const creditsRouter: IRouter = Router();
 
@@ -29,6 +29,8 @@ creditsRouter.get(
 		}
 
 		try {
+			const container = ServiceContainer.getInstance();
+			const creditsService = container.getCreditsService();
 			const credits = await creditsService.getCurrentBalance(userId);
 
 			logger.info("Credits balance retrieved", {

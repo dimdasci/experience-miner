@@ -2,6 +2,7 @@ import type {
 	ExperienceRecord,
 	ProfessionalSummary,
 } from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 /**
  * Repository interface for experience/professional summary operations
@@ -12,7 +13,7 @@ export interface IExperienceRepository {
 	 */
 	saveRecord(
 		userId: string,
-		record: { extractedFacts: any },
+		record: { extractedFacts: ExtractedFacts },
 	): Promise<ExperienceRecord>;
 
 	/**

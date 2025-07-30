@@ -7,6 +7,8 @@ import type { ITopicRepository } from "../interfaces/index.js";
  */
 export class MockTopicRepository implements ITopicRepository {
 	private topics: Topic[] = [];
+	// biome-ignore lint/correctness/noUnusedPrivateClassMembers: Used in create method for ID generation
+	private nextId = 1;
 
 	/**
 	 * Get current topics (for testing/debugging)

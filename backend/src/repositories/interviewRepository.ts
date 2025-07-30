@@ -77,7 +77,7 @@ export class InterviewRepository implements IInterviewRepository {
 			[parseInt(interviewId, 10)],
 		);
 
-		return result.length > 0 ? result[0] : null;
+		return result.length > 0 ? (result[0] ?? null) : null;
 	}
 
 	async getAllByUserId(userId: string): Promise<Interview[]> {
@@ -129,10 +129,7 @@ export class InterviewRepository implements IInterviewRepository {
 		]);
 
 		// Then delete the interview
-		const _result = await this.db.query(
-			"DELETE FROM interviews WHERE id = $1",
-			[interviewId],
-		);
+		await this.db.query("DELETE FROM interviews WHERE id = $1", [interviewId]);
 
 		Sentry.logger?.info?.("Interview and related data deleted", {
 			interviewId,

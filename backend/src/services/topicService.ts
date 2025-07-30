@@ -481,5 +481,3 @@ Focus on which topics would be most valuable for this specific person to explore
 		};
 	}
 }
-
-export const topicService = new TopicService();

@@ -1,5 +1,7 @@
 // Database entity types for Experience Miner
 
+import type { ExtractedFacts } from "../extractedFacts.js";
+
 export interface Topic {
 	id?: number; // Optional - only set after database persistence
 	user_id: string;
@@ -49,23 +51,7 @@ export interface ExperienceRecord {
 }
 
 export interface ProfessionalSummary {
-	extractedFacts: {
-		achievements: Achievement[];
-		companies: Company[];
-		projects: Project[];
-		roles: Role[];
-		skills: Skill[];
-		summary: {
-			text: string;
-			lastUpdated: string;
-			basedOnInterviews: string[];
-		};
-		metadata: {
-			totalExtractions: number;
-			lastExtractionAt: string;
-			creditsUsed: number;
-		};
-	};
+	extractedFacts: ExtractedFacts;
 }
 
 export interface Achievement {

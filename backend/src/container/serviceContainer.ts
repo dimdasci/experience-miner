@@ -1,10 +1,14 @@
 import { serverConfig } from "@/config/index.js";
-import { ProviderFactory } from "@/factories/providerFactory.js";
+import {
+	createAIProvider,
+	createDatabaseProvider,
+} from "@/factories/providerFactory.js";
 import type {
 	IAIProvider,
 	IDatabaseProvider,
 } from "@/interfaces/providers/index.js";
 import { CreditsService } from "@/services/creditsService.js";
+import { DatabaseService } from "@/services/databaseService.js";
 import { TopicService } from "@/services/topicService.js";
 import { TranscribeService } from "@/services/transcribeService.js";
 
@@ -14,20 +18,16 @@ import { TranscribeService } from "@/services/transcribeService.js";
  */
 export class ServiceContainer {
 	private static instance: ServiceContainer;
-	private aiProvider: IAIProvider;
-	private databaseProvider: IDatabaseProvider;
-	private creditsService: CreditsService;
-	private topicService: TopicService;
-	private transcribeService: TranscribeService;
+	private aiProvider: IAIProvider | null = null;
+	private databaseProvider: IDatabaseProvider | null = null;
+	private creditsService: CreditsService | null = null;
+	private databaseService: DatabaseService | null = null;
+	private topicService: TopicService | null = null;
+	private transcribeService: TranscribeService | null = null;
 	private initialized = false;
 
 	private constructor() {
 		// Providers and services will be initialized lazily
-		this.aiProvider = null as any;
-		this.databaseProvider = null as any;
-		this.creditsService = null as any;
-		this.topicService = null as any;
-		this.transcribeService = null as any;
 	}
 
 	/**
@@ -51,14 +51,15 @@ export class ServiceContainer {
 
 		try {
 			// Create providers using factory
-			this.aiProvider = ProviderFactory.createAIProvider();
-			this.databaseProvider = ProviderFactory.createDatabaseProvider();
+			this.aiProvider = createAIProvider();
+			this.databaseProvider = createDatabaseProvider();
 
 			// Initialize database provider
 			await this.databaseProvider.initialize();
 
 			// Initialize services
 			this.creditsService = new CreditsService();
+			this.databaseService = new DatabaseService();
 			this.topicService = new TopicService();
 			this.transcribeService = new TranscribeService();
 
@@ -83,6 +84,9 @@ export class ServiceContainer {
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
+		if (!this.aiProvider) {
+			throw new Error("AI provider not initialized");
+		}
 		return this.aiProvider;
 	}
 
@@ -94,6 +98,9 @@ export class ServiceContainer {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
+		}
+		if (!this.databaseProvider) {
+			throw new Error("Database provider not initialized");
 		}
 		return this.databaseProvider;
 	}
@@ -107,7 +114,25 @@ export class ServiceContainer {
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
+		if (!this.creditsService) {
+			throw new Error("Credits service not initialized");
+		}
 		return this.creditsService;
+	}
+
+	/**
+	 * Get database service instance
+	 */
+	getDatabaseService(): DatabaseService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.databaseService) {
+			throw new Error("Database service not initialized");
+		}
+		return this.databaseService;
 	}
 
 	/**
@@ -118,6 +143,9 @@ export class ServiceContainer {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
+		}
+		if (!this.topicService) {
+			throw new Error("Topic service not initialized");
 		}
 		return this.topicService;
 	}
@@ -130,6 +158,9 @@ export class ServiceContainer {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
+		}
+		if (!this.transcribeService) {
+			throw new Error("Transcribe service not initialized");
 		}
 		return this.transcribeService;
 	}
@@ -146,11 +177,12 @@ export class ServiceContainer {
 	 */
 	reset(): void {
 		this.initialized = false;
-		this.aiProvider = null as any;
-		this.databaseProvider = null as any;
-		this.creditsService = null as any;
-		this.topicService = null as any;
-		this.transcribeService = null as any;
+		this.aiProvider = null;
+		this.databaseProvider = null;
+		this.creditsService = null;
+		this.databaseService = null;
+		this.topicService = null;
+		this.transcribeService = null;
 	}
 
 	/**
@@ -161,6 +193,7 @@ export class ServiceContainer {
 		databaseProvider: IDatabaseProvider,
 		services?: {
 			creditsService?: CreditsService;
+			databaseService?: DatabaseService;
 			topicService?: TopicService;
 			transcribeService?: TranscribeService;
 		},
@@ -173,8 +206,10 @@ export class ServiceContainer {
 
 		// Initialize services (use provided or create new)
 		this.creditsService = services?.creditsService || new CreditsService();
+		this.databaseService = services?.databaseService || new DatabaseService();
 		this.topicService = services?.topicService || new TopicService();
-		this.transcribeService = services?.transcribeService || new TranscribeService();
+		this.transcribeService =
+			services?.transcribeService || new TranscribeService();
 
 		this.initialized = true;
 	}
@@ -188,7 +223,7 @@ export class ServiceContainer {
 		}
 
 		try {
-			await this.databaseProvider.close();
+			await this.databaseProvider?.close();
 			this.reset();
 			console.log("Service container cleaned up successfully");
 		} catch (error) {
@@ -215,7 +250,7 @@ export class ServiceContainer {
 			};
 		}
 
-		const databaseHealthy = await this.databaseProvider.isHealthy();
+		const databaseHealthy = (await this.databaseProvider?.isHealthy()) ?? false;
 
 		return {
 			healthy: databaseHealthy,

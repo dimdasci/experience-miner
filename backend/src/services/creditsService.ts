@@ -222,5 +222,3 @@ export class CreditsService {
 		return this.addCredits(userId, 100, "welcome", 100, "CREDITS");
 	}
 }
-
-export const creditsService = new CreditsService();

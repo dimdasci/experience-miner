@@ -7,7 +7,7 @@ import {
 	authenticateToken,
 } from "@/common/middleware/auth.js";
 import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
-import { databaseService } from "@/services/databaseService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 import type {
 	Answer as BusinessAnswer,
 	Topic,
@@ -29,6 +29,8 @@ topicsRouter.get(
 
 		try {
 			// Get existing topics for user
+			const container = ServiceContainer.getInstance();
+			const databaseService = container.getDatabaseService();
 			let topics = await databaseService.getTopicsByUserId(userId);
 
 			// If no topics exist, seed with initial topics
@@ -117,6 +119,8 @@ topicsRouter.post(
 			await client.query("BEGIN");
 
 			// 1. Verify topic exists and is available
+			const container = ServiceContainer.getInstance();
+			const databaseService = container.getDatabaseService();
 			const topic = await databaseService.getTopicById(topicId);
 			if (!topic) {
 				await client.query("ROLLBACK");

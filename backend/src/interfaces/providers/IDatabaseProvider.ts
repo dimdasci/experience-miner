@@ -1,4 +1,12 @@
 /**
+ * Generic database client interface for different implementations
+ */
+export interface DatabaseClient {
+	query<T>(sql: string, params?: unknown[]): Promise<T[] | { rows: T[] }>;
+	release?(): void;
+}
+
+/**
  * Database Provider interface for abstracting different database implementations
  * Supports query execution, transactions, and connection management
  */
@@ -9,20 +17,20 @@ export interface IDatabaseProvider {
 	 * @param params - Optional query parameters
 	 * @returns Promise with query results
 	 */
-	query<T>(sql: string, params?: any[]): Promise<T[]>;
+	query<T>(sql: string, params?: unknown[]): Promise<T[]>;
 
 	/**
 	 * Execute multiple operations within a database transaction
 	 * @param callback - Function to execute within transaction
 	 * @returns Promise with transaction result
 	 */
-	transaction<T>(callback: (client: any) => Promise<T>): Promise<T>;
+	transaction<T>(callback: (client: DatabaseClient) => Promise<T>): Promise<T>;
 
 	/**
 	 * Get a database client for manual connection management
 	 * @returns Promise with database client
 	 */
-	getClient(): Promise<any>;
+	getClient(): Promise<DatabaseClient>;
 
 	/**
 	 * Initialize database connection and perform setup

@@ -1,5 +1,5 @@
 import type { IAIProvider } from "@/interfaces/providers/index.js";
-import type { ExtractedFacts } from "@/services/transcribeService.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { AIResponse } from "@/types/ai/index.js";
 import type { Topic } from "@/types/database/index.js";
 
@@ -9,7 +9,7 @@ import type { Topic } from "@/types/database/index.js";
  */
 export class MockAIProvider implements IAIProvider {
 	private shouldFail: boolean;
-	private responses: Map<string, any>;
+	private responses: Map<string, unknown>;
 
 	constructor(shouldFail = false) {
 		this.shouldFail = shouldFail;
@@ -19,7 +19,7 @@ export class MockAIProvider implements IAIProvider {
 	/**
 	 * Set custom response for a specific operation
 	 */
-	setResponse(operation: string, response: any): void {
+	setResponse(operation: string, response: unknown): void {
 		this.responses.set(operation, response);
 	}
 
@@ -40,7 +40,7 @@ export class MockAIProvider implements IAIProvider {
 
 		const customResponse = this.responses.get("transcribe");
 		if (customResponse) {
-			return customResponse;
+			return customResponse as AIResponse<string>;
 		}
 
 		// Default mock transcription
@@ -66,12 +66,16 @@ export class MockAIProvider implements IAIProvider {
 
 		const customResponse = this.responses.get("extract");
 		if (customResponse) {
-			return customResponse;
+			return customResponse as AIResponse<ExtractedFacts>;
 		}
 
 		// Default mock extraction
 		const facts: ExtractedFacts = {
-			summary: "Mock professional summary based on the interview transcript",
+			summary: {
+				text: "Mock professional summary based on the interview transcript",
+				lastUpdated: new Date().toISOString(),
+				basedOnInterviews: [interviewId],
+			},
 			companies: [
 				{
 					name: "Mock Corporation",
@@ -125,6 +129,11 @@ export class MockAIProvider implements IAIProvider {
 					extractedAt: new Date().toISOString(),
 				},
 			],
+			metadata: {
+				totalExtractions: 1,
+				lastExtractionAt: new Date().toISOString(),
+				creditsUsed: 200,
+			},
 		};
 
 		return {
@@ -138,7 +147,7 @@ export class MockAIProvider implements IAIProvider {
 	}
 
 	async generateTopics(
-		_extractedFacts: any,
+		_extractedFacts: ExtractedFacts,
 		_userId: string,
 	): Promise<AIResponse<Topic[]>> {
 		if (this.shouldFail) {
@@ -147,7 +156,7 @@ export class MockAIProvider implements IAIProvider {
 
 		const customResponse = this.responses.get("generateTopics");
 		if (customResponse) {
-			return customResponse;
+			return customResponse as AIResponse<Topic[]>;
 		}
 
 		// Default mock topics
@@ -194,7 +203,7 @@ export class MockAIProvider implements IAIProvider {
 	async rankTopics(
 		newCandidates: Topic[],
 		existingTopics: Topic[],
-		_extractedFacts: any,
+		_extractedFacts: ExtractedFacts,
 	): Promise<AIResponse<number[]>> {
 		if (this.shouldFail) {
 			throw new Error("Mock AI topic ranking failure");
@@ -202,7 +211,7 @@ export class MockAIProvider implements IAIProvider {
 
 		const customResponse = this.responses.get("rankTopics");
 		if (customResponse) {
-			return customResponse;
+			return customResponse as AIResponse<number[]>;
 		}
 
 		// Default mock ranking (simply return indices in order)

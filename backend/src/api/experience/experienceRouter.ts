@@ -5,7 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { authenticateToken } from "@/common/middleware/auth.js";
-import { databaseService } from "@/services/databaseService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 export const experienceRouter: IRouter = Router();
 
@@ -31,6 +31,8 @@ experienceRouter.get(
 				endpoint: "GET /api/experience",
 			});
 
+			const container = ServiceContainer.getInstance();
+			const databaseService = container.getDatabaseService();
 			const experienceRecord =
 				await databaseService.getExperienceByUserId(userId);
 
@@ -71,13 +73,55 @@ experienceRouter.get(
 			Sentry.logger?.info?.("Experience data retrieved successfully", {
 				user_id: userId,
 				hasData: true,
-				extractionCount:
-					experienceRecord.summary?.metadata?.totalExtractions || 0,
+				summary: experienceRecord.summary,
+				extractionCount: experienceRecord.summary?.extractedFacts?.metadata?.totalExtractions || 0,
 			});
 
+			// Get the stored extracted facts - stored in summary.extractedFacts per database schema
+			const storedFacts = experienceRecord.summary?.extractedFacts;
+
+			// Handle case where extractedFacts might not exist yet
+			if (!storedFacts) {
+				// Return empty experience data structure if extractedFacts doesn't exist
+				const emptyExperience = {
+					extractedFacts: {
+						achievements: [],
+						companies: [],
+						projects: [],
+						roles: [],
+						skills: [],
+						summary: {
+							text: "",
+							lastUpdated: new Date().toISOString(),
+							basedOnInterviews: [],
+						},
+						metadata: {
+							totalExtractions: 0,
+							lastExtractionAt: null,
+							creditsUsed: 0,
+						},
+					},
+				};
+
+				Sentry.logger?.info?.(
+					"Experience data retrieved (empty - no extractedFacts)",
+					{
+						user_id: userId,
+						hasData: false,
+					},
+				);
+
+				const serviceResponse = ServiceResponse.success(
+					"Experience data retrieved (empty)",
+					emptyExperience,
+				);
+				return res.status(serviceResponse.statusCode).json(serviceResponse);
+			}
+
+			// Data is already in the correct unified format - return as is
 			const serviceResponse = ServiceResponse.success(
 				"Experience data retrieved successfully",
-				{ extractedFacts: experienceRecord.summary },
+				{ extractedFacts: storedFacts },
 			);
 
 			return res.status(serviceResponse.statusCode).json(serviceResponse);

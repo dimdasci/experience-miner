@@ -125,7 +125,7 @@ export class AnswerRepository implements IAnswerRepository {
 			[answerId],
 		);
 
-		return result.length > 0 ? result[0] : null;
+		return result.length > 0 ? (result[0] ?? null) : null;
 	}
 
 	async deleteByInterviewId(interviewId: number): Promise<void> {

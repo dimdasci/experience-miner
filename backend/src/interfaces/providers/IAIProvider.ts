@@ -1,6 +1,9 @@
-import type { ExtractedFacts } from "@/services/transcribeService.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { AIResponse } from "@/types/ai/index.js";
 import type { Topic } from "@/types/database/index.js";
+
+// Type alias to avoid circular dependency issues
+type ExtractedFactsData = ExtractedFacts;
 
 /**
  * AI Provider interface for abstracting different AI service implementations
@@ -36,7 +39,7 @@ export interface IAIProvider {
 	 * @returns Promise with generated topics and usage metadata
 	 */
 	generateTopics(
-		extractedFacts: any, // Using any for now to avoid circular dependencies
+		extractedFacts: ExtractedFactsData,
 		userId: string,
 	): Promise<AIResponse<Topic[]>>;
 
@@ -50,6 +53,6 @@ export interface IAIProvider {
 	rankTopics(
 		newCandidates: Topic[],
 		existingTopics: Topic[],
-		extractedFacts: any, // Using any for now to avoid circular dependencies
+		extractedFacts: ExtractedFactsData,
 	): Promise<AIResponse<number[]>>;
 }

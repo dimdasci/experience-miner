@@ -14,7 +14,7 @@ import type {
 	UpdateAnswerParams,
 } from "@/types/database/index.js";
 
-class DatabaseService {
+export class DatabaseService {
 	// Topic CRUD operations
 	async createTopic(params: CreateTopicParams): Promise<Topic> {
 		const result = await database.query<Topic>(
@@ -463,5 +463,3 @@ class DatabaseService {
 		}
 	}
 }
-
-export const databaseService = new DatabaseService();
