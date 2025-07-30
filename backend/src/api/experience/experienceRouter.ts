@@ -29,12 +29,13 @@ experienceRouter.get(
 			Sentry.logger?.info?.("Experience data request started", {
 				user_id: userId,
 				endpoint: "GET /api/experience",
+				component: "ExperienceRouter",
 			});
 
 			const container = ServiceContainer.getInstance();
-			const databaseService = container.getDatabaseService();
+			const experienceService = container.getExperienceService();
 			const experienceRecord =
-				await databaseService.getExperienceByUserId(userId);
+				await experienceService.getExperienceByUserId(userId);
 
 			if (!experienceRecord) {
 				// Return empty experience data structure if none exists
@@ -61,6 +62,7 @@ experienceRouter.get(
 				Sentry.logger?.info?.("Experience data retrieved (empty)", {
 					user_id: userId,
 					hasData: false,
+					component: "ExperienceRouter",
 				});
 
 				const serviceResponse = ServiceResponse.success(
@@ -73,12 +75,13 @@ experienceRouter.get(
 			Sentry.logger?.info?.("Experience data retrieved successfully", {
 				user_id: userId,
 				hasData: true,
-				summary: experienceRecord.summary,
-				extractionCount: experienceRecord.summary?.extractedFacts?.metadata?.totalExtractions || 0,
+				component: "ExperienceRouter",
+				extractionCount:
+					experienceRecord?.payload?.metadata?.totalExtractions || 0,
 			});
 
 			// Get the stored extracted facts - stored in summary.extractedFacts per database schema
-			const storedFacts = experienceRecord.summary?.extractedFacts;
+			const storedFacts = experienceRecord.payload;
 
 			// Handle case where extractedFacts might not exist yet
 			if (!storedFacts) {
@@ -108,6 +111,7 @@ experienceRouter.get(
 					{
 						user_id: userId,
 						hasData: false,
+						component: "ExperienceRouter",
 					},
 				);
 
@@ -132,6 +136,10 @@ experienceRouter.get(
 				contexts: {
 					user: { id: userId },
 					request: { endpoint: "GET /api/experience" },
+					operation: {
+						name: "getExperienceByUserId",
+						component: "ExperienceRouter",
+					},
 				},
 			});
 			// Supplementary logging for user journey analysis
@@ -139,6 +147,7 @@ experienceRouter.get(
 				user_id: userId,
 				endpoint: "GET /api/experience",
 				error: error instanceof Error ? error.message : String(error),
+				component: "ExperienceRouter",
 			});
 
 			const serviceResponse = ServiceResponse.failure(

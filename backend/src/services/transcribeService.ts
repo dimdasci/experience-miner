@@ -244,7 +244,6 @@ ${transcript}
 			const jsonText = response.text.trim();
 			const rawData = JSON.parse(jsonText) as GeminiExtractedFacts;
 
-
 			// Validate required fields
 			if (!rawData.summary || !Array.isArray(rawData.companies)) {
 				throw new Error("Invalid response format from Gemini");
@@ -301,7 +300,6 @@ ${transcript}
 					creditsUsed: 0, // Will be updated by caller
 				},
 			};
-
 
 			return {
 				data: enrichedFacts,

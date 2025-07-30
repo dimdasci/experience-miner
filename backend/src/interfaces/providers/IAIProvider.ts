@@ -1,6 +1,6 @@
-import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { AIResponse } from "@/types/ai/index.js";
 import type { Topic } from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 // Type alias to avoid circular dependency issues
 type ExtractedFactsData = ExtractedFacts;

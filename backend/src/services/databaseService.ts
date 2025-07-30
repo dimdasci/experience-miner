@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node";
 import type { PoolClient } from "pg";
 import { database } from "@/common/connections/databaseConnection.js";
 import type {
@@ -6,10 +5,8 @@ import type {
 	CreateAnswerParams,
 	CreateInterviewParams,
 	CreateTopicParams,
-	ExperienceRecord,
 	Interview,
 	InterviewStatus,
-	ProfessionalSummary,
 	Topic,
 	UpdateAnswerParams,
 } from "@/types/database/index.js";
@@ -297,108 +294,6 @@ export class DatabaseService {
 		);
 
 		return result;
-	}
-
-	// Experience record operations
-	async saveExperienceRecord(
-		userId: string,
-		summary: ProfessionalSummary,
-	): Promise<ExperienceRecord> {
-		try {
-			Sentry.logger?.info?.("Saving experience record", {
-				user_id: userId,
-				operation: "saveExperienceRecord",
-				extractionCount:
-					summary.extractedFacts?.metadata?.totalExtractions || 0,
-			});
-
-			const result = await database.query<ExperienceRecord>(
-				`INSERT INTO experience (user_id, summary, updated_at)
-				 VALUES ($1, $2, NOW())
-				 ON CONFLICT (user_id) 
-				 DO UPDATE SET summary = $2, updated_at = NOW()
-				 RETURNING *`,
-				[userId, JSON.stringify(summary)],
-			);
-
-			if (!result || result.length === 0) {
-				throw new Error("Experience record upsert failed - no rows returned");
-			}
-
-			const item = result[0];
-			if (!item) {
-				throw new Error("Database operation failed - no row returned");
-			}
-
-			Sentry.logger?.info?.("Experience record saved successfully", {
-				user_id: userId,
-				operation: "saveExperienceRecord",
-			});
-
-			return item;
-		} catch (error) {
-			// Track database error with full context
-			Sentry.captureException(error, {
-				tags: { service: "database", operation: "save_experience_record" },
-				contexts: {
-					user: { id: userId },
-					operation: { name: "saveExperienceRecord" },
-				},
-			});
-			// Supplementary logging for user journey analysis
-			Sentry.logger?.error?.("Experience record save failed", {
-				user_id: userId,
-				operation: "saveExperienceRecord",
-				error: error instanceof Error ? error.message : String(error),
-			});
-			throw error;
-		}
-	}
-
-	async getExperienceByUserId(
-		userId: string,
-	): Promise<ExperienceRecord | null> {
-		try {
-			Sentry.logger?.debug?.("Querying experience table", {
-				user_id: userId,
-				operation: "getExperienceByUserId",
-			});
-
-			const result = await database.query<ExperienceRecord>(
-				"SELECT * FROM experience WHERE user_id = $1",
-				[userId],
-			);
-
-			Sentry.logger?.debug?.("Experience query completed", {
-				user_id: userId,
-				rowCount: result.length,
-			});
-
-			if (result.length === 0) {
-				return null;
-			}
-			const item = result[0];
-			if (!item) {
-				throw new Error("Database returned null row");
-			}
-			return item;
-		} catch (error) {
-			// Track database error with full context
-			Sentry.captureException(error, {
-				tags: { service: "database", operation: "get_experience_by_user" },
-				contexts: {
-					user: { id: userId },
-					operation: { name: "getExperienceByUserId" },
-				},
-			});
-			// Supplementary logging for user journey analysis
-			Sentry.logger?.error?.("Experience query failed", {
-				user_id: userId,
-				operation: "getExperienceByUserId",
-				error: error instanceof Error ? error.message : String(error),
-			});
-			throw error;
-		}
 	}
 
 	async getAllInterviewsByUserId(userId: string): Promise<Interview[]> {

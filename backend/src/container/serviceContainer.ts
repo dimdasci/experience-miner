@@ -7,8 +7,10 @@ import type {
 	IAIProvider,
 	IDatabaseProvider,
 } from "@/interfaces/providers/index.js";
+import { ExperienceRepository } from "@/repositories/experienceRepository.js";
 import { CreditsService } from "@/services/creditsService.js";
 import { DatabaseService } from "@/services/databaseService.js";
+import { ExperienceService } from "@/services/experienceService.js";
 import { TopicService } from "@/services/topicService.js";
 import { TranscribeService } from "@/services/transcribeService.js";
 
@@ -24,6 +26,8 @@ export class ServiceContainer {
 	private databaseService: DatabaseService | null = null;
 	private topicService: TopicService | null = null;
 	private transcribeService: TranscribeService | null = null;
+	private experienceRepository: ExperienceRepository | null = null;
+	private experienceService: ExperienceService | null = null;
 	private initialized = false;
 
 	private constructor() {
@@ -62,6 +66,12 @@ export class ServiceContainer {
 			this.databaseService = new DatabaseService();
 			this.topicService = new TopicService();
 			this.transcribeService = new TranscribeService();
+
+			// Initialize experience repository and service
+			this.experienceRepository = new ExperienceRepository(
+				this.databaseProvider,
+			);
+			this.experienceService = new ExperienceService(this.experienceRepository);
 
 			this.initialized = true;
 
@@ -135,6 +145,19 @@ export class ServiceContainer {
 		return this.databaseService;
 	}
 
+	/** Get experience service instance, connected to the repository */
+	getExperienceService(): ExperienceService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.experienceService) {
+			throw new Error("Experience service not initialized");
+		}
+		return this.experienceService;
+	}
+
 	/**
 	 * Get topic service instance
 	 */
@@ -183,6 +206,8 @@ export class ServiceContainer {
 		this.databaseService = null;
 		this.topicService = null;
 		this.transcribeService = null;
+		this.experienceRepository = null;
+		this.experienceService = null;
 	}
 
 	/**
@@ -196,6 +221,8 @@ export class ServiceContainer {
 			databaseService?: DatabaseService;
 			topicService?: TopicService;
 			transcribeService?: TranscribeService;
+			experienceRepository?: ExperienceRepository;
+			experienceService?: ExperienceService;
 		},
 	): Promise<void> {
 		this.aiProvider = aiProvider;
@@ -210,6 +237,12 @@ export class ServiceContainer {
 		this.topicService = services?.topicService || new TopicService();
 		this.transcribeService =
 			services?.transcribeService || new TranscribeService();
+		this.experienceRepository =
+			services?.experienceRepository ||
+			new ExperienceRepository(this.databaseProvider);
+		this.experienceService =
+			services?.experienceService ||
+			new ExperienceService(this.experienceRepository);
 
 		this.initialized = true;
 	}

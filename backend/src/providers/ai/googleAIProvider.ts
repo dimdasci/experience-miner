@@ -2,9 +2,9 @@ import { Type } from "@google/genai";
 import * as Sentry from "@sentry/node";
 import { geminiConnection } from "@/common/connections/geminiConnection.js";
 import type { IAIProvider } from "@/interfaces/providers/index.js";
-import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { AIResponse, ExtendedUsageMetadata } from "@/types/ai/index.js";
 import type { Topic } from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 // Remove duplicate type definition - use the one from types/ai/index.ts
 

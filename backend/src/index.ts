@@ -15,17 +15,15 @@ const startServer = async () => {
 
 		app.listen(serverConfig.port, "0.0.0.0", () => {
 			logger.info(
-				`🚀 Experience Miner backend listening on port ${serverConfig.port}`,
+				`Experience Miner backend listening on port ${serverConfig.port}`,
 			);
+			logger.info(`Health check: http://localhost:${serverConfig.port}/health`);
 			logger.info(
-				`📄 Health check: http://localhost:${serverConfig.port}/health`,
+				`API endpoints: http://localhost:${serverConfig.port}/api/...`,
 			);
-			logger.info(
-				`🤖 API endpoints: http://localhost:${serverConfig.port}/api/interview`,
-			);
-			logger.info(`📝 Environment: ${serverConfig.nodeEnv}`);
-			logger.info(`🤖 AI Provider: ${serverConfig.aiProvider}`);
-			logger.info(`🗄️ Database: ${databaseConfig.connection.host}`);
+			logger.info(`Environment: ${serverConfig.nodeEnv}`);
+			logger.info(`AI Provider: ${serverConfig.aiProvider}`);
+			logger.info(`Database: ${databaseConfig.connection.host}`);
 		});
 	} catch (error) {
 		logger.error("Failed to start server:", error);
@@ -40,7 +38,7 @@ const gracefulShutdown = async (signal: string) => {
 		await ServiceContainer.getInstance().cleanup();
 		logger.info("✅ Service container cleaned up successfully");
 	} catch (error) {
-		logger.error("Error during cleanup:", error);
+		logger.error("❌ Error during cleanup:", error);
 	}
 	process.exit(0);
 };

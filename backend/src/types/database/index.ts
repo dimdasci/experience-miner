@@ -46,12 +46,8 @@ export interface Answer {
 
 export interface ExperienceRecord {
 	user_id: string;
-	summary: ProfessionalSummary;
+	payload: ExtractedFacts;
 	updated_at: string;
-}
-
-export interface ProfessionalSummary {
-	extractedFacts: ExtractedFacts;
 }
 
 export interface Achievement {

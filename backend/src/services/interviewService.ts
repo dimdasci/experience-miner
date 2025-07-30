@@ -11,7 +11,6 @@ import {
 import type { CreditsService } from "@/services/creditsService.js";
 import type { TopicService } from "@/services/topicService.js";
 import type { TranscribeService } from "@/services/transcribeService.js";
-import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { ExtractedFactsAI } from "@/types/ai/index.js";
 import type {
 	Answer,
@@ -19,6 +18,7 @@ import type {
 	InterviewStatus,
 	Topic,
 } from "@/types/database/index.js";
+import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 /**
  * Service for interview-related business operations
@@ -320,7 +320,7 @@ export class InterviewService {
 
 			// Step 4: Get the complete extracted facts from transcribeService (already enriched with metadata)
 			const extractedFacts = extractionResult.data;
-			
+
 			// Update credits used in metadata
 			extractedFacts.metadata.creditsUsed = totalTokenCount;
 

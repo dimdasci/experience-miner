@@ -1,7 +1,4 @@
-import type {
-	ExperienceRecord,
-	ProfessionalSummary,
-} from "@/types/database/index.js";
+import type { ExperienceRecord } from "@/types/database/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { IExperienceRepository } from "../interfaces/index.js";
 
@@ -37,13 +34,11 @@ export class MockExperienceRepository implements IExperienceRepository {
 
 	async saveRecord(
 		userId: string,
-		record: { extractedFacts: ExtractedFacts },
+		record: ExtractedFacts,
 	): Promise<ExperienceRecord> {
 		const experienceRecord: ExperienceRecord = {
 			user_id: userId,
-			summary: {
-				extractedFacts: record.extractedFacts,
-			},
+			payload: record,
 			updated_at: new Date().toISOString(),
 		};
 
@@ -55,9 +50,9 @@ export class MockExperienceRepository implements IExperienceRepository {
 		return this.experiences.get(userId) || null;
 	}
 
-	async updateSummary(
+	async updateRecord(
 		userId: string,
-		summary: ProfessionalSummary,
+		record: ExtractedFacts,
 	): Promise<ExperienceRecord> {
 		const existing = this.experiences.get(userId);
 		if (!existing) {
@@ -66,7 +61,7 @@ export class MockExperienceRepository implements IExperienceRepository {
 
 		const updated: ExperienceRecord = {
 			...existing,
-			summary,
+			payload: record,
 			updated_at: new Date().toISOString(),
 		};
 
@@ -74,7 +69,7 @@ export class MockExperienceRepository implements IExperienceRepository {
 		return updated;
 	}
 
-	async delete(userId: string): Promise<void> {
+	async deleteRecord(userId: string): Promise<void> {
 		this.experiences.delete(userId);
 	}
 }

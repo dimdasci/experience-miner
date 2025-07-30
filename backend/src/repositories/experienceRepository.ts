@@ -1,23 +1,22 @@
 import * as Sentry from "@sentry/node";
-import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type { ExperienceRecord } from "@/types/database/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
-import type {
-	ExperienceRecord,
-	ProfessionalSummary,
-} from "@/types/database/index.js";
 import type { IExperienceRepository } from "./interfaces/index.js";
 
 /**
  * PostgreSQL implementation of experience repository
  */
 export class ExperienceRepository implements IExperienceRepository {
-	private get db() {
-		return ServiceContainer.getInstance().getDatabaseProvider();
+	private db: IDatabaseProvider;
+
+	constructor(databaseProvider: IDatabaseProvider) {
+		this.db = databaseProvider;
 	}
 
 	async saveRecord(
 		userId: string,
-		record: { extractedFacts: ExtractedFacts },
+		record: ExtractedFacts,
 	): Promise<ExperienceRecord> {
 		// Check if record exists
 		const existing = await this.getByUserId(userId);
@@ -26,10 +25,10 @@ export class ExperienceRepository implements IExperienceRepository {
 			// Update existing record
 			const result = await this.db.query<ExperienceRecord>(
 				`UPDATE experience 
-				 SET summary = $1, updated_at = NOW() 
+				 SET payload = $1, updated_at = NOW() 
 				 WHERE user_id = $2 
 				 RETURNING *`,
-				[JSON.stringify(record.extractedFacts), userId],
+				[JSON.stringify(record), userId],
 			);
 
 			if (!result || result.length === 0) {
@@ -48,16 +47,16 @@ export class ExperienceRepository implements IExperienceRepository {
 
 			return {
 				user_id: updatedRecord.user_id,
-				summary: updatedRecord.summary as ProfessionalSummary,
+				payload: updatedRecord.payload,
 				updated_at: updatedRecord.updated_at,
 			};
 		} else {
 			// Create new record
 			const result = await this.db.query<ExperienceRecord>(
-				`INSERT INTO experience (user_id, summary, updated_at)
+				`INSERT INTO experience (user_id, payload, updated_at)
 				 VALUES ($1, $2, NOW())
 				 RETURNING *`,
-				[userId, JSON.stringify(record.extractedFacts)],
+				[userId, JSON.stringify(record)],
 			);
 
 			if (!result || result.length === 0) {
@@ -76,7 +75,7 @@ export class ExperienceRepository implements IExperienceRepository {
 
 			return {
 				user_id: newRecord.user_id,
-				summary: newRecord.summary as ProfessionalSummary,
+				payload: newRecord.payload,
 				updated_at: newRecord.updated_at,
 			};
 		}
@@ -85,7 +84,7 @@ export class ExperienceRepository implements IExperienceRepository {
 	async getByUserId(userId: string): Promise<ExperienceRecord | null> {
 		const result = await this.db.query<{
 			user_id: string;
-			summary: ProfessionalSummary;
+			payload: ExtractedFacts;
 			updated_at: string;
 		}>("SELECT * FROM experience WHERE user_id = $1", [userId]);
 
@@ -99,57 +98,50 @@ export class ExperienceRepository implements IExperienceRepository {
 		}
 		return {
 			user_id: record.user_id,
-			summary:
-				typeof record.summary === "string"
-					? JSON.parse(record.summary)
-					: record.summary,
+			payload: record.payload,
 			updated_at: record.updated_at,
 		};
 	}
 
-	async updateSummary(
+	async updateRecord(
 		userId: string,
-		summary: ProfessionalSummary,
+		record: ExtractedFacts,
 	): Promise<ExperienceRecord> {
 		const result = await this.db.query<{
 			user_id: string;
-			summary: ProfessionalSummary;
+			payload: ExtractedFacts;
 			updated_at: string;
 		}>(
 			`UPDATE experience 
-			 SET summary = $1, updated_at = NOW() 
+			 SET payload = $1, updated_at = NOW() 
 			 WHERE user_id = $2 
 			 RETURNING *`,
-			[JSON.stringify(summary), userId],
+			[JSON.stringify(record), userId],
 		);
 
 		if (!result || result.length === 0) {
-			throw new Error("Experience summary update failed - record not found");
+			throw new Error("Experience record update failed - record not found");
 		}
 
-		const record = result[0];
-		if (!record) {
-			throw new Error("Experience summary update returned empty row");
+		const newRecord = result[0];
+		if (!newRecord) {
+			throw new Error("Experience record update returned empty row");
 		}
 
-		Sentry.logger?.info?.("Professional summary updated", {
+		Sentry.logger?.info?.("Experience record updated", {
 			userId,
-			summaryUpdated: true,
+			recordUpdated: true,
 		});
 
 		return {
-			user_id: record.user_id,
-			summary:
-				typeof record.summary === "string"
-					? JSON.parse(record.summary)
-					: record.summary,
-			updated_at: record.updated_at,
+			user_id: newRecord.user_id,
+			payload: newRecord.payload,
+			updated_at: newRecord.updated_at,
 		};
 	}
 
-	async delete(userId: string): Promise<void> {
+	async deleteRecord(userId: string): Promise<void> {
 		await this.db.query("DELETE FROM experience WHERE user_id = $1", [userId]);
-
 		Sentry.logger?.info?.("Experience record deleted", {
 			userId,
 		});

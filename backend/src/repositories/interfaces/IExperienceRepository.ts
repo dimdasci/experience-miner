@@ -1,7 +1,4 @@
-import type {
-	ExperienceRecord,
-	ProfessionalSummary,
-} from "@/types/database/index.js";
+import type { ExperienceRecord } from "@/types/database/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 /**
@@ -11,10 +8,7 @@ export interface IExperienceRepository {
 	/**
 	 * Save or update experience record for user
 	 */
-	saveRecord(
-		userId: string,
-		record: { extractedFacts: ExtractedFacts },
-	): Promise<ExperienceRecord>;
+	saveRecord(userId: string, record: ExtractedFacts): Promise<ExperienceRecord>;
 
 	/**
 	 * Get experience record by user ID
@@ -22,15 +16,15 @@ export interface IExperienceRepository {
 	getByUserId(userId: string): Promise<ExperienceRecord | null>;
 
 	/**
-	 * Update professional summary
+	 * Update experience record
 	 */
-	updateSummary(
+	updateRecord(
 		userId: string,
-		summary: ProfessionalSummary,
+		record: ExtractedFacts,
 	): Promise<ExperienceRecord>;
 
 	/**
 	 * Delete experience record
 	 */
-	delete(userId: string): Promise<void>;
+	deleteRecord(userId: string): Promise<void>;
 }

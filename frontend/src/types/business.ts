@@ -43,12 +43,6 @@ export interface Answer {
   updated_at: string;
 }
 
-export interface ExperienceRecord {
-  user_id: string;
-  summary: ProfessionalSummary;
-  updated_at: string;
-}
-
 export interface ProfessionalSummary {
   extractedFacts: {
     achievements: Achievement[];
