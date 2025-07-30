@@ -9,14 +9,12 @@ export { aiConfig } from "./ai.js";
 export { authConfig } from "./auth.js";
 export { creditsConfig } from "./credits.js";
 export { databaseConfig } from "./database.js";
-export { monitoringConfig } from "./monitoring.js";
 export { serverConfig } from "./server.js";
 
 import { aiConfig } from "./ai.js";
 import { authConfig } from "./auth.js";
 import { creditsConfig } from "./credits.js";
 import { databaseConfig } from "./database.js";
-import { monitoringConfig } from "./monitoring.js";
 import { serverConfig } from "./server.js";
 
 // Health check for all configurations
@@ -36,10 +34,6 @@ export const getConfigHealth = () => {
 		},
 		auth: {
 			supabaseConfigured: !!authConfig.supabase.url,
-		},
-		monitoring: {
-			sentryEnabled: !!monitoringConfig.sentry.dsn,
-			environment: monitoringConfig.sentry.environment,
 		},
 		credits: {
 			rates: creditsConfig.rates,
