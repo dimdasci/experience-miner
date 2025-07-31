@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { IGenerativeAIProvider } from "@/interfaces/providers/index.js";
+import type { IGenerativeAIProvider } from "@/providers/index.js";
 import {
 	AnswerRepository,
 	InterviewRepository,
