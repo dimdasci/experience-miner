@@ -11,6 +11,13 @@ const aiEnv = aiSchema.parse({
 	apiKey: process.env.API_KEY,
 });
 
+export interface RateLimitConfig {
+	requestsPerMinute: number;
+	requestsPerDay: number;
+	backoffMultiplier: number;
+	maxRetries: number;
+}
+
 export const aiConfig = {
 	// Sensitive data (from environment)
 	apiKey: aiEnv.apiKey,
@@ -28,5 +35,5 @@ export const aiConfig = {
 		requestsPerDay: 5000,
 		maxRetries: 3,
 		backoffMultiplier: 2,
-	},
+	} as RateLimitConfig,
 };
