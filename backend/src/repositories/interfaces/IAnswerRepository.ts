@@ -1,8 +1,6 @@
-import type { PoolClient } from "pg";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
 import type {
 	Answer,
-	CreateAnswerParams,
-	UpdateAnswerParams,
 } from "@/types/database/index.js";
 
 /**
@@ -12,20 +10,18 @@ export interface IAnswerRepository {
 	/**
 	 * Create a new answer
 	 */
-	create(params: CreateAnswerParams): Promise<Answer>;
-
-	/**
-	 * Create answer within a transaction
-	 */
-	createWithTransaction(
-		client: PoolClient,
-		params: CreateAnswerParams,
+	create(
+		interviewId: number,
+		userId: string,
+		questionNumber: number,
+		question: string,
+		client?: DatabaseClient,
 	): Promise<Answer>;
 
 	/**
 	 * Update an existing answer
 	 */
-	update(params: UpdateAnswerParams): Promise<Answer>;
+	update(answerId: string, answerText: string, recordingDurationSeconds?: number, client?: DatabaseClient): Promise<Answer>;
 
 	/**
 	 * Get answers by interview ID

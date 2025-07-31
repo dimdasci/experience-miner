@@ -1,8 +1,8 @@
 
-import { Pool, type PoolClient } from "pg";
+import { Pool } from "pg";
 import { databaseConfig } from "@/config/database.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type { IDatabaseProvider, DatabaseClient } from "@/interfaces/providers/index.js";
 
 /**
  * PostgreSQL Provider implementation using pg connection pool
@@ -10,6 +10,15 @@ import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
  */
 export class PostgresProvider implements IDatabaseProvider {
 	private pool: Pool;
+/**
+ * Helper to extract first row or throw error if not found
+ */
+getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
+	if (!result.rows || result.rows.length === 0 || !result.rows[0]) {
+		throw new Error(errorMessage);
+	}
+	return result.rows[0];
+}
 
 	constructor() {
 		this.pool = new Pool({
@@ -35,27 +44,28 @@ export class PostgresProvider implements IDatabaseProvider {
 		}
 	}
 
-	async query<T = Record<string, unknown>>(
+	async query<T>(
 		text: string,
 		params: unknown[] = [],
-	): Promise<T[]> {
+	): Promise<{ rows: T[]}> {
 		const client = await this.pool.connect();
 		try {
 			const result = await client.query(text, params);
-			return result.rows;
+			return { rows: result.rows };
 		} finally {
 			client.release();
 		}
 	}
 
-	async getClient(): Promise<PoolClient> {
+	async getClient(): Promise<DatabaseClient> {
 		return await this.pool.connect();
 	}
 
 	async transaction<T>(
-		callback: (client: PoolClient) => Promise<T>,
+		callback: (client: DatabaseClient) => Promise<T>,
 	): Promise<T> {
-		const client = await this.pool.connect();
+		// Always pass a real PoolClient from pg
+		const client: DatabaseClient = await this.pool.connect();
 		try {
 			await client.query("BEGIN");
 			const result = await callback(client);

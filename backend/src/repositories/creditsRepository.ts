@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/node";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
 import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
-import type { CreditTransaction, SourceType } from "@/types/services/index.js";
+import type { CreditRecord, SourceType } from "@/types/services/index.js";
 import type { ICreditsRepository } from "./interfaces/ICreditsRepository.js";
 import { creditsConfig } from "@/config/credits.js";
 
@@ -19,7 +20,7 @@ export class CreditsRepository implements ICreditsRepository {
 			"SELECT COALESCE(SUM(amount), 0) as total FROM credits WHERE user_id = $1",
 			[userId],
 		);
-		return parseInt(result[0]?.total || "0", 10);
+		return parseInt(result.rows[0]?.total || "0", 10);
 	}
 
 	async addCredits(
@@ -28,22 +29,21 @@ export class CreditsRepository implements ICreditsRepository {
 		sourceType: SourceType,
 		sourceAmount: number = amount,
 		sourceUnit: string = "CREDITS",
-	): Promise<CreditTransaction> {
-		const result = await this.db.query<CreditTransaction>(
+		client?: DatabaseClient,
+	): Promise<CreditRecord> {
+		const db = client || (await this.db.getClient());
+		
+		if (amount <= 0) {
+			throw new Error("Amount must be greater than zero");
+		}
+		const result = await db.query<CreditRecord>(
 			`INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
 			 VALUES ($1, $2, $3, $4, $5)
 			 RETURNING *`,
 			[userId, amount, sourceAmount, sourceType, sourceUnit],
 		);
 
-		if (!result || result.length === 0) {
-			throw new Error("Credit transaction insert failed - no rows returned");
-		}
-
-		const transaction = result[0];
-		if (!transaction) {
-			throw new Error("Credit transaction insert returned empty row");
-		}
+		const transaction = this.db.getFirstRowOrThrow(result, "Credit transaction insert failed - no rows returned");
 
 		Sentry.logger?.info?.("Credits added successfully", {
 			user_id: userId,
@@ -61,8 +61,14 @@ export class CreditsRepository implements ICreditsRepository {
 		userId: string,
 		tokensUsed: number,
 		sourceType: "transcriber" | "extractor" | "topic_generator" | "topic_ranker",
-	): Promise<{ transaction: CreditTransaction; remainingCredits: number }> {
+		client?: DatabaseClient,
+	): Promise<CreditRecord> {
 		let rate: number;
+		const db = client || (await this.db.getClient());
+
+		if (tokensUsed <= 0) {
+			throw new Error("Tokens used must be greater than zero");
+		}
 		switch (sourceType) {
 			case "transcriber":
 				rate = creditsConfig.rates.transcriber;
@@ -83,41 +89,22 @@ export class CreditsRepository implements ICreditsRepository {
 		const sourceAmount = tokensUsed / 1000; // Convert to K_TOKENS
 		const creditsToConsume = Math.max(1, Math.ceil(sourceAmount * rate)); // Minimum 1 credit
 
-		// Transaction handling
-		const transaction = await this.db.transaction<CreditTransaction>(async () => {
-			const result = await this.db.query<CreditTransaction>(
-				`INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
-				 VALUES ($1, $2, $3, $4, $5)
-				 RETURNING *`,
-				[userId, -creditsToConsume, sourceAmount, sourceType, "K_TOKENS"],
-			);
+		const result = await db.query<CreditRecord>(
+			`INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
+				VALUES ($1, $2, $3, $4, $5)
+				RETURNING *`,
+			[userId, -creditsToConsume, sourceAmount, sourceType, "K_TOKENS"],
+		);
 
-			if (!result || result.length === 0) {
-				throw new Error("Credit transaction insert failed - no rows returned");
-			}
-
-			const creditTransaction = result[0];
-			if (!creditTransaction) {
-				throw new Error("Credit transaction insert returned empty row");
-			}
-
-			return creditTransaction;
-		});
-
-		const remainingCredits = await this.getCurrentBalance(userId);
+		const credits = this.db.getFirstRowOrThrow(result, "Credit transaction insert failed - no rows returned");
 
 		Sentry.logger?.info?.("Credits consumed successfully", {
 			user_id: userId,
 			tokensUsed,
 			sourceType,
-			creditsConsumed: creditsToConsume,
-			remainingCredits,
-			transaction_id: transaction.id,
+			creditsConsumed: credits.amount,
 		});
 
-		return {
-			transaction,
-			remainingCredits,
-		};
-    }
+		return credits;
+	}
 };

@@ -1,8 +1,7 @@
 import * as Sentry from "@sentry/node";
-import type { PoolClient } from "pg";
-import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
+import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
 import type {
-	CreateInterviewParams,
 	Interview,
 	InterviewStatus,
 } from "@/types/database/index.js";
@@ -12,60 +11,39 @@ import type { IInterviewRepository } from "./interfaces/index.js";
  * PostgreSQL implementation of interview repository
  */
 export class InterviewRepository implements IInterviewRepository {
-	private get db() {
-		return ServiceContainer.getInstance().getDatabaseProvider();
+	private db: IDatabaseProvider;
+
+	constructor(databaseProvider: IDatabaseProvider) {
+		this.db = databaseProvider;
 	}
 
-	async create(params: CreateInterviewParams): Promise<Interview> {
-		const result = await this.db.query<Interview>(
+	/**
+	 * Creates a new interview for the given user
+	 * @param userId User ID to associate with the interview
+	 * @param title Title of the interview
+	 * @param motivationalQuote Motivational quote for the interview
+	 * @param client Optional database client for transaction support
+	 * @return Created interview object
+	 */
+	async create(userId: string,
+		title: string,
+		motivationalQuote: string,
+		client?: DatabaseClient
+	): Promise<Interview> {
+		const db = client || (await this.db.getClient());
+		const result = await db.query<Interview>(
 			`INSERT INTO interviews (user_id, title, motivational_quote, status, created_at, updated_at)
 			 VALUES ($1, $2, $3, 'draft', NOW(), NOW())
 			 RETURNING *`,
-			[params.userId, params.title, params.motivational_quote],
+			[userId, title, motivationalQuote],
 		);
 
-		if (!result || result.length === 0) {
-			throw new Error("Interview insert failed - no rows returned");
-		}
-
-		const interview = result[0];
-		if (!interview) {
-			throw new Error("Interview insert returned empty row");
-		}
+		const interview = this.db.getFirstRowOrThrow(result, "Interview insert failed - no rows returned");
 
 		Sentry.logger?.info?.("Interview created successfully", {
 			interviewId: interview.id,
-			userId: params.userId,
-			title: params.title,
-		});
-
-		return interview;
-	}
-
-	async createWithTransaction(
-		client: PoolClient,
-		params: CreateInterviewParams,
-	): Promise<Interview> {
-		const result = await client.query<Interview>(
-			`INSERT INTO interviews (user_id, title, motivational_quote, status, created_at, updated_at)
-			 VALUES ($1, $2, $3, 'draft', NOW(), NOW())
-			 RETURNING *`,
-			[params.userId, params.title, params.motivational_quote],
-		);
-
-		if (!result.rows || result.rows.length === 0) {
-			throw new Error("Interview insert failed - no rows returned");
-		}
-
-		const interview = result.rows[0];
-		if (!interview) {
-			throw new Error("Interview insert returned empty row");
-		}
-
-		Sentry.logger?.info?.("Interview created successfully within transaction", {
-			interviewId: interview.id,
-			userId: params.userId,
-			title: params.title,
+			userId: userId,
+			title: title,
 		});
 
 		return interview;
@@ -77,7 +55,7 @@ export class InterviewRepository implements IInterviewRepository {
 			[parseInt(interviewId, 10)],
 		);
 
-		return result.length > 0 ? (result[0] ?? null) : null;
+		return result.rows.length > 0 ? (result.rows[0] ?? null) : null;
 	}
 
 	async getAllByUserId(userId: string): Promise<Interview[]> {
@@ -88,14 +66,23 @@ export class InterviewRepository implements IInterviewRepository {
 			[userId],
 		);
 
-		return result;
+		return result.rows.length > 0 ? result.rows : [];
 	}
 
+	/**
+	 * Updates the status of an interview
+	 * @param interviewId ID of the interview to update
+	 * @param status New status to set
+	 * @param client Optional database client for transaction support
+	 * @return Updated interview object
+	 */
 	async updateStatus(
 		interviewId: number,
 		status: InterviewStatus,
+		client?: DatabaseClient
 	): Promise<Interview> {
-		const result = await this.db.query<Interview>(
+		const db = client || (await this.db.getClient());
+		const result = await db.query<Interview>(
 			`UPDATE interviews 
 			 SET status = $1, updated_at = NOW() 
 			 WHERE id = $2 
@@ -103,14 +90,7 @@ export class InterviewRepository implements IInterviewRepository {
 			[status, interviewId],
 		);
 
-		if (!result || result.length === 0) {
-			throw new Error("Interview update failed - interview not found");
-		}
-
-		const interview = result[0];
-		if (!interview) {
-			throw new Error("Interview update returned empty row");
-		}
+		const interview = this.db.getFirstRowOrThrow(result, "Interview update failed - interview not found");
 
 		Sentry.logger?.info?.("Interview status updated", {
 			interviewId,

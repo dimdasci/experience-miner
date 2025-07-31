@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/node";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
 import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
 import type { ExperienceRecord } from "@/types/database/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
@@ -14,16 +15,20 @@ export class ExperienceRepository implements IExperienceRepository {
 		this.db = databaseProvider;
 	}
 
-	async saveRecord(
+	async saveOrUpdateRecord(
 		userId: string,
 		record: ExtractedFacts,
+		client?: DatabaseClient,
 	): Promise<ExperienceRecord> {
 		// Check if record exists
-		const existing = await this.getByUserId(userId);
+		const db = client || (await this.db.getClient());
+
+		// pass client if provided
+		const existing = await this.getByUserId(userId, client);
 
 		if (existing) {
 			// Update existing record
-			const result = await this.db.query<ExperienceRecord>(
+			const result = await db.query<ExperienceRecord>(
 				`UPDATE experience 
 				 SET payload = $1, updated_at = NOW() 
 				 WHERE user_id = $2 
@@ -31,113 +36,50 @@ export class ExperienceRepository implements IExperienceRepository {
 				[JSON.stringify(record), userId],
 			);
 
-			if (!result || result.length === 0) {
-				throw new Error("Experience record update failed");
-			}
-
-			const updatedRecord = result[0];
-			if (!updatedRecord) {
-				throw new Error("Experience record update returned empty row");
-			}
+			const updatedRecord = this.db.getFirstRowOrThrow(result, "Experience record update failed");
 
 			Sentry.logger?.info?.("Experience record updated", {
 				userId,
 				recordUpdated: true,
 			});
 
-			return {
-				user_id: updatedRecord.user_id,
-				payload: updatedRecord.payload,
-				updated_at: updatedRecord.updated_at,
-			};
+			return updatedRecord;
 		} else {
 			// Create new record
-			const result = await this.db.query<ExperienceRecord>(
+			const result = await db.query<ExperienceRecord>(
 				`INSERT INTO experience (user_id, payload, updated_at)
 				 VALUES ($1, $2, NOW())
 				 RETURNING *`,
 				[userId, JSON.stringify(record)],
 			);
 
-			if (!result || result.length === 0) {
-				throw new Error("Experience record insert failed");
-			}
-
-			const newRecord = result[0];
-			if (!newRecord) {
-				throw new Error("Experience record insert returned empty row");
-			}
+			const newRecord = this.db.getFirstRowOrThrow(result, "Experience record insert failed");
 
 			Sentry.logger?.info?.("Experience record created", {
 				userId,
 				recordCreated: true,
 			});
 
-			return {
-				user_id: newRecord.user_id,
-				payload: newRecord.payload,
-				updated_at: newRecord.updated_at,
-			};
+			return newRecord;
 		}
 	}
 
-	async getByUserId(userId: string): Promise<ExperienceRecord | null> {
-		const result = await this.db.query<{
-			user_id: string;
-			payload: ExtractedFacts;
-			updated_at: string;
-		}>("SELECT * FROM experience WHERE user_id = $1", [userId]);
+	async getByUserId(userId: string, client?: DatabaseClient): Promise<ExperienceRecord | null> {
+		const db = client || (await this.db.getClient());
+		const result = await db.query<ExperienceRecord>(
+			"SELECT * FROM experience WHERE user_id = $1", 
+			[userId]
+		);
 
-		if (result.length === 0) {
+		if (result.rows.length === 0) {
 			return null;
 		}
 
-		const record = result[0];
+		const record = result.rows[0];
 		if (!record) {
 			return null;
 		}
-		return {
-			user_id: record.user_id,
-			payload: record.payload,
-			updated_at: record.updated_at,
-		};
-	}
-
-	async updateRecord(
-		userId: string,
-		record: ExtractedFacts,
-	): Promise<ExperienceRecord> {
-		const result = await this.db.query<{
-			user_id: string;
-			payload: ExtractedFacts;
-			updated_at: string;
-		}>(
-			`UPDATE experience 
-			 SET payload = $1, updated_at = NOW() 
-			 WHERE user_id = $2 
-			 RETURNING *`,
-			[JSON.stringify(record), userId],
-		);
-
-		if (!result || result.length === 0) {
-			throw new Error("Experience record update failed - record not found");
-		}
-
-		const newRecord = result[0];
-		if (!newRecord) {
-			throw new Error("Experience record update returned empty row");
-		}
-
-		Sentry.logger?.info?.("Experience record updated", {
-			userId,
-			recordUpdated: true,
-		});
-
-		return {
-			user_id: newRecord.user_id,
-			payload: newRecord.payload,
-			updated_at: newRecord.updated_at,
-		};
+		return record;
 	}
 
 	async deleteRecord(userId: string): Promise<void> {

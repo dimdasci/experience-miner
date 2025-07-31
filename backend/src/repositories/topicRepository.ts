@@ -1,30 +1,37 @@
 import * as Sentry from "@sentry/node";
-import type { PoolClient } from "pg";
-import { ServiceContainer } from "@/container/serviceContainer.js";
-import type { CreateTopicParams, Topic } from "@/types/database/index.js";
+import type { IDatabaseProvider, DatabaseClient } from "@/interfaces/providers/index.js";
+import type { Topic } from "@/types/database/index.js";
 import type { ITopicRepository } from "./interfaces/index.js";
-
+import type { TopicQuestion } from "@/constants/initialTopics.js";
 /**
  * PostgreSQL implementation of topic repository
  */
 export class TopicRepository implements ITopicRepository {
-	private get db() {
-		return ServiceContainer.getInstance().getDatabaseProvider();
+	private db: IDatabaseProvider;
+
+	constructor(databaseProvider: IDatabaseProvider) {
+		this.db = databaseProvider;
 	}
 
-	async create(params: CreateTopicParams): Promise<Topic> {
-		const result = await this.db.query<Topic>(
-			`INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-			 RETURNING *`,
-			[
-				params.userId,
-				params.title,
-				params.motivational_quote,
-				JSON.stringify(params.questions),
-				params.status,
-			],
-		);
+	async create(userId: string, title: string, motivationalQuote: string, questions: TopicQuestion[], status: string, client?: DatabaseClient): Promise<Topic> {
+		const query = `INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+		 RETURNING *`;
+		const params = [
+			userId,
+			title,
+			motivationalQuote,
+			JSON.stringify(questions),
+			status,
+		];
+
+		let result: Topic[];
+		if (client) {
+			const resultRaw = await client.query<Topic>(query, params);
+			result = resultRaw.rows;
+		} else {
+			result = await this.db.query<Topic>(query, params);
+		}
 
 		if (!result || result.length === 0) {
 			throw new Error("Topic insert failed - no rows returned");
@@ -78,52 +85,26 @@ export class TopicRepository implements ITopicRepository {
 		return topic;
 	}
 
-	async markAsUsedWithTransaction(
-		client: PoolClient,
-		topicId: number,
-	): Promise<Topic> {
-		const result = await client.query<Topic>(
-			`UPDATE topics 
-			 SET status = 'used', updated_at = NOW() 
-			 WHERE id = $1 
-			 RETURNING *`,
-			[topicId],
-		);
-
-		if (!result.rows || result.rows.length === 0) {
-			throw new Error("Topic update failed - topic not found");
-		}
-
-		const topic = result.rows[0];
-		if (!topic) {
-			throw new Error("Topic update returned empty row");
-		}
-
-		return topic;
-	}
-
 	async getAvailable(userId: string): Promise<Topic[]> {
 		return this.getByUserId(userId, "available");
 	}
 
-	async saveGenerated(topics: Topic[]): Promise<Topic[]> {
+	async saveGenerated(topics: Topic[], client?: DatabaseClient): Promise<Topic[]> {
 		if (topics.length === 0) {
 			return [];
 		}
 
 		const savedTopics: Topic[] = [];
-
 		for (const topic of topics) {
 			try {
-				const createParams: CreateTopicParams = {
-					userId: topic.user_id,
-					title: topic.title,
-					motivational_quote: topic.motivational_quote,
-					questions: topic.questions,
-					status: topic.status,
-				};
-
-				const savedTopic = await this.create(createParams);
+				const savedTopic = await this.create(
+					topic.user_id,
+					topic.title,
+					topic.motivational_quote,
+					topic.questions,
+					topic.status,
+					client
+				);
 				savedTopics.push(savedTopic);
 
 				Sentry.logger?.debug?.("Generated topic saved to database", {
@@ -140,23 +121,23 @@ export class TopicRepository implements ITopicRepository {
 				throw error;
 			}
 		}
-
 		return savedTopics;
 	}
 
 	async updateStatuses(
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
+		client?: DatabaseClient
 	): Promise<void> {
 		if (updates.length === 0) {
 			return;
 		}
-
+		const db = client ?? this.db;
 		for (const update of updates) {
 			try {
-				await this.db.query(
+				await db.query(
 					`UPDATE topics 
-					 SET status = $1, updated_at = NOW() 
-					 WHERE id = $2`,
+				 SET status = $1, updated_at = NOW() 
+				 WHERE id = $2`,
 					[update.status, update.id],
 				);
 

@@ -1,6 +1,5 @@
-import type { PoolClient } from "pg";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
 import type {
-	CreateInterviewParams,
 	Interview,
 	InterviewStatus,
 } from "@/types/database/index.js";
@@ -12,14 +11,10 @@ export interface IInterviewRepository {
 	/**
 	 * Create a new interview
 	 */
-	create(params: CreateInterviewParams): Promise<Interview>;
-
-	/**
-	 * Create interview within a transaction
-	 */
-	createWithTransaction(
-		client: PoolClient,
-		params: CreateInterviewParams,
+	create(userId: string,
+		title: string,
+		motivationalQuote: string,
+		client?: DatabaseClient,
 	): Promise<Interview>;
 
 	/**

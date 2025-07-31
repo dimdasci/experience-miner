@@ -1,6 +1,6 @@
-import type { PoolClient } from "pg";
-import type { CreateTopicParams, Topic } from "@/types/database/index.js";
-
+import type { Topic } from "@/types/database/index.js";
+import type { TopicQuestion } from "@/constants/initialTopics.js";
+import type { DatabaseClient } from "@/interfaces/providers/index.js";
 /**
  * Repository interface for topic-related database operations
  */
@@ -8,7 +8,13 @@ export interface ITopicRepository {
 	/**
 	 * Create a new topic
 	 */
-	create(params: CreateTopicParams): Promise<Topic>;
+	create(
+		userId: string, 
+		title: string, 
+		motivationalQuote: string, 
+		questions: TopicQuestion[], 
+		status: string,
+		client?: DatabaseClient): Promise<Topic>;
 
 	/**
 	 * Get topics by user ID with optional status filter
@@ -26,14 +32,6 @@ export interface ITopicRepository {
 	markAsUsed(topicId: number): Promise<Topic>;
 
 	/**
-	 * Mark topic as used within a transaction
-	 */
-	markAsUsedWithTransaction(
-		client: PoolClient,
-		topicId: number,
-	): Promise<Topic>;
-
-	/**
 	 * Get available topics for user (status = 'available')
 	 */
 	getAvailable(userId: string): Promise<Topic[]>;
@@ -41,12 +39,13 @@ export interface ITopicRepository {
 	/**
 	 * Save multiple generated topics
 	 */
-	saveGenerated(topics: Topic[]): Promise<Topic[]>;
+	saveGenerated(topics: Topic[], client?: DatabaseClient): Promise<Topic[]>;
 
 	/**
 	 * Update topic statuses in batch
 	 */
 	updateStatuses(
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
+		client?: DatabaseClient
 	): Promise<void>;
 }

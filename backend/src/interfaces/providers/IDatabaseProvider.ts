@@ -1,10 +1,13 @@
 /**
  * Generic database client interface for different implementations
  */
+
+// DatabaseClient is structurally compatible with PoolClient
 export interface DatabaseClient {
-	query<T>(sql: string, params?: unknown[]): Promise<T[] | { rows: T[] }>;
-	release?(): void;
+	query<T = any>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+	release(): void;
 }
+
 
 /**
  * Database Provider interface for abstracting different database implementations
@@ -17,7 +20,14 @@ export interface IDatabaseProvider {
 	 * @param params - Optional query parameters
 	 * @returns Promise with query results
 	 */
-	query<T>(sql: string, params?: unknown[]): Promise<T[]>;
+	query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+
+	/**
+	 * Extract first row from query result or throw error if not found
+	 * @param result - Query result object with rows
+	 * @param errorMessage - Error message to throw if no row found
+	 */
+	getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T;
 
 	/**
 	 * Execute multiple operations within a database transaction

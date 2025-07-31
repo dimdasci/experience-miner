@@ -1,4 +1,4 @@
-import type { CreditTransaction, SourceType } from "@/types/services/index.js";
+import type { CreditRecord, SourceType } from "@/types/services/index.js";
 
 /**
  * Repository interface for credit operations
@@ -18,7 +18,7 @@ export interface ICreditsRepository {
 		sourceType: SourceType,
 		sourceAmount?: number,
 		sourceUnit?: string,
-	): Promise<CreditTransaction>;
+	): Promise<CreditRecord>;
 
 	/**
 	 * Consume credits based on token usage and source type
@@ -27,5 +27,5 @@ export interface ICreditsRepository {
 		userId: string,
 		tokensUsed: number,
 		sourceType: "transcriber" | "extractor" | "topic_generator" | "topic_ranker",
-	): Promise<{ transaction: CreditTransaction; remainingCredits: number }>;
+	): Promise<CreditRecord>;
 }
