@@ -30,6 +30,14 @@ export const aiConfig = {
 		topicReranking: "gemini-2.5-flash",
 	},
 
+	maxTokens: {
+		transcription: 5000,
+		extraction: 5000,
+		topicGeneration: 5000,
+		topicReranking: 1000,
+	},
+	minAnswerLength: 32, // Minimum length for answers to be considered valid
+
 	rateLimits: {
 		requestsPerMinute: 150,
 		requestsPerDay: 5000,
