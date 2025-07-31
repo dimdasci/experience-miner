@@ -91,30 +91,6 @@ export interface Skill {
 	extractedAt: string;
 }
 
-// Database operation parameter types
-export interface CreateTopicParams {
-	userId: string;
-	title: string;
-	motivational_quote: string;
-	questions: TopicQuestion[];
-	status: TopicStatus;
-}
 
-export interface CreateInterviewParams {
-	userId: string;
-	title: string;
-	motivational_quote: string;
-}
 
-export interface CreateAnswerParams {
-	interviewId: number;
-	userId: string;
-	questionNumber: number;
-	question: string;
-}
 
-export interface UpdateAnswerParams {
-	answerId: string;
-	answer: string;
-	recordingDurationSeconds?: number;
-}
