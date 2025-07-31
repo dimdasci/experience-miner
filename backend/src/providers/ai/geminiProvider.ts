@@ -7,7 +7,7 @@ import {
 import * as Sentry from "@sentry/node";
 import { aiConfig, RateLimitConfig } from "@/config/ai.js";
 import { ModelResponse, MediaData, Usage } from "@/types/ai";
-import { IGenerativeAIProvider } from "@/interfaces/providers/IGenerativeAIProvider";
+import { IGenerativeAIProvider } from "@/providers/ai/IGenerativeAIProvider";
 import { z, ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
