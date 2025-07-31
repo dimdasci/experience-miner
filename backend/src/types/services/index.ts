@@ -1,5 +1,5 @@
 // Credit system types
-export interface CreditTransaction {
+export interface CreditRecord {
 	id: string;
 	created_at: string;
 	user_id: string;

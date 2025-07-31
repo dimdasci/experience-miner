@@ -33,7 +33,7 @@ export interface Interview {
 export type InterviewStatus = "draft" | "completed";
 
 export interface Answer {
-	id: string;
+	id: number;
 	interview_id: number;
 	user_id: string;
 	question_number: number;
@@ -48,47 +48,6 @@ export interface ExperienceRecord {
 	user_id: string;
 	payload: ExtractedFacts;
 	updated_at: string;
-}
-
-export interface Achievement {
-	description: string;
-	sourceInterviewId: string;
-	sourceQuestionNumber: number;
-	extractedAt: string;
-}
-
-export interface Company {
-	name: string;
-	sourceInterviewId: string;
-	sourceQuestionNumber: number;
-	extractedAt: string;
-}
-
-export interface Project {
-	name: string;
-	description: string;
-	role: string;
-	company?: string;
-	sourceInterviewId: string;
-	sourceQuestionNumber: number;
-	extractedAt: string;
-}
-
-export interface Role {
-	title: string;
-	company: string;
-	duration: string; // flexible format
-	sourceInterviewId: string;
-	sourceQuestionNumber: number;
-	extractedAt: string;
-}
-
-export interface Skill {
-	name: string;
-	category?: string; // optional: technical, leadership, etc.
-	sourceInterviewId: string;
-	sourceQuestionNumber: number;
-	extractedAt: string;
 }
 
 
