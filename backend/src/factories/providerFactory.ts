@@ -1,12 +1,10 @@
 import { serverConfig } from "@/config/index.js";
 import type {
-	IAIProvider,
+	IGenerativeAIProvider,
 	IDatabaseProvider,
-} from "@/interfaces/providers/index.js";
+} from "@/providers/index.js";
 import {
-	GoogleAIProvider,
-	MockAIProvider,
-	MockDatabaseProvider,
+	GeminiProvider,
 	PostgresProvider,
 } from "@/providers/index.js";
 
@@ -15,17 +13,17 @@ import {
  * @param providerType - Optional override for provider type
  * @returns AI provider instance
  */
-export function createAIProvider(providerType?: string): IAIProvider {
+export function createAIProvider(providerType?: string): IGenerativeAIProvider {
 	const type = providerType || serverConfig.aiProvider;
 
 	switch (type.toLowerCase()) {
 		case "google":
 		case "gemini":
-			return new GoogleAIProvider();
+			return new GeminiProvider();
 
-		case "mock":
-		case "test":
-			return new MockAIProvider();
+		// case "mock":
+		// case "test":
+		// 	return new MockAIProvider();
 
 		default:
 			throw new Error(
@@ -49,44 +47,16 @@ export function createDatabaseProvider(
 		case "postgresql":
 			return new PostgresProvider();
 
-		case "mock":
-		case "test":
-		case "memory":
-			return new MockDatabaseProvider();
+		// case "mock":
+		// case "test":
+		// case "memory":
+		// 	return new MockDatabaseProvider();
 
 		default:
 			throw new Error(
 				`Unknown database provider type: ${type}. Supported types: postgres, mock`,
 			);
 	}
-}
-
-/**
- * Create providers for testing environment
- * @returns Object with mock providers for testing
- */
-export function createTestProviders(): {
-	aiProvider: IAIProvider;
-	databaseProvider: IDatabaseProvider;
-} {
-	return {
-		aiProvider: new MockAIProvider(),
-		databaseProvider: new MockDatabaseProvider(),
-	};
-}
-
-/**
- * Create providers for production environment
- * @returns Object with production providers
- */
-export function createProductionProviders(): {
-	aiProvider: IAIProvider;
-	databaseProvider: IDatabaseProvider;
-} {
-	return {
-		aiProvider: new GoogleAIProvider(),
-		databaseProvider: new PostgresProvider(),
-	};
 }
 
 /**
