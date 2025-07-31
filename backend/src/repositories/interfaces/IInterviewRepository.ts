@@ -1,8 +1,8 @@
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
+import type { DatabaseClient } from "@/providers/index.js";
 import type {
 	Interview,
 	InterviewStatus,
-} from "@/types/database/index.js";
+} from "@/types/domain/index.js";
 
 /**
  * Repository interface for interview-related database operations
@@ -20,7 +20,7 @@ export interface IInterviewRepository {
 	/**
 	 * Get interview by ID
 	 */
-	getById(interviewId: string): Promise<Interview | null>;
+	getById(userId: string, interviewId: number): Promise<Interview | null>;
 
 	/**
 	 * Get all interviews for a user
@@ -31,6 +31,7 @@ export interface IInterviewRepository {
 	 * Update interview status
 	 */
 	updateStatus(
+		userId: string,
 		interviewId: number,
 		status: InterviewStatus,
 	): Promise<Interview>;
@@ -38,5 +39,5 @@ export interface IInterviewRepository {
 	/**
 	 * Delete interview and related data
 	 */
-	delete(interviewId: number): Promise<void>;
+	delete(userId: string, interviewId: number): Promise<void>;
 }

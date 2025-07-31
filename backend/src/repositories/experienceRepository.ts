@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
-import type { ExperienceRecord } from "@/types/database/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
+import type { ExperienceRecord } from "@/types/domain/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
 import type { IExperienceRepository } from "./interfaces/index.js";
 

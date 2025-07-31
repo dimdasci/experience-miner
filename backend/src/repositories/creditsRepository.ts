@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
 import type { CreditRecord, SourceType } from "@/types/services/index.js";
 import type { ICreditsRepository } from "./interfaces/ICreditsRepository.js";
 import { creditsConfig } from "@/config/credits.js";

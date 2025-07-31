@@ -1,10 +1,9 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
 import type {
 	Interview,
 	InterviewStatus,
-} from "@/types/database/index.js";
+} from "@/types/domain/index.js";
 import type { IInterviewRepository } from "./interfaces/index.js";
 
 /**
@@ -25,7 +24,8 @@ export class InterviewRepository implements IInterviewRepository {
 	 * @param client Optional database client for transaction support
 	 * @return Created interview object
 	 */
-	async create(userId: string,
+	async create(
+		userId: string,
 		title: string,
 		motivationalQuote: string,
 		client?: DatabaseClient
@@ -49,10 +49,10 @@ export class InterviewRepository implements IInterviewRepository {
 		return interview;
 	}
 
-	async getById(interviewId: string): Promise<Interview | null> {
+	async getById(userId: string, interviewId: number): Promise<Interview | null> {
 		const result = await this.db.query<Interview>(
-			"SELECT * FROM interviews WHERE id = $1",
-			[parseInt(interviewId, 10)],
+			"SELECT * FROM interviews WHERE id = $1 AND user_id = $2",
+			[interviewId, userId],
 		);
 
 		return result.rows.length > 0 ? (result.rows[0] ?? null) : null;
@@ -77,6 +77,7 @@ export class InterviewRepository implements IInterviewRepository {
 	 * @return Updated interview object
 	 */
 	async updateStatus(
+		userId: string,
 		interviewId: number,
 		status: InterviewStatus,
 		client?: DatabaseClient
@@ -85,9 +86,9 @@ export class InterviewRepository implements IInterviewRepository {
 		const result = await db.query<Interview>(
 			`UPDATE interviews 
 			 SET status = $1, updated_at = NOW() 
-			 WHERE id = $2 
+			 WHERE id = $2 AND user_id = $3
 			 RETURNING *`,
-			[status, interviewId],
+			[status, interviewId, userId],
 		);
 
 		const interview = this.db.getFirstRowOrThrow(result, "Interview update failed - interview not found");
@@ -100,16 +101,17 @@ export class InterviewRepository implements IInterviewRepository {
 		return interview;
 	}
 
-	async delete(interviewId: number): Promise<void> {
+	async delete(userId: string, interviewId: number): Promise<void> {
 		// Delete in correct order due to foreign key constraints
 
 		// First delete answers
-		await this.db.query("DELETE FROM answers WHERE interview_id = $1", [
+		await this.db.query("DELETE FROM answers WHERE interview_id = $1 AND user_id = $2", [
 			interviewId,
+			userId,
 		]);
 
 		// Then delete the interview
-		await this.db.query("DELETE FROM interviews WHERE id = $1", [interviewId]);
+		await this.db.query("DELETE FROM interviews WHERE id = $1 AND user_id = $2", [interviewId, userId]);
 
 		Sentry.logger?.info?.("Interview and related data deleted", {
 			interviewId,

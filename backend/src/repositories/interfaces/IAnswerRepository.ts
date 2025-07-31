@@ -1,7 +1,7 @@
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
+import type { DatabaseClient } from "@/providers/index.js";
 import type {
 	Answer,
-} from "@/types/database/index.js";
+} from "@/types/domain/index.js";
 
 /**
  * Repository interface for answer-related database operations
@@ -21,20 +21,20 @@ export interface IAnswerRepository {
 	/**
 	 * Update an existing answer
 	 */
-	update(answerId: string, answerText: string, recordingDurationSeconds?: number, client?: DatabaseClient): Promise<Answer>;
+	update(userId: string, answerId: number, answerText: string, recordingDurationSeconds?: number, client?: DatabaseClient): Promise<Answer>;
 
 	/**
 	 * Get answers by interview ID
 	 */
-	getByInterviewId(interviewId: string): Promise<Answer[]>;
+	getByInterviewId(userId: string, interviewId: number): Promise<Answer[]>;
 
 	/**
 	 * Get answer by ID
 	 */
-	getById(answerId: string): Promise<Answer | null>;
+	getById(userId: string, answerId: number): Promise<Answer | null>;
 
 	/**
 	 * Delete answers for an interview
 	 */
-	deleteByInterviewId(interviewId: number): Promise<void>;
+	deleteByInterviewId(userId: string, interviewId: number): Promise<void>;
 }

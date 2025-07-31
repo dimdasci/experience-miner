@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
-import type { IDatabaseProvider, DatabaseClient } from "@/interfaces/providers/index.js";
-import type { Topic } from "@/types/database/index.js";
+import type { IDatabaseProvider, DatabaseClient } from "@/providers/index.js";
+import type { Topic } from "@/types/domain/index.js";
 import type { ITopicRepository } from "./interfaces/index.js";
 import type { TopicQuestion } from "@/constants/initialTopics.js";
 /**
@@ -14,35 +14,16 @@ export class TopicRepository implements ITopicRepository {
 	}
 
 	async create(userId: string, title: string, motivationalQuote: string, questions: TopicQuestion[], status: string, client?: DatabaseClient): Promise<Topic> {
-		const query = `INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
+		const db = client ?? this.db;
+
+		const result = await db.query<Topic>(
+			`INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		 RETURNING *`;
-		const params = [
-			userId,
-			title,
-			motivationalQuote,
-			JSON.stringify(questions),
-			status,
-		];
+		 RETURNING *`,
+			[userId, title, motivationalQuote, JSON.stringify(questions), status],
+		);
 
-		let result: Topic[];
-		if (client) {
-			const resultRaw = await client.query<Topic>(query, params);
-			result = resultRaw.rows;
-		} else {
-			result = await this.db.query<Topic>(query, params);
-		}
-
-		if (!result || result.length === 0) {
-			throw new Error("Topic insert failed - no rows returned");
-		}
-
-		const topic = result[0];
-		if (!topic) {
-			throw new Error("Topic insert returned empty row");
-		}
-
-		return topic;
+		return this.db.getFirstRowOrThrow(result, "Topic insert failed - no rows returned");
 	}
 
 	async getByUserId(userId: string, status?: string): Promise<Topic[]> {
@@ -52,64 +33,63 @@ export class TopicRepository implements ITopicRepository {
 
 		const params = status ? [userId, status] : [userId];
 
-		return await this.db.query<Topic>(sql, params);
+		const result = await this.db.query<Topic>(sql, params);
+		return result.rows.length > 0 ? result.rows : [];
 	}
 
-	async getById(topicId: number): Promise<Topic | null> {
+	async getById(userId: string, topicId: number): Promise<Topic> {
 		const result = await this.db.query<Topic>(
-			"SELECT * FROM topics WHERE id = $1",
-			[topicId],
+			"SELECT * FROM topics WHERE id = $1 AND user_id = $2",
+			[topicId, userId],
 		);
 
-		return result.length > 0 ? (result[0] ?? null) : null;
+		return this.db.getFirstRowOrThrow(result, "Topic not found");
 	}
 
-	async markAsUsed(topicId: number): Promise<Topic> {
+	async markAsUsed(userId: string, topicId: number): Promise<Topic> {
 		const result = await this.db.query<Topic>(
 			`UPDATE topics 
 			 SET status = 'used', updated_at = NOW() 
-			 WHERE id = $1 
+			 WHERE id = $1 AND user_id = $2
 			 RETURNING *`,
-			[topicId],
+			[topicId, userId],
 		);
 
-		if (!result || result.length === 0) {
-			throw new Error("Topic update failed - topic not found");
-		}
-
-		const topic = result[0];
-		if (!topic) {
-			throw new Error("Topic update returned empty row");
-		}
-
-		return topic;
+		return this.db.getFirstRowOrThrow(result, "Failed to mark topic as used");
 	}
 
 	async getAvailable(userId: string): Promise<Topic[]> {
 		return this.getByUserId(userId, "available");
 	}
 
-	async saveGenerated(topics: Topic[], client?: DatabaseClient): Promise<Topic[]> {
+	async createOrUpdate(userId: string, topics: Topic[], client?: DatabaseClient): Promise<void> {
 		if (topics.length === 0) {
-			return [];
+			return;
 		}
 
-		const savedTopics: Topic[] = [];
 		for (const topic of topics) {
 			try {
-				const savedTopic = await this.create(
-					topic.user_id,
-					topic.title,
-					topic.motivational_quote,
-					topic.questions,
-					topic.status,
-					client
-				);
-				savedTopics.push(savedTopic);
+				if (topic.id === undefined) {
+					await this.create(
+						topic.user_id,
+						topic.title,
+						topic.motivational_quote,
+						topic.questions,
+						topic.status,
+						client
+					);
+				} else {
+					await this.updateStatuses(
+						userId,
+						[{ id: topic.id, status: topic.status }],
+						client
+					);
+				}
 
-				Sentry.logger?.debug?.("Generated topic saved to database", {
-					topicId: savedTopic.id,
-					title: savedTopic.title,
+				Sentry.logger?.debug?.("Topic is persisted", {
+					action: topic.id ? "updated" : "created",
+					topicId: topic.id,
+					title: topic.title,
 					userId: topic.user_id,
 				});
 			} catch (error) {
@@ -121,10 +101,10 @@ export class TopicRepository implements ITopicRepository {
 				throw error;
 			}
 		}
-		return savedTopics;
 	}
 
 	async updateStatuses(
+		userId: string,
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
 		client?: DatabaseClient
 	): Promise<void> {
@@ -137,8 +117,8 @@ export class TopicRepository implements ITopicRepository {
 				await db.query(
 					`UPDATE topics 
 				 SET status = $1, updated_at = NOW() 
-				 WHERE id = $2`,
-					[update.status, update.id],
+				 WHERE id = $2 AND user_id = $3`,
+					[update.status, update.id, userId],
 				);
 
 				Sentry.logger?.debug?.("Topic status updated", {
@@ -147,6 +127,7 @@ export class TopicRepository implements ITopicRepository {
 				});
 			} catch (error) {
 				Sentry.logger?.error?.("Failed to update topic status", {
+					userId: userId,
 					topicId: update.id,
 					status: update.status,
 					error: error instanceof Error ? error.message : String(error),

@@ -1,9 +1,8 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient } from "@/interfaces/providers/IDatabaseProvider.js";
-import type { IDatabaseProvider } from "@/interfaces/providers/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
 import type {
 	Answer,
-} from "@/types/database/index.js";
+} from "@/types/domain/index.js";
 import type { IAnswerRepository } from "./interfaces/index.js";
 
 /**
@@ -57,14 +56,20 @@ export class AnswerRepository implements IAnswerRepository {
 		return answer;
 	}
 
-	async update(answerId: string, answerText: string, recordingDurationSeconds?: number, client?: DatabaseClient): Promise<Answer> {
+	async update(
+		userId: string,
+		answerId: number,
+		answerText: string,
+		recordingDurationSeconds?: number,
+		client?: DatabaseClient
+	): Promise<Answer> {
 		const db = client || (await this.db.getClient());
 		const result = await db.query<Answer>(
 			`UPDATE answers 
 			 SET answer = $1, recording_duration_seconds = $2, updated_at = NOW() 
-			 WHERE id = $3 
+			 WHERE id = $3 AND user_id = $4 
 			 RETURNING *`,
-			[answerText, recordingDurationSeconds || null, answerId],
+			[answerText, recordingDurationSeconds || null, answerId, userId],
 		);
 		const answer = this.db.getFirstRowOrThrow(result, "Answer update failed - answer not found");
 
@@ -77,29 +82,30 @@ export class AnswerRepository implements IAnswerRepository {
 		return answer;
 	}
 
-	async getByInterviewId(interviewId: string): Promise<Answer[]> {
+	async getByInterviewId(userId: string, interviewId: number): Promise<Answer[]> {
 		const result = await this.db.query<Answer>(
 			`SELECT * FROM answers 
-			 WHERE interview_id = $1 
+			 WHERE interview_id = $1 AND user_id = $2
 			 ORDER BY question_number ASC`,
-			[parseInt(interviewId, 10)],
+			[interviewId, userId],
 		);
 
 		return result.rows;
 	}
 
-	async getById(answerId: string): Promise<Answer | null> {
+	async getById(userId: string, answerId: number): Promise<Answer | null> {
 		const result = await this.db.query<Answer>(
-			"SELECT * FROM answers WHERE id = $1",
-			[answerId],
+			"SELECT * FROM answers WHERE id = $1 AND user_id = $2",
+			[answerId, userId],
 		);
 
 		return result.rows.length > 0 ? (result.rows[0] ?? null) : null;
 	}
 
-	async deleteByInterviewId(interviewId: number): Promise<void> {
-		await this.db.query("DELETE FROM answers WHERE interview_id = $1", [
+	async deleteByInterviewId(userId: string, interviewId: number): Promise<void> {
+		await this.db.query("DELETE FROM answers WHERE interview_id = $1 AND user_id = $2", [
 			interviewId,
+			userId,
 		]);
 
 		Sentry.logger?.debug?.("Answers deleted for interview", {

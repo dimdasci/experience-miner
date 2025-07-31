@@ -1,4 +1,4 @@
-import type { ExperienceRecord } from "@/types/database/index.js";
+import type { ExperienceRecord } from "@/types/domain/index.js";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
 
 /**

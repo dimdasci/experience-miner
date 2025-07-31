@@ -1,6 +1,6 @@
-import type { Topic } from "@/types/database/index.js";
+import type { Topic } from "@/types/domain/index.js";
 import type { TopicQuestion } from "@/constants/initialTopics.js";
-import type { DatabaseClient } from "@/interfaces/providers/index.js";
+import type { DatabaseClient } from "@/providers/index.js";
 /**
  * Repository interface for topic-related database operations
  */
@@ -24,12 +24,12 @@ export interface ITopicRepository {
 	/**
 	 * Get topic by ID
 	 */
-	getById(topicId: number): Promise<Topic | null>;
+	getById(userId: string,topicId: number): Promise<Topic | null>;
 
 	/**
 	 * Mark topic as used
 	 */
-	markAsUsed(topicId: number): Promise<Topic>;
+	markAsUsed(userId: string, topicId: number): Promise<Topic>;
 
 	/**
 	 * Get available topics for user (status = 'available')
@@ -37,14 +37,15 @@ export interface ITopicRepository {
 	getAvailable(userId: string): Promise<Topic[]>;
 
 	/**
-	 * Save multiple generated topics
+	 * Save multiple  topics
 	 */
-	saveGenerated(topics: Topic[], client?: DatabaseClient): Promise<Topic[]>;
+	createOrUpdate(userId: string, topics: Topic[], client?: DatabaseClient): Promise<void>;
 
 	/**
 	 * Update topic statuses in batch
 	 */
 	updateStatuses(
+		userId: string,
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
 		client?: DatabaseClient
 	): Promise<void>;

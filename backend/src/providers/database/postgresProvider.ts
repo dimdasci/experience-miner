@@ -10,15 +10,15 @@ import type { IDatabaseProvider, DatabaseClient } from "@/interfaces/providers/i
  */
 export class PostgresProvider implements IDatabaseProvider {
 	private pool: Pool;
-/**
- * Helper to extract first row or throw error if not found
- */
-getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
-	if (!result.rows || result.rows.length === 0 || !result.rows[0]) {
-		throw new Error(errorMessage);
+	/**
+	 * Helper to extract first row or throw error if not found
+	 */
+	getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
+		if (!result.rows || result.rows.length === 0 || !result.rows[0]) {
+			throw new Error(errorMessage);
+		}
+		return result.rows[0];
 	}
-	return result.rows[0];
-}
 
 	constructor() {
 		this.pool = new Pool({
@@ -47,7 +47,7 @@ getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
 	async query<T>(
 		text: string,
 		params: unknown[] = [],
-	): Promise<{ rows: T[]}> {
+	): Promise<{ rows: T[] }> {
 		const client = await this.pool.connect();
 		try {
 			const result = await client.query(text, params);
@@ -84,8 +84,7 @@ getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
 			await this.query("SELECT 1");
 		} catch (error) {
 			throw new Error(
-				`PostgreSQL initialization failed: ${
-					error instanceof Error ? error.message : "Unknown error"
+				`PostgreSQL initialization failed: ${error instanceof Error ? error.message : "Unknown error"
 				}`,
 			);
 		}
