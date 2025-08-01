@@ -21,4 +21,16 @@ export interface IGenerativeAIProvider {
         maxOutputTokens?: number,
         responseSchema?: string, 
     ): Promise<ModelResponse<string>>;
+
+	/**
+	 * Close database connections and cleanup resources
+	 * @returns Promise that resolves when cleanup is complete
+	 */    
+    close(): Promise<void>;
+
+	/**
+	 * Health check for database connectivity
+	 * @returns Promise with boolean indicating database health
+	 */
+	isHealthy(): Promise<boolean>;    
 }
