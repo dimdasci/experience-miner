@@ -2,41 +2,44 @@ import pino from "pino";
 import pinoHttp from "pino-http";
 import { serverConfig } from "@/config";
 
-// Use the original configuration structure that worked before
+// Lazy configuration functions to avoid loading pino-pretty in production
+const createDevelopmentConfig = (): pino.LoggerOptions => ({
+	level: serverConfig.logLevel,
+	transport: {
+		targets: [
+			{
+				target: "pino-pretty",
+				options: {
+					colorize: true,
+					translateTime: "SYS:standard",
+					ignore: "pid,hostname",
+				},
+				level: "info",
+			},
+			{
+				target: "pino/file",
+				options: {
+					destination: "./logs/app.log",
+					mkdir: true,
+				},
+				level: "debug",
+			},
+		],
+	},
+});
+
+const createProductionConfig = (): pino.LoggerOptions => ({
+	level: serverConfig.logLevel,
+	formatters: {
+		level: (label: string) => ({ level: label }),
+	},
+	timestamp: pino.stdTimeFunctions.isoTime,
+});
+
 const logger = pino(
 	serverConfig.nodeEnv === "development"
-		? {
-				level: serverConfig.logLevel,
-				transport: {
-					targets: [
-						{
-							target: "pino-pretty",
-							options: {
-								colorize: true,
-								translateTime: "SYS:standard",
-								ignore: "pid,hostname",
-							},
-							level: "info",
-						},
-						{
-							target: "pino/file",
-							options: {
-								destination: "./logs/app.log",
-								mkdir: true,
-							},
-							level: "debug",
-						},
-					],
-				},
-			}
-		: {
-				// Production: Simple JSON logs without transports
-				level: serverConfig.logLevel,
-				formatters: {
-					level: (label) => ({ level: label }),
-				},
-				timestamp: pino.stdTimeFunctions.isoTime,
-			}
+		? createDevelopmentConfig()
+		: createProductionConfig()
 );
 
 export const requestLogger = pinoHttp({
