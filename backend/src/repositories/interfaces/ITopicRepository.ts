@@ -29,7 +29,7 @@ export interface ITopicRepository {
 	/**
 	 * Mark topic as used
 	 */
-	markAsUsed(userId: string, topicId: number): Promise<Topic>;
+	markAsUsed(userId: string, topicId: number, client?: DatabaseClient): Promise<Topic>;
 
 	/**
 	 * Get available topics for user (status = 'available')

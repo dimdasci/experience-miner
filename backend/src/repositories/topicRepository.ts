@@ -46,8 +46,9 @@ export class TopicRepository implements ITopicRepository {
 		return this.db.getFirstRowOrThrow(result, "Topic not found");
 	}
 
-	async markAsUsed(userId: string, topicId: number): Promise<Topic> {
-		const result = await this.db.query<Topic>(
+	async markAsUsed(userId: string, topicId: number, client?: DatabaseClient): Promise<Topic> {
+		const db = client ?? this.db;
+		const result = await db.query<Topic>(
 			`UPDATE topics 
 			 SET status = 'used', updated_at = NOW() 
 			 WHERE id = $1 AND user_id = $2
