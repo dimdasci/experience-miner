@@ -112,9 +112,9 @@ topicsRouter.post(
 		}
 
 		try {
-			const container = ServiceContainer.getInstance();
-			const topicService = container.getTopicService();
-			const result = await topicService.selectTopic(userId, topicId);
+			const selectTopicWorkflow = ServiceContainer.getInstance().getSelectTopicWorkflow();
+
+			const result = await selectTopicWorkflow.execute(userId, topicId);
 			return res.json(
 				ServiceResponse.success("Topic selected and interview created", result)
 			);

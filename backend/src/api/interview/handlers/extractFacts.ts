@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { InterviewService } from "@/services/interviewService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 /**
  * HTTP handler for extracting structured facts from interview
@@ -24,7 +24,9 @@ export const extractFacts = async (
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	}
 
-	if (!interviewId) {
+	// Validate interviewId
+	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",
 			null,
@@ -34,12 +36,15 @@ export const extractFacts = async (
 	}
 
 	try {
-		const interviewService = new InterviewService();
-		const result = await interviewService.extractFacts(interviewId, userId);
+		const workflow = ServiceContainer.getInstance().getProcessInterviewWorkflow();
+		await workflow.execute(
+			userId,
+			interviewIdNumber
+		);
 
 		const serviceResponse = ServiceResponse.success(
 			"Interview extraction completed successfully",
-			result,
+			null,
 		);
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);

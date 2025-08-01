@@ -1,8 +1,9 @@
+import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { InterviewService } from "@/services/interviewService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 /**
  * HTTP handler for getting all interviews for authenticated user
@@ -24,8 +25,8 @@ export const getAllInterviews = async (
 	}
 
 	try {
-		const interviewService = new InterviewService();
-		const interviews = await interviewService.getAllInterviews(userId);
+		const interviewRepo = ServiceContainer.getInstance().getInterviewRepository();
+		const interviews = await interviewRepo.getAllByUserId(userId);
 
 		const serviceResponse = ServiceResponse.success(
 			"Interviews retrieved successfully",
@@ -34,6 +35,17 @@ export const getAllInterviews = async (
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {
+		// Track error with full context
+		Sentry.captureException(error, {
+			contexts: {
+				user: { id: userId },
+				request: { endpoint: "GET /api/interviews" },
+				operation: {
+					name: "getAllInterviews",
+					component: "ExperienceRouter",
+				},
+			},
+		});		
 		const serviceResponse = ServiceResponse.failure(
 			`Failed to retrieve interviews: ${
 				error instanceof Error ? error.message : "Unknown error"

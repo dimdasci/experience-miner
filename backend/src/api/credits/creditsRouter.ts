@@ -30,8 +30,8 @@ creditsRouter.get(
 
 		try {
 			const container = ServiceContainer.getInstance();
-			const creditsService = container.getCreditsService();
-			const credits = await creditsService.getCurrentBalance(userId);
+			const creditsRepo = container.getCreditsRepository();
+			const credits = await creditsRepo.getCurrentBalance(userId);
 
 			logger.info("Credits balance retrieved", {
 				user_id: userId,

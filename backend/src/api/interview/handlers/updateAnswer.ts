@@ -1,8 +1,10 @@
+import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { InterviewService } from "@/services/interviewService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
+
 
 /**
  * HTTP handler for updating answer by question number
@@ -25,7 +27,11 @@ export const updateAnswer = async (
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	}
 
-	if (!interviewId || !questionNumber) {
+	// convert interviewId and questionNumber to numbers
+	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	const questionNumberNumber = parseInt(questionNumber ?? "", 10);
+
+	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0 || isNaN(questionNumberNumber) || questionNumberNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID and question number are required",
 			null,
@@ -44,10 +50,10 @@ export const updateAnswer = async (
 	}
 
 	try {
-		const interviewService = new InterviewService();
+		const interviewService = ServiceContainer.getInstance().getInterviewService();
 		const updatedAnswer = await interviewService.updateAnswer(
-			interviewId,
-			parseInt(questionNumber, 10),
+			interviewIdNumber,
+			questionNumberNumber,
 			userId,
 			answer,
 			recording_duration_seconds,
@@ -60,22 +66,31 @@ export const updateAnswer = async (
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {
+		// Track error with full context
+		Sentry.captureException(error, {
+			contexts: {
+				user: { id: userId },
+				request: { endpoint: `PUT /api/interviews/${interviewId}/answers/${questionNumber}` },
+				operation: {
+					name: "updateAnswer",
+					component: "ExperienceRouter",
+				},
+			},
+		});
+
 		let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 
 		if (error instanceof Error) {
 			if (
-				error.message.includes("not found") ||
+				error.message.includes("found") ||
 				error.message.includes("Access denied")
 			) {
 				statusCode = StatusCodes.NOT_FOUND;
-			} else if (error.message === "Question not found") {
-				statusCode = StatusCodes.BAD_REQUEST;
 			}
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to update answer: ${
-				error instanceof Error ? error.message : "Unknown error"
+			`Failed to update answer: ${error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

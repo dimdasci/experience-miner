@@ -3,7 +3,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { InterviewService } from "@/services/interviewService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 /**
  * HTTP handler for transcribing audio to text
@@ -34,16 +34,16 @@ export const transcribeAudio = async (
 	}
 
 	try {
-		const interviewService = new InterviewService();
-		const result = await interviewService.transcribeAudio(
+		const workflow = ServiceContainer.getInstance().getTranscribeAudioWorkflow();
+		const transcription = await workflow.execute(
+			userId,
 			req.file.buffer,
 			req.file.mimetype,
-			userId,
 		);
 
 		const serviceResponse = ServiceResponse.success(
 			"Audio transcribed successfully",
-			result,
+			transcription
 		);
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
@@ -75,8 +75,7 @@ export const transcribeAudio = async (
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to transcribe audio: ${
-				error instanceof Error ? error.message : "Unknown error"
+			`Failed to transcribe audio: ${error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

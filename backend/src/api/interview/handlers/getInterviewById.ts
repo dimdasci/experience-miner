@@ -2,7 +2,7 @@ import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { InterviewService } from "@/services/interviewService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 /**
  * HTTP handler for getting interview by ID with answers
@@ -24,7 +24,9 @@ export const getInterviewById = async (
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	}
 
-	if (!interviewId) {
+	// convert to integer
+	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",
 			null,
@@ -34,10 +36,10 @@ export const getInterviewById = async (
 	}
 
 	try {
-		const interviewService = new InterviewService();
-		const interview = await interviewService.getInterviewById(
-			interviewId,
+		const interviewRepo = ServiceContainer.getInstance().getInterviewRepository();
+		const interview = await interviewRepo.getById(
 			userId,
+			interviewIdNumber,
 		);
 
 		if (!interview) {
@@ -63,8 +65,7 @@ export const getInterviewById = async (
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to retrieve interview: ${
-				error instanceof Error ? error.message : "Unknown error"
+			`Failed to retrieve interview: ${error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

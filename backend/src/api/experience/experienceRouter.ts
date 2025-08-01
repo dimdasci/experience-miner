@@ -33,41 +33,21 @@ experienceRouter.get(
 			});
 
 			const container = ServiceContainer.getInstance();
-			const experienceService = container.getExperienceService();
+			const experienceRepo = container.getExperienceRepository();
 			const experienceRecord =
-				await experienceService.getExperienceByUserId(userId);
+				await experienceRepo.getByUserId(userId);
 
 			if (!experienceRecord) {
-				// Return empty experience data structure if none exists
-				const emptyExperience = {
-					extractedFacts: {
-						achievements: [],
-						companies: [],
-						projects: [],
-						roles: [],
-						skills: [],
-						summary: {
-							text: "",
-							lastUpdated: new Date().toISOString(),
-							basedOnInterviews: [],
-						},
-						metadata: {
-							totalExtractions: 0,
-							lastExtractionAt: null,
-							creditsUsed: 0,
-						},
-					},
-				};
-
-				Sentry.logger?.info?.("Experience data retrieved (empty)", {
+				Sentry.logger?.warn?.("Experience data record not found", {
 					user_id: userId,
 					hasData: false,
 					component: "ExperienceRouter",
 				});
 
-				const serviceResponse = ServiceResponse.success(
-					"Experience data retrieved (empty)",
-					emptyExperience,
+				const serviceResponse = ServiceResponse.failure(
+					"Experience data is not found",
+					null,
+					StatusCodes.NOT_FOUND,
 				);
 				return res.status(serviceResponse.statusCode).json(serviceResponse);
 			}
@@ -76,8 +56,6 @@ experienceRouter.get(
 				user_id: userId,
 				hasData: true,
 				component: "ExperienceRouter",
-				extractionCount:
-					experienceRecord?.payload?.metadata?.totalExtractions || 0,
 			});
 
 			// Get the stored extracted facts - stored in summary.extractedFacts per database schema
@@ -85,29 +63,8 @@ experienceRouter.get(
 
 			// Handle case where extractedFacts might not exist yet
 			if (!storedFacts) {
-				// Return empty experience data structure if extractedFacts doesn't exist
-				const emptyExperience = {
-					extractedFacts: {
-						achievements: [],
-						companies: [],
-						projects: [],
-						roles: [],
-						skills: [],
-						summary: {
-							text: "",
-							lastUpdated: new Date().toISOString(),
-							basedOnInterviews: [],
-						},
-						metadata: {
-							totalExtractions: 0,
-							lastExtractionAt: null,
-							creditsUsed: 0,
-						},
-					},
-				};
-
-				Sentry.logger?.info?.(
-					"Experience data retrieved (empty - no extractedFacts)",
+				Sentry.logger?.warn?.(
+					"Experience data record has empty payload",
 					{
 						user_id: userId,
 						hasData: false,
@@ -115,9 +72,10 @@ experienceRouter.get(
 					},
 				);
 
-				const serviceResponse = ServiceResponse.success(
+				const serviceResponse = ServiceResponse.failure(
 					"Experience data retrieved (empty)",
-					emptyExperience,
+					null,
+					StatusCodes.NOT_FOUND,
 				);
 				return res.status(serviceResponse.statusCode).json(serviceResponse);
 			}
