@@ -45,7 +45,7 @@ export const transcribeAudio = async (
 		const serviceResponse = ServiceResponse.success(
 			"Audio transcribed successfully",
 			{
-				transcript: transcription
+				transcript: transcription,
 			},
 		);
 
@@ -53,7 +53,7 @@ export const transcribeAudio = async (
 			user_id: userId,
 			result: transcription,
 			serviceResponse,
-		});		
+		});
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {
 		let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;

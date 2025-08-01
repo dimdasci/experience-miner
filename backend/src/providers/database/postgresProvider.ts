@@ -26,18 +26,18 @@ export class PostgresProvider implements IDatabaseProvider {
 			...databaseConfig.connection,
 			...databaseConfig.pool,
 		});
-		
+
 		// Add event handlers to track pool behavior
-		this.pool.on('error', (err) => {
+		this.pool.on("error", (err) => {
 			logger.error("Unexpected PostgreSQL pool error", {
 				error: err.message,
-				stack: err.stack
+				stack: err.stack,
 			});
 			Sentry.captureException(err, {
-				tags: { component: "db_pool" }
+				tags: { component: "db_pool" },
 			});
 		});
-		
+
 		// Test connection on startup
 		this.testConnection();
 	}
@@ -59,20 +59,22 @@ export class PostgresProvider implements IDatabaseProvider {
 
 	async query<T>(text: string, params: unknown[] = []): Promise<{ rows: T[] }> {
 		// Check if pool is already ended before attempting to connect
-		if (this.pool['ending'] === true) {
-			const error = new Error('Cannot use a pool after calling end on the pool');
+		if (this.pool.ending === true) {
+			const error = new Error(
+				"Cannot use a pool after calling end on the pool",
+			);
 			logger.error("Attempted to use closed PostgreSQL pool", {
 				query: text,
 				error: error.message,
-				stack: error.stack
+				stack: error.stack,
 			});
 			Sentry.captureException(error, {
 				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } }
+				contexts: { query: { text, params } },
 			});
 			throw error;
 		}
-		
+
 		try {
 			const client = await this.pool.connect();
 			try {
@@ -85,11 +87,11 @@ export class PostgresProvider implements IDatabaseProvider {
 			logger.error("Database query error", {
 				query: text,
 				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined
+				stack: error instanceof Error ? error.stack : undefined,
 			});
 			Sentry.captureException(error, {
 				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } }
+				contexts: { query: { text, params } },
 			});
 			throw error;
 		}
@@ -133,13 +135,15 @@ export class PostgresProvider implements IDatabaseProvider {
 		logger.info("Closing PostgreSQL connection pool", {
 			stack: new Error().stack, // Log the call stack to see where close() is being called from
 		});
-		
+
 		// Check if pool is already ended
-		if (this.pool['ending'] === true) {
-			logger.warn("Attempted to close PostgreSQL pool that is already ending/ended");
+		if (this.pool.ending === true) {
+			logger.warn(
+				"Attempted to close PostgreSQL pool that is already ending/ended",
+			);
 			return;
 		}
-		
+
 		// Track active clients before ending
 		const poolStatus = {
 			totalCount: this.pool.totalCount,
@@ -147,7 +151,7 @@ export class PostgresProvider implements IDatabaseProvider {
 			waitingCount: this.pool.waitingCount,
 		};
 		logger.info("Pool status before closing", poolStatus);
-		
+
 		await this.pool.end();
 		logger.info("Database pool closed successfully");
 	}
