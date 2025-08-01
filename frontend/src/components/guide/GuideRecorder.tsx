@@ -65,9 +65,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
           })
           
           // Update credits in the global context by refreshing from the server
-          if (typeof result.responseObject.credits === 'number') {
-            refreshCredits(true)
-          }
+          refreshCredits(true)
           
           // Log successful transcription and auto-submission
           UserJourneyLogger.logUserAction({
@@ -76,8 +74,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
             data: {
               questionId: questionId,
               transcriptLength: result.responseObject.transcript.length,
-              duration: recording.duration,
-              remainingCredits: result.responseObject.credits
+              duration: recording.duration
             }
           })
         } else {

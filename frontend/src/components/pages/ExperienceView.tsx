@@ -2,54 +2,31 @@ import { useState, useEffect, useCallback } from 'react'
 import { Building2, User, Briefcase, Award, Code, Target, AlertCircle, Clock } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { UserJourneyLogger } from '../../utils/logger'
+import { 
+  Achievement, 
+  Company, 
+  Project, 
+  Role, 
+  Skill
+} from '../../types/business'
 
+// Define the structure we'll use directly from the API
 interface ExtractedFacts {
-  achievements: Array<{
-    description: string
-    sourceInterviewId: string
-    sourceQuestionNumber: number
-    extractedAt: string
-  }>
-  companies: Array<{
-    name: string
-    sourceInterviewId: string
-    sourceQuestionNumber: number
-    extractedAt: string
-  }>
-  projects: Array<{
-    name: string
-    description: string
-    role: string
-    company?: string
-    sourceInterviewId: string
-    sourceQuestionNumber: number
-    extractedAt: string
-  }>
-  roles: Array<{
-    title: string
-    company: string
-    duration: string
-    sourceInterviewId: string
-    sourceQuestionNumber: number
-    extractedAt: string
-  }>
-  skills: Array<{
-    name: string
-    category?: string
-    sourceInterviewId: string
-    sourceQuestionNumber: number
-    extractedAt: string
-  }>
+  achievements: Achievement[];
+  companies: Company[];
+  projects: Project[];
+  roles: Role[];
+  skills: Skill[];
   summary: {
-    text: string
-    lastUpdated: string
-    basedOnInterviews: string[]
-  }
-  metadata: {
-    totalExtractions: number
-    lastExtractionAt: string | null
-    creditsUsed: number
-  }
+    basedOnInterviews: number[];
+    text?: string; // Optional for UI display
+    lastUpdated?: string; // Optional for UI display
+  };
+  metadata?: {
+    totalExtractions: number;
+    lastExtractionAt: string;
+    creditsUsed: number;
+  };
 }
 
 interface ExperienceViewProps {
@@ -69,7 +46,29 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
       const response = await apiService.getExperienceData()
       
       if (response.success) {
-        setExperienceData(response.responseObject.extractedFacts)
+        // Use the data directly from the API with minimal transformation
+        const backendData = response.responseObject.extractedFacts;
+        
+        // Just add some UI-specific fields if they don't exist
+        const extractedData: ExtractedFacts = {
+          achievements: backendData.achievements || [],
+          companies: backendData.companies || [],
+          projects: backendData.projects || [],
+          roles: backendData.roles || [],
+          skills: backendData.skills || [],
+          summary: {
+            basedOnInterviews: backendData.summary?.basedOnInterviews || [],
+            text: backendData.summary?.text || "No summary available",
+            lastUpdated: new Date().toISOString()
+          },
+          metadata: {
+            totalExtractions: backendData.metadata?.totalExtractions || 1,
+            lastExtractionAt: backendData.metadata?.lastExtractionAt || new Date().toISOString(),
+            creditsUsed: backendData.metadata?.creditsUsed || 0
+          }
+        };
+        
+        setExperienceData(extractedData);
       } else {
         // Special handling for duplicate requests - don't treat as errors
         if (response.isDuplicate || response.statusCode === 429) {
@@ -161,7 +160,7 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
         <p className="text-gray-600">
           Organized insights from your career interviews
         </p>
-        {experienceData.metadata.lastExtractionAt && (
+        {experienceData.metadata?.lastExtractionAt && (
           <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-500">
             <Clock className="w-4 h-4" />
             Last updated: {new Date(experienceData.metadata.lastExtractionAt).toLocaleDateString()}
@@ -197,7 +196,12 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
                   <div key={index} className="p-3 bg-blue-50 rounded border">
                     <div className="font-medium">{company.name}</div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Interview {company.sourceInterviewId} • Q{company.sourceQuestionNumber}
+                      {company.sources.map((source, idx) => (
+                        <span key={idx} className="inline-block mr-2">
+                          Interview {source.interview_id} • Q{source.question_number}
+                          {idx < company.sources.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -221,7 +225,12 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
                       <div className="text-xs text-gray-500">{role.duration}</div>
                     )}
                     <div className="text-xs text-gray-500 mt-1">
-                      Interview {role.sourceInterviewId} • Q{role.sourceQuestionNumber}
+                      {role.sources.map((source, idx) => (
+                        <span key={idx} className="inline-block mr-2">
+                          Interview {source.interview_id} • Q{source.question_number}
+                          {idx < role.sources.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -256,7 +265,12 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
                       </div>
                     )}
                     <div className="text-xs text-gray-500">
-                      Interview {project.sourceInterviewId} • Q{project.sourceQuestionNumber}
+                      {project.sources.map((source, idx) => (
+                        <span key={idx} className="inline-block mr-2">
+                          Interview {source.interview_id} • Q{source.question_number}
+                          {idx < project.sources.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -277,8 +291,13 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
                     <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full cursor-help">
                       {skill.name}
                     </span>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                      Interview {skill.sourceInterviewId} • Q{skill.sourceQuestionNumber}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-xs">
+                      {skill.sources.map((source, idx) => (
+                        <span key={idx} className="inline-block mr-1">
+                          Interview {source.interview_id} • Q{source.question_number}
+                          {idx < skill.sources.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -301,7 +320,12 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
                   <div>
                     <span className="text-sm">{achievement.description}</span>
                     <div className="text-xs text-gray-500 mt-1">
-                      Interview {achievement.sourceInterviewId} • Q{achievement.sourceQuestionNumber}
+                      {achievement.sources.map((source, idx) => (
+                        <span key={idx} className="inline-block mr-2">
+                          Interview {source.interview_id} • Q{source.question_number}
+                          {idx < achievement.sources.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -316,7 +340,7 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
             <div>
               <h3 className="font-medium text-gray-900">Experience Summary</h3>
               <div className="text-sm text-gray-600 mt-1">
-                {experienceData.metadata.totalExtractions} extraction(s) • {experienceData.metadata.creditsUsed} credits used
+                {experienceData.metadata?.totalExtractions || 0} extraction(s) • {experienceData.metadata?.creditsUsed || 0} credits used
               </div>
             </div>
           </div>

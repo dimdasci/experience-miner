@@ -162,6 +162,21 @@ export class ServiceContainer {
 	}
 
 	/**
+	 * Get answer repository instance
+	 */
+	getAnswerRepository(): AnswerRepository {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.answerRepository) {
+			throw new Error("Answer repository not initialized");
+		}
+		return this.answerRepository;
+	}
+
+	/**
 	 * Get credits repository instance
 	 */
 	getCreditsRepository(): CreditsRepository {

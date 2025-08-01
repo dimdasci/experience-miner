@@ -38,6 +38,7 @@ export const SkillSchema = z.object({
 
 export const ExtractedFactsSchema = z.object({
 	summary: z.object({
+		text: z.string().describe("Summary text of the professional experience"),
 		basedOnInterviews: z.array(z.number()),
 	}),
 	companies: z.array(CompanySchema),

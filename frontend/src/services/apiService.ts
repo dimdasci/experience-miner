@@ -154,7 +154,7 @@ class ApiService {
     interviewId: number,
     questionNumber: number,
     recordingDuration?: number
-  ): Promise<ApiResponse<{ transcript: string; credits: number }>> {
+  ): Promise<ApiResponse<{ transcript: string }>> {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'recording.webm')
     formData.append('question', question)
@@ -198,7 +198,7 @@ class ApiService {
       }
       return {
         success: false,
-        responseObject: { transcript: '', credits: 0 },
+        responseObject: { transcript: '' },
         message: error instanceof Error ? error.message : 'Transcription failed',
         statusCode: 500,
         error: error instanceof Error ? error.message : 'Transcription failed'

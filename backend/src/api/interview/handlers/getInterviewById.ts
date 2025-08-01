@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
@@ -15,6 +16,11 @@ export const getInterviewById = async (
 	const { id: interviewId } = req.params;
 	const userId = req.user?.id;
 
+	Sentry.logger?.info?.("Interview requested", {
+		user_id: userId,
+		interviewId,
+	});
+
 	if (!userId) {
 		const serviceResponse = ServiceResponse.failure(
 			"Invalid user authentication",
@@ -27,6 +33,10 @@ export const getInterviewById = async (
 	// convert to integer
 	const interviewIdNumber = parseInt(interviewId ?? "", 10);
 	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
+		Sentry.logger?.error?.("Invalid interview ID", {
+			user_id: userId,
+			interviewId,
+		});
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",
 			null,
@@ -38,7 +48,16 @@ export const getInterviewById = async (
 	try {
 		const interviewRepo =
 			ServiceContainer.getInstance().getInterviewRepository();
+		const answerRepo =
+			ServiceContainer.getInstance().getAnswerRepository();
+
 		const interview = await interviewRepo.getById(userId, interviewIdNumber);
+		const answers = await answerRepo.getByInterviewId(userId, interviewIdNumber);
+		Sentry.logger?.info?.("Interview retrieved", {
+			user_id: userId,
+			interviewId: interviewIdNumber,
+			result: { interview, answers },
+		});
 
 		if (!interview) {
 			const serviceResponse = ServiceResponse.failure(
@@ -51,8 +70,9 @@ export const getInterviewById = async (
 
 		const serviceResponse = ServiceResponse.success(
 			"Interview retrieved successfully",
-			interview,
+			{ interview, answers },
 		);
+
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {

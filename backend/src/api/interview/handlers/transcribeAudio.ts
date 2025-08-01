@@ -44,9 +44,16 @@ export const transcribeAudio = async (
 
 		const serviceResponse = ServiceResponse.success(
 			"Audio transcribed successfully",
-			transcription,
+			{
+				transcript: transcription
+			},
 		);
 
+		Sentry.logger?.info?.("Audio Extraction Service Response", {
+			user_id: userId,
+			result: transcription,
+			serviceResponse,
+		});		
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {
 		let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
