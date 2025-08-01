@@ -24,6 +24,7 @@ RUN npm ci
 # Copy source code
 COPY src ./src
 COPY tsconfig.json biome.json ./
+COPY instruments.mjs ./
 
 # Build the application
 RUN npm run build
@@ -42,7 +43,7 @@ WORKDIR /app
 COPY --from=base --chown=backend:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=backend:nodejs /app/dist ./dist
 COPY --from=build --chown=backend:nodejs /app/package.json ./
-COPY --chown=backend:nodejs instruments.mjs ./
+COPY --from=build --chown=backend:nodejs /app/instruments.mjs ./
 
 # Switch to non-root user
 USER backend
