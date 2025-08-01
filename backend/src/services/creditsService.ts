@@ -16,7 +16,9 @@ export class CreditsService {
 	removeUserLock(userId: string): void {
 		const wasLocked = userProcessingLocks.delete(userId);
 		if (wasLocked) {
-			Sentry.logger?.info?.("User processing lock removed", { user_id: userId });
+			Sentry.logger?.info?.("User processing lock removed", {
+				user_id: userId,
+			});
 		}
 	}
 }

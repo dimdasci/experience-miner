@@ -1,8 +1,6 @@
 import * as Sentry from "@sentry/node";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
-import type {
-	Answer,
-} from "@/types/domain";
+import type { Answer } from "@/types/domain";
 import type { IAnswerRepository } from "./interfaces";
 
 /**
@@ -29,7 +27,7 @@ export class AnswerRepository implements IAnswerRepository {
 		userId: string,
 		questionNumber: number,
 		question: string,
-		client?: DatabaseClient,	
+		client?: DatabaseClient,
 	): Promise<Answer> {
 		// choose the connection method based on whether a client is provided
 		const db = client || (await this.db.getClient());
@@ -37,15 +35,13 @@ export class AnswerRepository implements IAnswerRepository {
 			`INSERT INTO answers (interview_id, user_id, question_number, question, answer, recording_duration_seconds, created_at, updated_at)
 			 VALUES ($1, $2, $3, $4, NULL, NULL, NOW(), NOW())
 			 RETURNING *`,
-			[
-				interviewId,
-				userId,
-				questionNumber,
-				question,
-			],
+			[interviewId, userId, questionNumber, question],
 		);
 
-		const answer = this.db.getFirstRowOrThrow(result, "Answer insert failed - no rows returned");
+		const answer = this.db.getFirstRowOrThrow(
+			result,
+			"Answer insert failed - no rows returned",
+		);
 
 		Sentry.logger?.debug?.("Answer record created", {
 			answerId: answer.id,
@@ -61,7 +57,7 @@ export class AnswerRepository implements IAnswerRepository {
 		answerId: number,
 		answerText: string,
 		recordingDurationSeconds?: number,
-		client?: DatabaseClient
+		client?: DatabaseClient,
 	): Promise<Answer> {
 		const db = client || (await this.db.getClient());
 		const result = await db.query<Answer>(
@@ -71,7 +67,10 @@ export class AnswerRepository implements IAnswerRepository {
 			 RETURNING *`,
 			[answerText, recordingDurationSeconds || null, answerId, userId],
 		);
-		const answer = this.db.getFirstRowOrThrow(result, "Answer update failed - answer not found");
+		const answer = this.db.getFirstRowOrThrow(
+			result,
+			"Answer update failed - answer not found",
+		);
 
 		Sentry.logger?.debug?.("Answer updated successfully", {
 			answerId: answer.id,
@@ -82,7 +81,10 @@ export class AnswerRepository implements IAnswerRepository {
 		return answer;
 	}
 
-	async getByInterviewId(userId: string, interviewId: number): Promise<Answer[]> {
+	async getByInterviewId(
+		userId: string,
+		interviewId: number,
+	): Promise<Answer[]> {
 		const result = await this.db.query<Answer>(
 			`SELECT * FROM answers 
 			 WHERE interview_id = $1 AND user_id = $2
@@ -102,11 +104,14 @@ export class AnswerRepository implements IAnswerRepository {
 		return result.rows.length > 0 ? (result.rows[0] ?? null) : null;
 	}
 
-	async deleteByInterviewId(userId: string, interviewId: number): Promise<void> {
-		await this.db.query("DELETE FROM answers WHERE interview_id = $1 AND user_id = $2", [
-			interviewId,
-			userId,
-		]);
+	async deleteByInterviewId(
+		userId: string,
+		interviewId: number,
+	): Promise<void> {
+		await this.db.query(
+			"DELETE FROM answers WHERE interview_id = $1 AND user_id = $2",
+			[interviewId, userId],
+		);
 
 		Sentry.logger?.debug?.("Answers deleted for interview", {
 			interviewId,

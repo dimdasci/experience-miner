@@ -1,8 +1,5 @@
 import type { DatabaseClient } from "@/providers";
-import type {
-	Interview,
-	InterviewStatus,
-} from "@/types/domain";
+import type { Interview, InterviewStatus } from "@/types/domain";
 
 /**
  * Repository interface for interview-related database operations
@@ -11,7 +8,8 @@ export interface IInterviewRepository {
 	/**
 	 * Create a new interview
 	 */
-	create(userId: string,
+	create(
+		userId: string,
 		title: string,
 		motivationalQuote: string,
 		client?: DatabaseClient,

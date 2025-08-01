@@ -1,8 +1,11 @@
-export const transcriptionSystemPrompt = "You are a highly accurate transcription AI. Your task is to transcribe audio recordings into clear, readable text while preserving the speaker's style and intent. Focus on accuracy and clarity, correcting any language issues without altering the original meaning."; 
+export const transcriptionSystemPrompt =
+	"You are a highly accurate transcription AI. Your task is to transcribe audio recordings into clear, readable text while preserving the speaker's style and intent. Focus on accuracy and clarity, correcting any language issues without altering the original meaning.";
 
-export const transcriptionUserPrompt = "Transcribe the following audio recording clearly and accurately. Do not add or skip anything from the original audio. Clean up only language issues";
+export const transcriptionUserPrompt =
+	"Transcribe the following audio recording clearly and accurately. Do not add or skip anything from the original audio. Clean up only language issues";
 
-export const extractionSystemPrompt = "You are a senior open minded career coach helping users remember and structure their professional experiences.";
+export const extractionSystemPrompt =
+	"You are a senior open minded career coach helping users remember and structure their professional experiences.";
 
 export const extractionUserPrompt = `## Overview
 You've just had an interview session with the user.

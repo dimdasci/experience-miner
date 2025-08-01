@@ -5,7 +5,6 @@ import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 
-
 /**
  * HTTP handler for updating answer by question number
  * Thin adapter that delegates to interview service
@@ -31,7 +30,12 @@ export const updateAnswer = async (
 	const interviewIdNumber = parseInt(interviewId ?? "", 10);
 	const questionNumberNumber = parseInt(questionNumber ?? "", 10);
 
-	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0 || isNaN(questionNumberNumber) || questionNumberNumber <= 0) {
+	if (
+		Number.isNaN(interviewIdNumber) ||
+		interviewIdNumber <= 0 ||
+		Number.isNaN(questionNumberNumber) ||
+		questionNumberNumber <= 0
+	) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID and question number are required",
 			null,
@@ -50,7 +54,8 @@ export const updateAnswer = async (
 	}
 
 	try {
-		const interviewService = ServiceContainer.getInstance().getInterviewService();
+		const interviewService =
+			ServiceContainer.getInstance().getInterviewService();
 		const updatedAnswer = await interviewService.updateAnswer(
 			interviewIdNumber,
 			questionNumberNumber,
@@ -70,7 +75,9 @@ export const updateAnswer = async (
 		Sentry.captureException(error, {
 			contexts: {
 				user: { id: userId },
-				request: { endpoint: `PUT /api/interviews/${interviewId}/answers/${questionNumber}` },
+				request: {
+					endpoint: `PUT /api/interviews/${interviewId}/answers/${questionNumber}`,
+				},
 				operation: {
 					name: "updateAnswer",
 					component: "ExperienceRouter",
@@ -90,7 +97,8 @@ export const updateAnswer = async (
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to update answer: ${error instanceof Error ? error.message : "Unknown error"
+			`Failed to update answer: ${
+				error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

@@ -1,13 +1,6 @@
 import { serverConfig } from "@/config";
-import type {
-	IGenerativeAIProvider,
-	IDatabaseProvider,
-} from "@/providers";
-import {
-	GeminiProvider,
-	PostgresProvider,
-} from "@/providers";
-
+import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
+import { GeminiProvider, PostgresProvider } from "@/providers";
 
 /**
  * Create AI provider instance based on configuration

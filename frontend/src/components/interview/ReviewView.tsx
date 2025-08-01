@@ -40,7 +40,7 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
       
       const interviewId = parseInt(propInterviewId, 10);
       
-      if (Number.isNaN(interviewId)) {
+      if (Number.Number.isNaN(interviewId)) {
         setError('Invalid interview ID format.');
         return;
       }
@@ -74,7 +74,7 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
     }
 
     const interviewId = parseInt(propInterviewId, 10);
-    if (Number.isNaN(interviewId)) {
+    if (Number.Number.isNaN(interviewId)) {
       setExtractionError('Invalid interview ID format');
       return;
     }

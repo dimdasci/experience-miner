@@ -35,7 +35,10 @@ export class ExperienceRepository implements IExperienceRepository {
 				[JSON.stringify(record), userId],
 			);
 
-			const updatedRecord = this.db.getFirstRowOrThrow(result, "Experience record update failed");
+			const updatedRecord = this.db.getFirstRowOrThrow(
+				result,
+				"Experience record update failed",
+			);
 
 			Sentry.logger?.info?.("Experience record updated", {
 				userId,
@@ -52,7 +55,10 @@ export class ExperienceRepository implements IExperienceRepository {
 				[userId, JSON.stringify(record)],
 			);
 
-			const newRecord = this.db.getFirstRowOrThrow(result, "Experience record insert failed");
+			const newRecord = this.db.getFirstRowOrThrow(
+				result,
+				"Experience record insert failed",
+			);
 
 			Sentry.logger?.info?.("Experience record created", {
 				userId,
@@ -63,11 +69,14 @@ export class ExperienceRepository implements IExperienceRepository {
 		}
 	}
 
-	async getByUserId(userId: string, client?: DatabaseClient): Promise<ExperienceRecord | null> {
+	async getByUserId(
+		userId: string,
+		client?: DatabaseClient,
+	): Promise<ExperienceRecord | null> {
 		const db = client || (await this.db.getClient());
 		const result = await db.query<ExperienceRecord>(
-			"SELECT * FROM experience WHERE user_id = $1", 
-			[userId]
+			"SELECT * FROM experience WHERE user_id = $1",
+			[userId],
 		);
 
 		if (result.rows.length === 0) {

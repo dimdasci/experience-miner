@@ -1,7 +1,5 @@
 import type { DatabaseClient } from "@/providers";
-import type {
-	Answer,
-} from "@/types/domain";
+import type { Answer } from "@/types/domain";
 
 /**
  * Repository interface for answer-related database operations
@@ -21,7 +19,13 @@ export interface IAnswerRepository {
 	/**
 	 * Update an existing answer
 	 */
-	update(userId: string, answerId: number, answerText: string, recordingDurationSeconds?: number, client?: DatabaseClient): Promise<Answer>;
+	update(
+		userId: string,
+		answerId: number,
+		answerText: string,
+		recordingDurationSeconds?: number,
+		client?: DatabaseClient,
+	): Promise<Answer>;
 
 	/**
 	 * Get answers by interview ID

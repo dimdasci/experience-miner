@@ -26,7 +26,7 @@ export const extractFacts = async (
 
 	// Validate interviewId
 	const interviewIdNumber = parseInt(interviewId ?? "", 10);
-	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
+	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",
 			null,
@@ -36,11 +36,9 @@ export const extractFacts = async (
 	}
 
 	try {
-		const workflow = ServiceContainer.getInstance().getProcessInterviewWorkflow();
-		await workflow.execute(
-			userId,
-			interviewIdNumber
-		);
+		const workflow =
+			ServiceContainer.getInstance().getProcessInterviewWorkflow();
+		await workflow.execute(userId, interviewIdNumber);
 
 		const serviceResponse = ServiceResponse.success(
 			"Interview extraction completed successfully",

@@ -7,9 +7,7 @@ import {
 } from "@/common/middleware/auth.js";
 import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
-import type {
-	Topic,
-} from "@/types/domain";
+import type { Topic } from "@/types/domain";
 
 const topicsRouter = express.Router();
 
@@ -112,11 +110,12 @@ topicsRouter.post(
 		}
 
 		try {
-			const selectTopicWorkflow = ServiceContainer.getInstance().getSelectTopicWorkflow();
+			const selectTopicWorkflow =
+				ServiceContainer.getInstance().getSelectTopicWorkflow();
 
 			const result = await selectTopicWorkflow.execute(userId, topicId);
 			return res.json(
-				ServiceResponse.success("Topic selected and interview created", result)
+				ServiceResponse.success("Topic selected and interview created", result),
 			);
 		} catch (error) {
 			Sentry.captureException(error, {

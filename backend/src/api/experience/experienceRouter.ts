@@ -34,8 +34,7 @@ experienceRouter.get(
 
 			const container = ServiceContainer.getInstance();
 			const experienceRepo = container.getExperienceRepository();
-			const experienceRecord =
-				await experienceRepo.getByUserId(userId);
+			const experienceRecord = await experienceRepo.getByUserId(userId);
 
 			if (!experienceRecord) {
 				Sentry.logger?.warn?.("Experience data record not found", {
@@ -63,14 +62,11 @@ experienceRouter.get(
 
 			// Handle case where extractedFacts might not exist yet
 			if (!storedFacts) {
-				Sentry.logger?.warn?.(
-					"Experience data record has empty payload",
-					{
-						user_id: userId,
-						hasData: false,
-						component: "ExperienceRouter",
-					},
-				);
+				Sentry.logger?.warn?.("Experience data record has empty payload", {
+					user_id: userId,
+					hasData: false,
+					component: "ExperienceRouter",
+				});
 
 				const serviceResponse = ServiceResponse.failure(
 					"Experience data retrieved (empty)",

@@ -34,7 +34,8 @@ export const transcribeAudio = async (
 	}
 
 	try {
-		const workflow = ServiceContainer.getInstance().getTranscribeAudioWorkflow();
+		const workflow =
+			ServiceContainer.getInstance().getTranscribeAudioWorkflow();
 		const transcription = await workflow.execute(
 			userId,
 			req.file.buffer,
@@ -43,7 +44,7 @@ export const transcribeAudio = async (
 
 		const serviceResponse = ServiceResponse.success(
 			"Audio transcribed successfully",
-			transcription
+			transcription,
 		);
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
@@ -75,7 +76,8 @@ export const transcribeAudio = async (
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to transcribe audio: ${error instanceof Error ? error.message : "Unknown error"
+			`Failed to transcribe audio: ${
+				error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

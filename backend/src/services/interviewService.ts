@@ -1,23 +1,25 @@
 import * as Sentry from "@sentry/node";
-import type { IGenerativeAIProvider } from "@/providers";
-import {
-	AnswerRepository,
-	InterviewRepository,
-	ExperienceRepository
-} from "@/repositories";
-import type { ModelResponse, MediaData } from "@/types/ai";
-import type {
-	Answer,
-	Interview,
-} from "@/types/domain";
-import { ExtractedFactsSchema, type ExtractedFacts, type SourceRef } from "@/types/extractedFacts.js";
-import {
-	transcriptionSystemPrompt,
-	transcriptionUserPrompt
-} from "@/constants/interviewPrompts";
 import { aiConfig } from "@/config";
-import { extractionSystemPrompt, extractionUserPrompt } from "@/constants/interviewPrompts";
+import {
+	extractionSystemPrompt,
+	extractionUserPrompt,
+	transcriptionSystemPrompt,
+	transcriptionUserPrompt,
+} from "@/constants/interviewPrompts";
+import type { IGenerativeAIProvider } from "@/providers";
+import type {
+	AnswerRepository,
+	ExperienceRepository,
+	InterviewRepository,
+} from "@/repositories";
 import { fillTemplate } from "@/services/utils.js";
+import type { MediaData, ModelResponse } from "@/types/ai";
+import type { Answer, Interview } from "@/types/domain";
+import {
+	type ExtractedFacts,
+	ExtractedFactsSchema,
+	type SourceRef,
+} from "@/types/extractedFacts.js";
 
 /**
  * Service for interview-related business operations
@@ -33,7 +35,7 @@ export class InterviewService {
 		aiProvider: IGenerativeAIProvider,
 		interviewRepo: InterviewRepository,
 		answerRepo: AnswerRepository,
-		experienceRepo: ExperienceRepository
+		experienceRepo: ExperienceRepository,
 	) {
 		this.aiProvider = aiProvider;
 		this.interviewRepo = interviewRepo;
@@ -52,7 +54,7 @@ export class InterviewService {
 		recordingDurationSeconds?: number,
 	): Promise<Answer> {
 		// Get answers for the interview
-		const answers = await this.answerRepo.getByInterviewId(userId, interviewId)
+		const answers = await this.answerRepo.getByInterviewId(userId, interviewId);
 		if (answers.length === 0) {
 			throw new Error("No answers found for this interview");
 		}
@@ -102,7 +104,7 @@ export class InterviewService {
 				} as MediaData,
 				0,
 				aiConfig.maxTokens.transcription,
-			)
+			);
 
 			const duration = Date.now() - startTime;
 
@@ -146,7 +148,6 @@ export class InterviewService {
 		interviewId: number,
 		userId: string,
 	): Promise<ModelResponse<ExtractedFacts>> {
-
 		// Retrieve interview data
 		const interviewData = await this.interviewRepo.getById(userId, interviewId);
 		if (!interviewData) {
@@ -162,10 +163,14 @@ export class InterviewService {
 		// get previous facts if available
 		const previousFactsRecord = await this.experienceRepo.getByUserId(userId);
 
-		const previousFacts = previousFactsRecord && previousFactsRecord.payload ?
-			this.buildFactsContext(previousFactsRecord.payload) : "We have no user career information yet.";
+		const previousFacts = previousFactsRecord?.payload
+			? this.buildFactsContext(previousFactsRecord.payload)
+			: "We have no user career information yet.";
 
-		const interviewContext = this.buildInterviewContext(interviewData, answeredQuestions);
+		const interviewContext = this.buildInterviewContext(
+			interviewData,
+			answeredQuestions,
+		);
 
 		const prompt = fillTemplate(extractionUserPrompt, {
 			careerContext: previousFacts,
@@ -185,30 +190,35 @@ export class InterviewService {
 			undefined,
 			0.1,
 			aiConfig.maxTokens.extraction,
-			ExtractedFactsSchema
+			ExtractedFactsSchema,
 		);
 
 		return extractionResult;
 	}
-	private buildInterviewContext(interview: Interview, answers: Answer[]): string {
+	private buildInterviewContext(
+		interview: Interview,
+		answers: Answer[],
+	): string {
 		const contextParts: string[] = [];
 
 		contextParts.push(`<title>${interview.title}</title>`);
-		contextParts.push(`<motivational_quote>${interview.motivational_quote}</motivational_quote>`);
-
+		contextParts.push(
+			`<motivational_quote>${interview.motivational_quote}</motivational_quote>`,
+		);
 
 		if (answers.length > 0) {
 			contextParts.push("<answers>");
 			for (const answer of answers) {
-				if (!answer.answer || answer.answer.trim().length <= aiConfig.minAnswerLength) {
+				if (
+					!answer.answer ||
+					answer.answer.trim().length <= aiConfig.minAnswerLength
+				) {
 					continue; // Skip empty or short answers
 				}
 				contextParts.push(
 					`<question number="${answer.question_number}">${answer.question}</question>`,
 				);
-				contextParts.push(
-					`<answer>${answer.answer}</answer>`,
-				);
+				contextParts.push(`<answer>${answer.answer}</answer>`);
 			}
 		} else {
 			contextParts.push("No answers provided for this interview yet.");
@@ -223,47 +233,57 @@ export class InterviewService {
 		const parts: string[] = [];
 
 		if (extractedFacts.companies?.length > 0) {
-			parts.push('<companies>');
+			parts.push("<companies>");
 			parts.push(
 				`${extractedFacts.companies.map((c) => `<company name="${c.name}">${this.addSource(c.sources)}</company>`).join("\n")}`,
 			);
 		}
 
 		if (extractedFacts.roles?.length > 0) {
-			parts.push('<roles>');
+			parts.push("<roles>");
 			parts.push(
 				extractedFacts.roles
-					.map((r) => `<role company="${r.company}" duration="${r.duration}">\n${this.addSource(r.sources)}\n<title>${r.title}</title>\n</role>`)
-					.join("\n")
+					.map(
+						(r) =>
+							`<role company="${r.company}" duration="${r.duration}">\n${this.addSource(r.sources)}\n<title>${r.title}</title>\n</role>`,
+					)
+					.join("\n"),
 			);
-			parts.push('</roles>');
+			parts.push("</roles>");
 		}
 
 		if (extractedFacts.projects?.length > 0) {
-			parts.push('<projects>')
+			parts.push("<projects>");
 			parts.push(
 				extractedFacts.projects
-					.map((p) => `<project name="${p.name}" role="${p.role}" company="${p.company}">\n${this.addSource(p.sources)}\n<description>${p.description}</description>\n</project>`)
-					.join("\n")
+					.map(
+						(p) =>
+							`<project name="${p.name}" role="${p.role}" company="${p.company}">\n${this.addSource(p.sources)}\n<description>${p.description}</description>\n</project>`,
+					)
+					.join("\n"),
 			);
-			parts.push('</projects>');
+			parts.push("</projects>");
 		}
 
 		if (extractedFacts.skills?.length > 0) {
-			parts.push('<skills>');
+			parts.push("<skills>");
 			parts.push(
 				`${extractedFacts.skills.map((s) => `<skill name="${s.name}" category="${s.category}">\n${this.addSource(s.sources)}\n</skill>`).join("\n")}`,
 			);
-			parts.push('</skills>');
+			parts.push("</skills>");
 		}
 
 		if (extractedFacts.achievements?.length > 0) {
-			parts.push('<achievements>');
+			parts.push("<achievements>");
 			parts.push(
 				extractedFacts.achievements
-					.map((a) => `<achievement>\n${this.addSource(a.sources)}\n<description>\n${a.description}\n</description>\n</achievement>`).join("\n")
+					.map(
+						(a) =>
+							`<achievement>\n${this.addSource(a.sources)}\n<description>\n${a.description}\n</description>\n</achievement>`,
+					)
+					.join("\n"),
 			);
-			parts.push('</achievements>');
+			parts.push("</achievements>");
 		}
 
 		return `<career_path>\n${parts.join("\n")}\n</career_path>`;

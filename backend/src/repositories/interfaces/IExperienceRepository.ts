@@ -8,7 +8,10 @@ export interface IExperienceRepository {
 	/**
 	 * Save or update experience record for user
 	 */
-	saveOrUpdateRecord(userId: string, record: ExtractedFacts): Promise<ExperienceRecord>;
+	saveOrUpdateRecord(
+		userId: string,
+		record: ExtractedFacts,
+	): Promise<ExperienceRecord>;
 
 	/**
 	 * Get experience record by user ID

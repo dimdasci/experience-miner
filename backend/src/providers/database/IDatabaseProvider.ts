@@ -4,10 +4,10 @@
 
 // DatabaseClient is structurally compatible with PoolClient
 export interface DatabaseClient {
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for generic client methods
 	query<T = any>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
 	release(): void;
 }
-
 
 /**
  * Database Provider interface for abstracting different database implementations

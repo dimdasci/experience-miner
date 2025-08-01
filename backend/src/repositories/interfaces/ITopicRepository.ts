@@ -1,6 +1,6 @@
-import type { Topic } from "@/types/domain";
 import type { TopicQuestion } from "@/constants/initialTopics.js";
 import type { DatabaseClient } from "@/providers";
+import type { Topic } from "@/types/domain";
 /**
  * Repository interface for topic-related database operations
  */
@@ -9,12 +9,13 @@ export interface ITopicRepository {
 	 * Create a new topic
 	 */
 	create(
-		userId: string, 
-		title: string, 
-		motivationalQuote: string, 
-		questions: TopicQuestion[], 
+		userId: string,
+		title: string,
+		motivationalQuote: string,
+		questions: TopicQuestion[],
 		status: string,
-		client?: DatabaseClient): Promise<Topic>;
+		client?: DatabaseClient,
+	): Promise<Topic>;
 
 	/**
 	 * Get topics by user ID with optional status filter
@@ -24,12 +25,16 @@ export interface ITopicRepository {
 	/**
 	 * Get topic by ID
 	 */
-	getById(userId: string,topicId: number): Promise<Topic | null>;
+	getById(userId: string, topicId: number): Promise<Topic | null>;
 
 	/**
 	 * Mark topic as used
 	 */
-	markAsUsed(userId: string, topicId: number, client?: DatabaseClient): Promise<Topic>;
+	markAsUsed(
+		userId: string,
+		topicId: number,
+		client?: DatabaseClient,
+	): Promise<Topic>;
 
 	/**
 	 * Get available topics for user (status = 'available')
@@ -39,7 +44,11 @@ export interface ITopicRepository {
 	/**
 	 * Save multiple  topics
 	 */
-	createOrUpdate(userId: string, topics: Topic[], client?: DatabaseClient): Promise<void>;
+	createOrUpdate(
+		userId: string,
+		topics: Topic[],
+		client?: DatabaseClient,
+	): Promise<void>;
 
 	/**
 	 * Update topic statuses in batch
@@ -47,6 +56,6 @@ export interface ITopicRepository {
 	updateStatuses(
 		userId: string,
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
-		client?: DatabaseClient
+		client?: DatabaseClient,
 	): Promise<void>;
 }

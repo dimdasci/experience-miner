@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/node";
+import { creditsConfig } from "@/config/credits.js";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { CreditRecord, SourceType } from "@/types/services";
 import type { ICreditsRepository } from "./interfaces/ICreditsRepository.js";
-import { creditsConfig } from "@/config/credits.js";
 
 /**
  * PostgreSQL implementation of credits repository
@@ -31,7 +31,7 @@ export class CreditsRepository implements ICreditsRepository {
 		client?: DatabaseClient,
 	): Promise<CreditRecord> {
 		const db = client || (await this.db.getClient());
-		
+
 		if (amount <= 0) {
 			throw new Error("Amount must be greater than zero");
 		}
@@ -42,7 +42,10 @@ export class CreditsRepository implements ICreditsRepository {
 			[userId, amount, sourceAmount, sourceType, sourceUnit],
 		);
 
-		const transaction = this.db.getFirstRowOrThrow(result, "Credit transaction insert failed - no rows returned");
+		const transaction = this.db.getFirstRowOrThrow(
+			result,
+			"Credit transaction insert failed - no rows returned",
+		);
 
 		Sentry.logger?.info?.("Credits added successfully", {
 			user_id: userId,
@@ -59,7 +62,11 @@ export class CreditsRepository implements ICreditsRepository {
 	async consumeCredits(
 		userId: string,
 		tokensUsed: number,
-		sourceType: "transcriber" | "extractor" | "topic_generator" | "topic_ranker",
+		sourceType:
+			| "transcriber"
+			| "extractor"
+			| "topic_generator"
+			| "topic_ranker",
 		client?: DatabaseClient,
 	): Promise<CreditRecord> {
 		let rate: number;
@@ -95,7 +102,10 @@ export class CreditsRepository implements ICreditsRepository {
 			[userId, -creditsToConsume, sourceAmount, sourceType, "K_TOKENS"],
 		);
 
-		const credits = this.db.getFirstRowOrThrow(result, "Credit transaction insert failed - no rows returned");
+		const credits = this.db.getFirstRowOrThrow(
+			result,
+			"Credit transaction insert failed - no rows returned",
+		);
 
 		Sentry.logger?.info?.("Credits consumed successfully", {
 			user_id: userId,
@@ -106,4 +116,4 @@ export class CreditsRepository implements ICreditsRepository {
 
 		return credits;
 	}
-};
+}

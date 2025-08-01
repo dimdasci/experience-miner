@@ -1,8 +1,7 @@
-
 import { Pool } from "pg";
-import { databaseConfig } from "@/config/database.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import type { IDatabaseProvider, DatabaseClient } from "@/providers";
+import { databaseConfig } from "@/config/database.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 
 /**
  * PostgreSQL Provider implementation using pg connection pool
@@ -44,10 +43,7 @@ export class PostgresProvider implements IDatabaseProvider {
 		}
 	}
 
-	async query<T>(
-		text: string,
-		params: unknown[] = [],
-	): Promise<{ rows: T[] }> {
+	async query<T>(text: string, params: unknown[] = []): Promise<{ rows: T[] }> {
 		const client = await this.pool.connect();
 		try {
 			const result = await client.query(text, params);
@@ -84,7 +80,8 @@ export class PostgresProvider implements IDatabaseProvider {
 			await this.query("SELECT 1");
 		} catch (error) {
 			throw new Error(
-				`PostgreSQL initialization failed: ${error instanceof Error ? error.message : "Unknown error"
+				`PostgreSQL initialization failed: ${
+					error instanceof Error ? error.message : "Unknown error"
 				}`,
 			);
 		}

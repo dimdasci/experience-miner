@@ -26,6 +26,10 @@ export interface ICreditsRepository {
 	consumeCredits(
 		userId: string,
 		tokensUsed: number,
-		sourceType: "transcriber" | "extractor" | "topic_generator" | "topic_ranker",
+		sourceType:
+			| "transcriber"
+			| "extractor"
+			| "topic_generator"
+			| "topic_ranker",
 	): Promise<CreditRecord>;
 }

@@ -26,7 +26,7 @@ export const getInterviewById = async (
 
 	// convert to integer
 	const interviewIdNumber = parseInt(interviewId ?? "", 10);
-	if (isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
+	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",
 			null,
@@ -36,11 +36,9 @@ export const getInterviewById = async (
 	}
 
 	try {
-		const interviewRepo = ServiceContainer.getInstance().getInterviewRepository();
-		const interview = await interviewRepo.getById(
-			userId,
-			interviewIdNumber,
-		);
+		const interviewRepo =
+			ServiceContainer.getInstance().getInterviewRepository();
+		const interview = await interviewRepo.getById(userId, interviewIdNumber);
 
 		if (!interview) {
 			const serviceResponse = ServiceResponse.failure(
@@ -65,7 +63,8 @@ export const getInterviewById = async (
 		}
 
 		const serviceResponse = ServiceResponse.failure(
-			`Failed to retrieve interview: ${error instanceof Error ? error.message : "Unknown error"
+			`Failed to retrieve interview: ${
+				error instanceof Error ? error.message : "Unknown error"
 			}`,
 			null,
 			statusCode,

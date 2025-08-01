@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/node";
-import type { IDatabaseProvider, DatabaseClient } from "@/providers";
+import type { TopicQuestion } from "@/constants/initialTopics.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { Topic } from "@/types/domain";
 import type { ITopicRepository } from "./interfaces";
-import type { TopicQuestion } from "@/constants/initialTopics.js";
 /**
  * PostgreSQL implementation of topic repository
  */
@@ -13,7 +13,14 @@ export class TopicRepository implements ITopicRepository {
 		this.db = databaseProvider;
 	}
 
-	async create(userId: string, title: string, motivationalQuote: string, questions: TopicQuestion[], status: string, client?: DatabaseClient): Promise<Topic> {
+	async create(
+		userId: string,
+		title: string,
+		motivationalQuote: string,
+		questions: TopicQuestion[],
+		status: string,
+		client?: DatabaseClient,
+	): Promise<Topic> {
 		const db = client ?? this.db;
 
 		const result = await db.query<Topic>(
@@ -23,7 +30,10 @@ export class TopicRepository implements ITopicRepository {
 			[userId, title, motivationalQuote, JSON.stringify(questions), status],
 		);
 
-		return this.db.getFirstRowOrThrow(result, "Topic insert failed - no rows returned");
+		return this.db.getFirstRowOrThrow(
+			result,
+			"Topic insert failed - no rows returned",
+		);
 	}
 
 	async getByUserId(userId: string, status?: string): Promise<Topic[]> {
@@ -46,7 +56,11 @@ export class TopicRepository implements ITopicRepository {
 		return this.db.getFirstRowOrThrow(result, "Topic not found");
 	}
 
-	async markAsUsed(userId: string, topicId: number, client?: DatabaseClient): Promise<Topic> {
+	async markAsUsed(
+		userId: string,
+		topicId: number,
+		client?: DatabaseClient,
+	): Promise<Topic> {
 		const db = client ?? this.db;
 		const result = await db.query<Topic>(
 			`UPDATE topics 
@@ -63,7 +77,11 @@ export class TopicRepository implements ITopicRepository {
 		return this.getByUserId(userId, "available");
 	}
 
-	async createOrUpdate(userId: string, topics: Topic[], client?: DatabaseClient): Promise<void> {
+	async createOrUpdate(
+		userId: string,
+		topics: Topic[],
+		client?: DatabaseClient,
+	): Promise<void> {
 		if (topics.length === 0) {
 			return;
 		}
@@ -77,13 +95,13 @@ export class TopicRepository implements ITopicRepository {
 						topic.motivational_quote,
 						topic.questions,
 						topic.status,
-						client
+						client,
 					);
 				} else {
 					await this.updateStatuses(
 						userId,
 						[{ id: topic.id, status: topic.status }],
-						client
+						client,
 					);
 				}
 
@@ -107,7 +125,7 @@ export class TopicRepository implements ITopicRepository {
 	async updateStatuses(
 		userId: string,
 		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
-		client?: DatabaseClient
+		client?: DatabaseClient,
 	): Promise<void> {
 		if (updates.length === 0) {
 			return;

@@ -1,19 +1,21 @@
 import * as Sentry from "@sentry/node";
-import type { IGenerativeAIProvider } from "@/providers";
+import { aiConfig } from "@/config";
 import {
-	ModelResponse,
+	topicGenerationPrompt,
+	topicRankingPrompt,
+	topicSystemPrompt,
+} from "@/constants/topicPrompts";
+import type { IGenerativeAIProvider } from "@/providers";
+import { fillTemplate } from "@/services/utils.js";
+import {
+	type ModelResponse,
 	TopicCandidatesSchema,
+	type TopicRanking,
 	TopicRankingSchema,
-	TopicRanking,
-	Usage,
+	type Usage,
 } from "@/types/ai";
 import type { Topic, TopicStatus } from "@/types/domain";
-import { topicSystemPrompt, topicGenerationPrompt, topicRankingPrompt } from "@/constants/topicPrompts";
-import { fillTemplate } from "@/services/utils.js";
-
-import { ExtractedFacts } from "@/types/extractedFacts";
-import { aiConfig } from "@/config";
-
+import type { ExtractedFacts } from "@/types/extractedFacts";
 
 /**
  * Service for topic generation and management operations
@@ -22,9 +24,7 @@ import { aiConfig } from "@/config";
 export class TopicService {
 	private aiProvider: IGenerativeAIProvider;
 
-	constructor(
-		aiProvider: IGenerativeAIProvider,
-	) {
+	constructor(aiProvider: IGenerativeAIProvider) {
 		this.aiProvider = aiProvider;
 	}
 
@@ -44,7 +44,7 @@ export class TopicService {
 			});
 
 			const context = this.buildFactsContext(extractedFacts);
-			const prompt = fillTemplate(topicGenerationPrompt, { context: context })
+			const prompt = fillTemplate(topicGenerationPrompt, { context: context });
 
 			const generationResult = await this.aiProvider.generateCompletion(
 				aiConfig.models.topicGeneration,
@@ -53,8 +53,8 @@ export class TopicService {
 				undefined,
 				0.5,
 				2000,
-				TopicCandidatesSchema
-			)
+				TopicCandidatesSchema,
+			);
 
 			if (!generationResult.data) {
 				Sentry.logger?.error?.("Topic generation returned no data", {
@@ -69,21 +69,25 @@ export class TopicService {
 			}
 
 			// Map generated topics to Topic domain model
-			const newTopicsResult: Topic[] = generationResult.data?.topics.map((topic) => ({
-				...topic,
-				user_id: userId,
-				status: "available",
-			} as Topic)) || [];
+			const newTopicsResult: Topic[] =
+				generationResult.data?.topics.map(
+					(topic) =>
+						({
+							...topic,
+							user_id: userId,
+							status: "available",
+						}) as Topic,
+				) || [];
 
 			return {
 				data: generationResult.data ? newTopicsResult : undefined,
-				usage: generationResult.usage
+				usage: generationResult.usage,
 			};
 		} catch (error) {
 			Sentry.captureException(error, {
 				tags: { endpoint: "topic_generation", status: "error" },
 				contexts: {
-					user: { id: userId, },
+					user: { id: userId },
 				},
 			});
 
@@ -110,7 +114,6 @@ export class TopicService {
 		extractedFacts: ExtractedFacts,
 		keepTopCount: number = 5,
 	): Promise<ModelResponse<Topic[]>> {
-
 		const zeroUsage = { inputTokens: 0, outputTokens: 0 } as Usage;
 
 		// Filter only unused existing topics
@@ -139,24 +142,25 @@ export class TopicService {
 
 		try {
 			// Use aiProvider.rankTopics to get ranked indices
-			const rankResult = await this.rerank(
-				allTopics,
-				extractedFacts,
-			);
+			const rankResult = await this.rerank(allTopics, extractedFacts);
 
 			const rankedIndices = rankResult.data?.rankedIndices;
 
 			// Validate and apply ranking
-			const validIndices = rankedIndices ?
-				rankedIndices.filter(
-					(index: number) => index >= 0 && index < allTopics.length,
-				) : [];
+			const validIndices = rankedIndices
+				? rankedIndices.filter(
+						(index: number) => index >= 0 && index < allTopics.length,
+					)
+				: [];
 
 			if (validIndices.length !== allTopics.length) {
-				Sentry.logger?.warn?.("Topic reranking returned invalid indices, using fallback", {
-					expected: allTopics.length,
-					received: validIndices.length,
-				});
+				Sentry.logger?.warn?.(
+					"Topic reranking returned invalid indices, using fallback",
+					{
+						expected: allTopics.length,
+						received: validIndices.length,
+					},
+				);
 
 				return {
 					data: unusedExisting,
@@ -171,7 +175,8 @@ export class TopicService {
 				// set irrelevant status for topics not in top 5
 				.map((topic, index) => ({
 					...topic,
-					status: index < keepTopCount ? "available" : ("irrelevant" as TopicStatus),
+					status:
+						index < keepTopCount ? "available" : ("irrelevant" as TopicStatus),
 				}))
 				// filter out irrelevant topics without id, we are not persisting them
 				.filter((topic) => topic.status !== "irrelevant" || topic.id);
@@ -215,11 +220,11 @@ export class TopicService {
 		allTopics: Topic[],
 		extractedFacts: ExtractedFacts,
 	): Promise<ModelResponse<TopicRanking>> {
-
 		const context = this.buildFactsContext(extractedFacts);
 		const topics_list = allTopics
 			.map(
-				(topic, index) => `${index}: ${topic.title} - ${topic.motivational_quote}`,
+				(topic, index) =>
+					`${index}: ${topic.title} - ${topic.motivational_quote}`,
 			)
 			.join("\n");
 		const prompt = fillTemplate(topicRankingPrompt, {
@@ -236,9 +241,8 @@ export class TopicService {
 			0.1,
 			1000,
 			TopicRankingSchema,
-		)
+		);
 	}
-
 
 	private buildFactsContext(extractedFacts: ExtractedFacts): string {
 		if (!extractedFacts) return "";

@@ -49,7 +49,3 @@ export interface ExperienceRecord {
 	payload: ExtractedFacts;
 	updated_at: string;
 }
-
-
-
-

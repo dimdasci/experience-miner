@@ -3,19 +3,20 @@ import {
 	createAIProvider,
 	createDatabaseProvider,
 } from "@/factories/providerFactory.js";
-import type {
-	IGenerativeAIProvider,
-	IDatabaseProvider,
-} from "@/providers";
+import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
 import {
 	AnswerRepository,
-	InterviewRepository,
 	CreditsRepository,
 	ExperienceRepository,
-	TopicRepository
+	InterviewRepository,
+	TopicRepository,
 } from "@/repositories";
-import { CreditsService, InterviewService, TopicService, } from "@/services";
-import { SelectTopicWorkflow, ProcessInterviewWorkflow, TranscribeAudioWorkflow } from "@/workflows";
+import { CreditsService, InterviewService, TopicService } from "@/services";
+import {
+	ProcessInterviewWorkflow,
+	SelectTopicWorkflow,
+	TranscribeAudioWorkflow,
+} from "@/workflows";
 
 /**
  * Service Container for dependency injection
@@ -92,7 +93,7 @@ export class ServiceContainer {
 				this.aiProvider,
 				this.interviewRepository,
 				this.answerRepository,
-				this.experienceRepository
+				this.experienceRepository,
 			);
 
 			// Initialize workflows
@@ -306,7 +307,6 @@ export class ServiceContainer {
 		}
 		return this.transcribeAudioWorkflow;
 	}
-
 
 	/**
 	 * Check if container is initialized

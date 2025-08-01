@@ -25,7 +25,8 @@ export const getAllInterviews = async (
 	}
 
 	try {
-		const interviewRepo = ServiceContainer.getInstance().getInterviewRepository();
+		const interviewRepo =
+			ServiceContainer.getInstance().getInterviewRepository();
 		const interviews = await interviewRepo.getAllByUserId(userId);
 
 		const serviceResponse = ServiceResponse.success(
@@ -45,7 +46,7 @@ export const getAllInterviews = async (
 					component: "ExperienceRouter",
 				},
 			},
-		});		
+		});
 		const serviceResponse = ServiceResponse.failure(
 			`Failed to retrieve interviews: ${
 				error instanceof Error ? error.message : "Unknown error"
