@@ -42,6 +42,7 @@ WORKDIR /app
 COPY --from=base --chown=backend:nodejs /app/node_modules ./node_modules
 COPY --from=build --chown=backend:nodejs /app/dist ./dist
 COPY --from=build --chown=backend:nodejs /app/package.json ./
+COPY --chown=backend:nodejs instruments.mjs ./
 
 # Switch to non-root user
 USER backend
