@@ -34,6 +34,7 @@ export interface IInterviewRepository {
 		userId: string,
 		interviewId: number,
 		status: InterviewStatus,
+		client?: DatabaseClient,
 	): Promise<Interview>;
 
 	/**
