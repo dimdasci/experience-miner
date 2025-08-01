@@ -10,6 +10,7 @@ import { interviewRouter } from "@/api/interview/interviewRouter.js";
 import { topicsRouter } from "@/api/topics/topicsRouter.js";
 import { errorHandler } from "@/common/middleware/errorHandler.js";
 import { aiRateLimiter, rateLimiter } from "@/common/middleware/rateLimiter.js";
+import { deduplicateRequests } from "@/common/middleware/requestDeduplication.js";
 import { requestLogger } from "@/common/middleware/requestLogger.js";
 import { serverConfig } from "@/config/server.js";
 
@@ -56,6 +57,9 @@ app.use(
 
 // Request logging
 app.use(requestLogger);
+
+// Request deduplication
+app.use(deduplicateRequests);
 
 // Rate limiting
 app.use(rateLimiter);

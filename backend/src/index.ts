@@ -1,4 +1,5 @@
 import { logger } from "@/common/middleware/requestLogger.js";
+import { cleanupRequestCache } from "@/common/middleware/requestDeduplication.js";
 import { databaseConfig, serverConfig } from "@/config";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import { app } from "./server.js";
@@ -32,6 +33,9 @@ const startServer = async () => {
 const gracefulShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, shutting down gracefully...`);
 	try {
+		// Clean up the request deduplication cache
+		cleanupRequestCache();
+		
 		await ServiceContainer.getInstance().cleanup();
 		logger.info("✅ Service container cleaned up successfully");
 	} catch (error) {
