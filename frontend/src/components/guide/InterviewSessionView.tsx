@@ -1,64 +1,179 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import GuideRecorder from './GuideRecorder';
-import { useInterviewSession } from '../../hooks/useInterviewSession';
-import { QuestionService } from '../../services/questionService';
+import { apiService } from '../../services/apiService';
+import { Interview, Answer } from '../../types/business';
+import { UserJourneyLogger } from '../../utils/logger';
 
 interface InterviewSessionViewProps {
-  onComplete: () => void;
+  onComplete: (interviewId: number) => void;
+  interviewId?: string;
 }
 
-const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
-  const [selectedTopic, setSelectedTopic] = useState<string>('');
+const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: InterviewSessionViewProps) => {
+  const [interview, setInterview] = useState<Interview | null>(null);
+  const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const { sessionData, addResponse, persistSession } = useInterviewSession();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const topic = localStorage.getItem('selectedTopic') || 'career_overview';
-    setSelectedTopic(topic);
-  }, []);
+    loadInterview();
+  }, [propInterviewId]);
 
-  // const questions = QuestionService.getQuestionsByTopic(selectedTopic);
-  const currentQuestionObj = QuestionService.getQuestionByIndex(selectedTopic, currentQuestion);
-  const progress = QuestionService.getTopicProgress(selectedTopic, currentQuestion);
-  const topicTitle = QuestionService.getTopicTitle(selectedTopic);
+  const loadInterview = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Interview ID should always be provided from URL params
+      if (!propInterviewId) {
+        setError('No interview ID provided. Please start from topic selection.');
+        return;
+      }
+      
+      const interviewId = parseInt(propInterviewId, 10);
+      
+      if (Number.isNaN(interviewId)) {
+        setError('Invalid interview ID format.');
+        return;
+      }
 
-  const handleDataUpdate = (data: any) => {
-    if (!currentQuestionObj) return;
+      const response = await apiService.getInterview(interviewId);
+      
+      if (response.success) {
+        setInterview(response.responseObject.interview);
+        setAnswers(response.responseObject.answers);
+      } else {
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate interview request detected - waiting for original request');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to load interview');
+        }
+      }
+    } catch (err) {
+      setError('Failed to load interview');
+      UserJourneyLogger.logError(err as Error, {
+        action: 'interview_loading_failed',
+        component: 'InterviewSessionView',
+        interviewId: propInterviewId
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get current question data from answers array
+  const currentQuestionData = answers[currentQuestion];
+  const progress = {
+    current: currentQuestion + 1,
+    total: answers.length,
+    percentage: ((currentQuestion + 1) / answers.length) * 100,
+    isComplete: currentQuestion >= answers.length - 1
+  };
+
+  const handleDataUpdate = async (data: any) => {
+    if (!currentQuestionData || !interview) return;
     
-    const questionData = {
-      ...data,
-      question: currentQuestionObj.text,
-      questionId: currentQuestionObj.id,
-      questionIndex: currentQuestion
-    };
-    addResponse(questionData);
+    try {
+      setSaving(true);
+      
+      const response = await apiService.updateAnswer(
+        interview.id,
+        currentQuestionData.question_number,
+        {
+          answer: data.response,
+          recording_duration_seconds: data.recordingDuration
+        }
+      );
+
+      if (response.success) {
+        // Update local state
+        setAnswers(prev => prev.map(answer => 
+          answer.question_number === currentQuestionData.question_number 
+            ? { ...answer, answer: data.response, recording_duration_seconds: data.recordingDuration }
+            : answer
+        ));
+      } else {
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate answer update request detected - original already being processed');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to save answer');
+        }
+      }
+    } catch (err) {
+      setError('Failed to save answer');
+      UserJourneyLogger.logError(err as Error, {
+        action: 'answer_save_failed',
+        component: 'InterviewSessionView',
+        questionNumber: currentQuestionData.question_number
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Get existing response for current question
   const getCurrentQuestionResponse = () => {
-    return sessionData.find(item => 
-      item.questionId === currentQuestionObj?.id || 
-      item.questionIndex === currentQuestion
-    )?.response || '';
+    return currentQuestionData?.answer || '';
   };
 
   const handleNextQuestion = () => {
     if (progress.isComplete) {
-      persistSession();
-      onComplete();
+      if (interview?.id) {
+        onComplete(interview.id);
+      }
     } else {
       setCurrentQuestion(prev => prev + 1);
     }
   };
 
 
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-600">Loading interview...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-800">{error}</div>
+          <button 
+            onClick={loadInterview}
+            className="mt-2 text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!interview || !currentQuestionData) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-gray-600">No interview data available.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">
-            {topicTitle}
+            {interview.title}
           </h1>
           <div className="text-sm text-gray-500">
             Question {progress.current} of {progress.total}
@@ -72,36 +187,48 @@ const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
         </div>
       </div>
 
-      {currentQuestionObj && (
-        <div className="bg-white border rounded-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-3">
-              Q{progress.current}/{progress.total}: {currentQuestionObj.text}
-            </h2>
-            <p className="text-sm text-gray-600">
-              Some hints how to answer
-            </p>
-          </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-800">{error}</div>
+        </div>
+      )}
 
-          <div className="space-y-6">
-            <GuideRecorder 
-              onDataUpdate={handleDataUpdate}
-              questionId={currentQuestionObj.id}
-              questionText={currentQuestionObj.text}
-              existingResponse={getCurrentQuestionResponse()}
-            />
+      <div className="bg-white border rounded-lg p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-3">
+            Q{progress.current}/{progress.total}: {currentQuestionData.question}
+          </h2>
+          <p className="text-sm text-gray-600 italic">
+            "{interview.motivational_quote}"
+          </p>
+        </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
-              <Button 
-                variant="outline"
-                onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-                disabled={currentQuestion === 0}
-              >
-                Previous Question
-              </Button>
-              
+        <div className="space-y-6">
+          <GuideRecorder 
+            onDataUpdate={handleDataUpdate}
+            questionId={currentQuestionData.id}
+            questionText={currentQuestionData.question}
+            questionNumber={currentQuestionData.question_number}
+            interviewId={interview.id}
+            existingResponse={getCurrentQuestionResponse()}
+          />
+
+          <div className="flex justify-between items-center pt-4 border-t">
+            <Button 
+              variant="outline"
+              onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+              disabled={currentQuestion === 0 || saving}
+            >
+              Previous Question
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              {saving && (
+                <span className="text-sm text-gray-500">Saving...</span>
+              )}
               <Button 
                 onClick={handleNextQuestion}
+                disabled={saving}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 {progress.isComplete ? 'Complete Interview' : 'Next Question'}
@@ -109,16 +236,15 @@ const InterviewSessionView = ({ onComplete }: InterviewSessionViewProps) => {
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {sessionData.length > 0 && (
-        <div className="mt-6 bg-gray-50 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 mb-3">Session Progress</h3>
-          <div className="text-sm text-gray-600">
-            Completed {sessionData.length} of {progress.total} questions
-          </div>
+      <div className="mt-6 bg-gray-50 rounded-lg p-4">
+        <h3 className="font-medium text-gray-900 mb-3">Session Progress</h3>
+        <div className="text-sm text-gray-600">
+          Question {progress.current} of {progress.total} • 
+          {answers.filter(a => a.answer && a.answer.trim() !== '').length} answered
         </div>
-      )}
+      </div>
     </div>
   );
 };

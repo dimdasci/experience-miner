@@ -1,19 +1,27 @@
-// IMPORTANT: Import instrument.ts first to initialize Sentry before everything else
-import "./instrument.js";
-
 import { logger } from "@/common/middleware/requestLogger.js";
-import { env } from "@/common/utils/envConfig.js";
+import { cleanupRequestCache } from "@/common/middleware/requestDeduplication.js";
+import { databaseConfig, serverConfig } from "@/config";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 import { app } from "./server.js";
 
-const startServer = () => {
+const startServer = async () => {
 	try {
-		app.listen(env.PORT, "0.0.0.0", () => {
-			logger.info(`🚀 Experience Miner backend listening on port ${env.PORT}`);
-			logger.info(`📄 Health check: http://localhost:${env.PORT}/health`);
+		// Initialize service container with providers
+		logger.info("🔧 Initializing service container...");
+		await ServiceContainer.getInstance().initialize();
+		logger.info("✅ Service container initialized successfully");
+
+		app.listen(serverConfig.port, "0.0.0.0", () => {
 			logger.info(
-				`🤖 API endpoints: http://localhost:${env.PORT}/api/interview`,
+				`Experience Miner backend listening on port ${serverConfig.port}`,
 			);
-			logger.info(`📝 Environment: ${env.NODE_ENV}`);
+			logger.info(`Health check: http://localhost:${serverConfig.port}/health`);
+			logger.info(
+				`API endpoints: http://localhost:${serverConfig.port}/api/...`,
+			);
+			logger.info(`Environment: ${serverConfig.nodeEnv}`);
+			logger.info(`AI Provider: ${serverConfig.aiProvider}`);
+			logger.info(`Database: ${databaseConfig.connection.host}`);
 		});
 	} catch (error) {
 		logger.error("Failed to start server:", error);
@@ -22,14 +30,24 @@ const startServer = () => {
 };
 
 // Graceful shutdown
-process.on("SIGINT", () => {
-	logger.info("🛑 Received SIGINT, shutting down gracefully...");
+const gracefulShutdown = async (signal: string) => {
+	logger.info(`🛑 Received ${signal}, shutting down gracefully...`);
+	try {
+		// Clean up the request deduplication cache
+		cleanupRequestCache();
+		
+		await ServiceContainer.getInstance().cleanup();
+		logger.info("✅ Service container cleaned up successfully");
+	} catch (error) {
+		logger.error("❌ Error during cleanup:", error);
+	}
 	process.exit(0);
-});
+};
 
-process.on("SIGTERM", () => {
-	logger.info("🛑 Received SIGTERM, shutting down gracefully...");
-	process.exit(0);
-});
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
-startServer();
+startServer().catch((error) => {
+	logger.error("Failed to start server:", error);
+	process.exit(1);
+});

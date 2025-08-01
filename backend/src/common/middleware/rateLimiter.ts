@@ -1,11 +1,12 @@
 import rateLimit from "express-rate-limit";
+import { serverConfig } from "@/config";
 
 // General API rate limiting
 export const rateLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // Limit each IP to 100 requests per windowMs
+	windowMs: serverConfig.rateLimiting.general.windowMs,
+	max: serverConfig.rateLimiting.general.max,
 	message: {
-		error: "Too many requests from this IP, please try again later.",
+		error: serverConfig.rateLimiting.general.message,
 	},
 	standardHeaders: true,
 	legacyHeaders: false,
@@ -13,15 +14,15 @@ export const rateLimiter = rateLimit({
 
 // Stricter rate limiting for AI-powered endpoints
 export const aiRateLimiter = rateLimit({
-	windowMs: 5 * 60 * 1000, // 5 minutes
-	max: 10, // Limit each IP to 10 AI requests per windowMs
+	windowMs: serverConfig.rateLimiting.ai.windowMs,
+	max: serverConfig.rateLimiting.ai.max,
 	message: {
-		error: "Too many AI processing requests, please wait before trying again.",
+		error: serverConfig.rateLimiting.ai.message,
 	},
 	standardHeaders: true,
 	legacyHeaders: false,
 	skip: (_req) => {
 		// Skip rate limiting in development
-		return process.env.NODE_ENV === "development";
+		return serverConfig.nodeEnv === "development";
 	},
 });

@@ -29,8 +29,9 @@ if (sentryDsn) {
   })
 }
 
+// Restored StrictMode - we'll handle 429 responses properly instead
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
+  </React.StrictMode>
 )

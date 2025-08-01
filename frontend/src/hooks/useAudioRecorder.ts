@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { AudioRecording, RecordingState } from '../types'
 import { RECORDING_CONSTRAINTS, MAX_RECORDING_DURATION } from '../constants'
+import { UserJourneyLogger } from '../utils/logger'
 
 interface UseAudioRecorderOptions {
   onRecordingComplete?: (recording: AudioRecording) => void
@@ -153,10 +154,13 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
       monitorVolume()
 
     } catch (err) {
-      if (import.meta.env.DEV) {
-        console.error('Failed to start recording:', err)
-      }
       setError('Failed to access microphone. Please check permissions.')
+      // Track recording start errors
+      UserJourneyLogger.logError(err as Error, {
+        action: 'recording_start_failed',
+        component: 'useAudioRecorder'
+      })
+      
     }
   }, [isSupported, onRecordingComplete, startTimer, monitorVolume])
 

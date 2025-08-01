@@ -19,6 +19,7 @@ function App() {
                   <Route path="/" element={<GuidePage />} />
                   <Route path="/guide" element={<GuidePage />} />
                   <Route path="/guide/:step" element={<GuidePage />} />
+                  <Route path="/guide/:step/:id" element={<GuidePage />} />
                   <Route path="/interviews" element={<InterviewsPage />} />
                   <Route path="/experience" element={<ExperiencePage />} />
                 </Routes>

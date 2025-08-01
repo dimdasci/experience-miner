@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
 
 export const errorHandler = (
 	error: Error,
@@ -13,7 +13,7 @@ export const errorHandler = (
 	let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
 	let message = "Internal Server Error";
 
-	// Handle specific error types
+	// TODO: Handle specific error types, below are examples
 	if (error.name === "ValidationError") {
 		statusCode = StatusCodes.BAD_REQUEST;
 		message = "Invalid request data";

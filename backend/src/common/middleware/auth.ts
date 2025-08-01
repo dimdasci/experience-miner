@@ -1,5 +1,6 @@
+import * as Sentry from "@sentry/node";
 import type { NextFunction, Request, Response } from "express";
-import { supabase } from "../utils/supabase";
+import { supabaseConnection } from "../connections/supabaseConnection.js";
 import { logger } from "./requestLogger";
 
 export interface AuthenticatedRequest extends Request {
@@ -28,10 +29,7 @@ export async function authenticateToken(
 	}
 
 	try {
-		const {
-			data: { user },
-			error,
-		} = await supabase.auth.getUser(token);
+		const { user, error } = await supabaseConnection.validateToken(token);
 
 		if (error || !user) {
 			const userPrefix = user?.email?.split("@")[0] ?? "unknown";
@@ -58,6 +56,17 @@ export async function authenticateToken(
 
 		next();
 	} catch (error) {
+		// Report to Sentry with context
+		Sentry.captureException(error, {
+			tags: { middleware: "auth", status: "error" },
+			contexts: {
+				request: {
+					path: req.path,
+					method: req.method,
+				},
+			},
+		});
+
 		logger.error("Authentication error", {
 			path: req.path,
 			method: req.method,

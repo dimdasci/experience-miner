@@ -9,13 +9,15 @@ interface GuideRecorderProps {
   onDataUpdate: (data: any) => void
   questionId: string
   questionText: string
+  questionNumber: number
+  interviewId: number
   existingResponse?: string
 }
 
-const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingResponse }: GuideRecorderProps) => {
+const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber, interviewId, existingResponse }: GuideRecorderProps) => {
   const [transcript, setTranscript] = useState('')
   const [isTranscribing, setIsTranscribing] = useState(false)
-  const { updateCredits } = useCredits()
+  const { refreshCredits } = useCredits()
 
   // Reset transcript when question changes or load existing response
   useEffect(() => {
@@ -41,10 +43,12 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
       setIsTranscribing(true)
       
       try {
+        
         const result = await apiService.transcribeAudio(
           recording.blob,
           questionText,
-          3, // hardcoded interviewId for testing
+          interviewId,
+          questionNumber,
           recording.duration
         )
         if (result.success && result.responseObject?.transcript) {
@@ -60,10 +64,8 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
             audioUrl: undefined
           })
           
-          // Update credits in the global context
-          if (typeof result.responseObject.credits === 'number') {
-            updateCredits(result.responseObject.credits)
-          }
+          // Update credits in the global context by refreshing from the server
+          refreshCredits(true)
           
           // Log successful transcription and auto-submission
           UserJourneyLogger.logUserAction({
@@ -72,14 +74,18 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
             data: {
               questionId: questionId,
               transcriptLength: result.responseObject.transcript.length,
-              duration: recording.duration,
-              remainingCredits: result.responseObject.credits
+              duration: recording.duration
             }
           })
         } else {
-          if (import.meta.env.DEV) {
-            console.error('Transcription failed:', result.error)
-          }
+          // Track transcription API failures  
+          UserJourneyLogger.logError(new Error(result.error || 'Transcription failed'), {
+            action: 'transcription_api_failed',
+            component: 'GuideRecorder',
+            questionId,
+            statusCode: result.statusCode
+          })
+          
           
           // Handle specific error types
           if (result.statusCode === 402) {
@@ -96,13 +102,13 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
           })
         }
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('Transcription error:', error)
-        }
+        // Track transcription errors (already properly using UserJourneyLogger.logError)
         UserJourneyLogger.logError(error as Error, {
           action: 'transcription_error',
+          component: 'GuideRecorder',
           questionId: questionId
         })
+        
       } finally {
         setIsTranscribing(false)
       }
@@ -159,6 +165,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, existingRespons
       })
     }
   }
+
 
   const isRecording = recordingState.isRecording
   const hasTranscript = transcript.trim().length > 0

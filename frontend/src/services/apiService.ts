@@ -5,6 +5,14 @@ import {
   CareerFact, 
   ProcessingResult 
 } from '../types'
+import { UserJourneyLogger } from '../utils/logger'
+import {
+  Topic,
+  TopicSelectionResponse,
+  Interview,
+  Answer,
+  UpdateAnswerRequest
+} from '../types/business'
 import { API_ENDPOINTS } from '../constants'
 import { supabase } from '../lib/supabase'
 
@@ -42,13 +50,43 @@ class ApiService {
         ...options,
       })
 
+      // Parse the JSON response
+      const data = await response.json();
+      
+      // Special handling for 429 status from our deduplication middleware
+      if (response.status === 429) {
+        // Check if this is our own deduplication middleware response
+        if (data.message?.includes("Duplicate request detected")) {
+          // For duplicate requests, just log a warning but don't treat as error
+          if (import.meta.env.DEV) {
+            console.warn('Duplicate request detected:', endpoint);
+          }
+          
+          // Return a special response that indicates this was a duplicate
+          return {
+            success: false,
+            responseObject: {} as T,
+            message: 'Duplicate request - original is being processed',
+            statusCode: 429,
+            error: 'DUPLICATE_REQUEST',
+            isDuplicate: true
+          };
+        }
+      }
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const data = await response.json()
       return data
     } catch (error) {
+      // Track API errors with full context
+      UserJourneyLogger.logError(error as Error, {
+        endpoint,
+        method: options.method || 'GET',
+        action: 'api_request_failed'
+      });
+      
       if (import.meta.env.DEV) {
         console.error('API request failed:', error)
       }
@@ -114,12 +152,14 @@ class ApiService {
     audioBlob: Blob, 
     question: string, 
     interviewId: number,
+    questionNumber: number,
     recordingDuration?: number
-  ): Promise<ApiResponse<{ transcript: string; credits: number }>> {
+  ): Promise<ApiResponse<{ transcript: string }>> {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'recording.webm')
     formData.append('question', question)
     formData.append('interviewId', interviewId.toString())
+    formData.append('questionNumber', questionNumber.toString())
     if (recordingDuration !== undefined) {
       formData.append('recordingDuration', recordingDuration.toString())
     }
@@ -146,12 +186,19 @@ class ApiService {
       const data = await response.json()
       return data
     } catch (error) {
+      // Track transcription errors with context
+      UserJourneyLogger.logError(error as Error, {
+        endpoint: '/api/interview/transcribe',
+        operation: 'audio_transcription',
+        action: 'transcription_failed'
+      });
+      
       if (import.meta.env.DEV) {
         console.error('Transcription failed:', error)
       }
       return {
         success: false,
-        responseObject: { transcript: '', credits: 0 },
+        responseObject: { transcript: '' },
         message: error instanceof Error ? error.message : 'Transcription failed',
         statusCode: 500,
         error: error instanceof Error ? error.message : 'Transcription failed'
@@ -159,15 +206,47 @@ class ApiService {
     }
   }
 
-  // Extract facts from transcript (matches our backend)
-  async extractFacts(
-    transcript: string, 
-    question: string, 
-    interviewId: number
-  ): Promise<ApiResponse<any>> {
-    return this.request('/interview/extract', {
+  // Extract facts from interview and complete full workflow
+  async extractInterviewData(interviewId: number): Promise<ApiResponse<any>> {
+    return this.request(`/interview/${interviewId}/extract`, {
       method: 'POST',
-      body: JSON.stringify({ transcript, question, interviewId }),
+    })
+  }
+
+  // Get user's experience data
+  async getExperienceData(): Promise<ApiResponse<any>> {
+    return this.request('/experience')
+  }
+
+  // Topic Management
+  async getTopics(): Promise<ApiResponse<Topic[]>> {
+    return this.request('/topics')
+  }
+
+  async selectTopic(topicId: string): Promise<ApiResponse<TopicSelectionResponse>> {
+    return this.request(`/topics/${topicId}/select`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+  }
+
+  // Interview Management
+  async getInterviews(): Promise<ApiResponse<Interview[]>> {
+    return this.request('/interview')
+  }
+
+  async getInterview(interviewId: number): Promise<ApiResponse<{ interview: Interview; answers: Answer[] }>> {
+    return this.request(`/interview/${interviewId}`)
+  }
+
+  async updateAnswer(
+    interviewId: number, 
+    questionNumber: number, 
+    data: UpdateAnswerRequest
+  ): Promise<ApiResponse<Answer>> {
+    return this.request(`/interview/${interviewId}/answers/${questionNumber}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
     })
   }
 }

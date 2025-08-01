@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { serverConfig } from "@/config";
 
 export const healthCheckRouter: Router = Router();
 
@@ -9,7 +10,7 @@ healthCheckRouter.get("/", (_req: Request, res: Response) => {
 	const serviceResponse = ServiceResponse.success("Service is healthy", {
 		uptime: process.uptime(),
 		timestamp: new Date().toISOString(),
-		environment: process.env.NODE_ENV || "development",
+		environment: serverConfig.nodeEnv,
 	});
 
 	return res.status(serviceResponse.statusCode).json(serviceResponse);

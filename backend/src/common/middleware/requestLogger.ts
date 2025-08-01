@@ -1,11 +1,11 @@
 import pino from "pino";
 import pinoHttp from "pino-http";
-import { env } from "@/common/utils/envConfig.js";
+import { serverConfig } from "@/config";
 
 const logger = pino(
-	env.NODE_ENV === "development"
+	serverConfig.nodeEnv === "development"
 		? {
-				level: env.LOG_LEVEL,
+				level: serverConfig.logLevel,
 				transport: {
 					targets: [
 						{
@@ -30,7 +30,7 @@ const logger = pino(
 			}
 		: {
 				// Production: JSON logs to stdout (Railway/Docker captures)
-				level: env.LOG_LEVEL,
+				level: serverConfig.logLevel,
 				formatters: {
 					level: (label) => ({ level: label }),
 				},
@@ -59,12 +59,12 @@ export const requestLogger = pinoHttp({
 		req: (req) => ({
 			method: req.method,
 			url: req.url,
-			headers: env.NODE_ENV === "development" ? req.headers : undefined,
+			headers: serverConfig.nodeEnv === "development" ? req.headers : undefined,
 		}),
 		res: (res) => ({
 			statusCode: res.statusCode,
 			headers:
-				env.NODE_ENV === "development" && res.getHeaders
+				serverConfig.nodeEnv === "development" && res.getHeaders
 					? res.getHeaders()
 					: undefined,
 		}),

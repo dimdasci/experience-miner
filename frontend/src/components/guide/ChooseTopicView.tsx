@@ -1,18 +1,103 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
-import { QuestionService } from '../../services/questionService';
+import { apiService } from '../../services/apiService';
+import { Topic } from '../../types/business';
+import { UserJourneyLogger } from '../../utils/logger';
 
 interface ChooseTopicViewProps {
-  onTopicSelect: (step: string) => void;
+  onTopicSelect: (step: string, interviewId?: string) => void;
 }
 
 const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
-  const topics = QuestionService.getAvailableTopics();
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selecting, setSelecting] = useState<string | null>(null);
 
-  const handleTopicSelect = (topicId: string) => {
-    // Store selected topic for the interview session
-    localStorage.setItem('selectedTopic', topicId);
-    onTopicSelect('interview');
+  // Use debounced loadTopics to prevent multiple rapid requests
+  const loadTopics = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getTopics();
+      
+      if (response.success) {
+        setTopics(response.responseObject);
+      } else {
+        // Don't show error for duplicate requests
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate topics request detected');
+          return;
+        }
+        setError(response.message || 'Failed to load topics');
+      }
+    } catch (err) {
+      setError('Failed to load topics');
+      UserJourneyLogger.logError(err as Error, {
+        action: 'topics_loading_failed',
+        component: 'ChooseTopicView'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load topics on component mount
+  useEffect(() => {
+    // Add a small delay to prevent multiple requests during component mounting/rendering cycles
+    const timeoutId = setTimeout(() => {
+      loadTopics();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [loadTopics]);
+
+  const handleTopicSelect = async (topicId: string) => {
+    // Don't allow multiple selections at once
+    if (selecting) {
+      return;
+    }
+    
+    try {
+      setSelecting(topicId);
+      setError(null);
+      
+      const response = await apiService.selectTopic(topicId);
+      
+      if (response.success) {
+        // Navigate to interview with the ID in URL
+        const interviewId = response.responseObject.interview.id;
+        onTopicSelect('interview', String(interviewId));
+      } else {
+        // Don't show error for duplicate requests - the original request is being processed
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate topic selection request detected');
+          // Keep the selecting state to prevent multiple clicks
+          return;
+        }
+        setError(response.message || 'Failed to select topic');
+      }
+    } catch (err) {
+      setError('Failed to select topic');
+      UserJourneyLogger.logError(err as Error, {
+        action: 'select_topic_failed',
+        component: 'ChooseTopicView',
+        topicId
+      });
+    } finally {
+      setSelecting(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-600">Loading topics...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -25,6 +110,18 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
         </p>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-800">{error}</div>
+          <button 
+            onClick={loadTopics}
+            className="mt-2 text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       <div className="space-y-6">
         {topics.map((topic) => (
           <div key={topic.id} className="bg-white border rounded-lg p-6 hover:border-blue-300 transition-colors">
@@ -33,18 +130,19 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {topic.title}
                 </h3>
-                <p className="text-gray-600 mb-2">
-                  {topic.description}
+                <p className="text-gray-600 mb-2 italic">
+                  "{topic.motivational_quote}"
                 </p>
                 <p className="text-sm text-gray-500">
-                  {topic.questionCount} questions
+                  {topic.questions.length} questions
                 </p>
               </div>
               <Button 
                 onClick={() => handleTopicSelect(topic.id)}
+                disabled={selecting === topic.id}
                 className="ml-4"
               >
-                Start Interview
+                {selecting === topic.id ? 'Starting...' : 'Start Interview'}
               </Button>
             </div>
           </div>

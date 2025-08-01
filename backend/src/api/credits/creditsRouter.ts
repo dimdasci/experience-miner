@@ -1,13 +1,13 @@
 import type { IRouter, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
+import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
 } from "@/common/middleware/auth.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import { ServiceResponse } from "@/common/models/serviceResponse.js";
-import { creditsService } from "@/services/creditsService.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 
 export const creditsRouter: IRouter = Router();
 
@@ -29,7 +29,9 @@ creditsRouter.get(
 		}
 
 		try {
-			const credits = await creditsService.getCurrentBalance(userId);
+			const container = ServiceContainer.getInstance();
+			const creditsRepo = container.getCreditsRepository();
+			const credits = await creditsRepo.getCurrentBalance(userId);
 
 			logger.info("Credits balance retrieved", {
 				user_id: userId,

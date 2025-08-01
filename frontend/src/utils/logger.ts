@@ -38,11 +38,11 @@ export class UserJourneyLogger {
       user: this.currentUserPrefix,
     };
 
-    // Send to Sentry as structured log
-    if (typeof Sentry.logger !== 'undefined') {
-      Sentry.logger.info('User Action', logData);
-    } else {
-      // Fallback for older Sentry versions
+    // Primary: Send to Sentry as structured log for user journey analysis
+    Sentry.logger?.info?.('User Action', logData);
+    
+    // Supplementary: For environments without logger support, capture as message
+    if (typeof Sentry.logger === 'undefined') {
       Sentry.captureMessage(`User Action: ${params.action}`, {
         level: 'info',
         tags: {
@@ -75,9 +75,11 @@ export class UserJourneyLogger {
       user: this.currentUserPrefix,
     };
 
-    if (typeof Sentry.logger !== 'undefined') {
-      Sentry.logger.info('Interview Progress', logData);
-    } else {
+    // Primary: Send to Sentry as structured log for user journey analysis  
+    Sentry.logger?.info?.('Interview Progress', logData);
+    
+    // Supplementary: For environments without logger support, capture as message
+    if (typeof Sentry.logger === 'undefined') {
       Sentry.captureMessage(`Interview: ${params.stage}`, {
         level: params.stage === 'error' ? 'error' : 'info',
         tags: {
