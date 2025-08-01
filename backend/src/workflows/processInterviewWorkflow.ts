@@ -49,7 +49,7 @@ export class ProcessInterviewWorkflow {
         // check available credits
         const currentCredits = await this.creditsRepo.getCurrentBalance(userId);
         if (currentCredits <= 0) {
-            throw new Error("Not enough credits to process interview");
+            throw new Error("Not enough credits");
         }
 
         // Run the process workflow
