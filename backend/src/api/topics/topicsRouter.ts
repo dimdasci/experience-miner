@@ -27,7 +27,7 @@ topicsRouter.get(
 			// Get existing topics for user
 			const container = ServiceContainer.getInstance();
 			const topicRepository = container.getTopicRepository();
-			let topics = await topicRepository.getByUserId(userId);
+			let topics = await topicRepository.getByUserId(userId, "available");
 
 			// If no topics exist, seed with initial topics
 			if (topics.length === 0) {
