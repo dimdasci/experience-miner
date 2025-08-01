@@ -1,19 +1,21 @@
-import { serverConfig } from "@/config/index.js";
+import { serverConfig } from "@/config";
 import {
 	createAIProvider,
 	createDatabaseProvider,
 } from "@/factories/providerFactory.js";
 import type {
-	IAIProvider,
+	IGenerativeAIProvider,
 	IDatabaseProvider,
-} from "@/interfaces/providers/index.js";
-import { ExperienceRepository } from "@/repositories/experienceRepository.js";
-import { CreditsRepository } from "@/repositories/creditsRepository.js";
-import { CreditsService } from "@/services/creditsService.js";
-import { DatabaseService } from "@/services/databaseService.js";
-import { ExperienceService } from "@/services/experienceService.js";
-import { TopicService } from "@/services/topicService.js";
-import { TranscribeService } from "@/services/transcribeService.js";
+} from "@/providers";
+import {
+	AnswerRepository,
+	InterviewRepository,
+	CreditsRepository,
+	ExperienceRepository,
+	TopicRepository
+} from "@/repositories";
+import { CreditsService, InterviewService, TopicService, } from "@/services";
+import { SelectTopicWorkflow, ProcessInterviewWorkflow, TranscribeAudioWorkflow } from "@/workflows";
 
 /**
  * Service Container for dependency injection
@@ -21,15 +23,26 @@ import { TranscribeService } from "@/services/transcribeService.js";
  */
 export class ServiceContainer {
 	private static instance: ServiceContainer;
-	private aiProvider: IAIProvider | null = null;
+	private aiProvider: IGenerativeAIProvider | null = null;
 	private databaseProvider: IDatabaseProvider | null = null;
+
+	private answerRepository: AnswerRepository | null = null;
+
 	private creditsRepository: CreditsRepository | null = null;
 	private creditsService: CreditsService | null = null;
-	private databaseService: DatabaseService | null = null;
+
+	private interviewRepository: InterviewRepository | null = null;
+	private interviewService: InterviewService | null = null;
+
+	private topicRepository: TopicRepository | null = null;
 	private topicService: TopicService | null = null;
-	private transcribeService: TranscribeService | null = null;
+
 	private experienceRepository: ExperienceRepository | null = null;
-	private experienceService: ExperienceService | null = null;
+
+	private processInterviewWorkflow: ProcessInterviewWorkflow | null = null;
+	private selectTopicWorkflow: SelectTopicWorkflow | null = null;
+	private transcribeAudioWorkflow: TranscribeAudioWorkflow | null = null;
+
 	private initialized = false;
 
 	private constructor() {
@@ -68,13 +81,42 @@ export class ServiceContainer {
 			this.experienceRepository = new ExperienceRepository(
 				this.databaseProvider,
 			);
+			this.interviewRepository = new InterviewRepository(this.databaseProvider);
+			this.answerRepository = new AnswerRepository(this.databaseProvider);
+			this.topicRepository = new TopicRepository(this.databaseProvider);
 
 			// Initialize services
-			this.creditsService = new CreditsService(this.creditsRepository);
-			this.databaseService = new DatabaseService();
-			this.topicService = new TopicService();
-			this.transcribeService = new TranscribeService();
-			this.experienceService = new ExperienceService(this.experienceRepository);
+			this.creditsService = new CreditsService();
+			this.topicService = new TopicService(this.aiProvider);
+			this.interviewService = new InterviewService(
+				this.aiProvider,
+				this.interviewRepository,
+				this.answerRepository,
+				this.experienceRepository
+			);
+
+			// Initialize workflows
+			this.processInterviewWorkflow = new ProcessInterviewWorkflow(
+				this.databaseProvider,
+				this.creditsRepository,
+				this.creditsService,
+				this.topicRepository,
+				this.topicService,
+				this.experienceRepository,
+				this.interviewService,
+				this.interviewRepository,
+			);
+			this.selectTopicWorkflow = new SelectTopicWorkflow(
+				this.topicRepository,
+				this.interviewRepository,
+				this.answerRepository,
+				this.databaseProvider,
+			);
+			this.transcribeAudioWorkflow = new TranscribeAudioWorkflow(
+				this.creditsRepository,
+				this.creditsService,
+				this.interviewService,
+			);
 
 			this.initialized = true;
 
@@ -91,7 +133,7 @@ export class ServiceContainer {
 	/**
 	 * Get AI provider instance
 	 */
-	getAIProvider(): IAIProvider {
+	getAIProvider(): IGenerativeAIProvider {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
@@ -119,6 +161,21 @@ export class ServiceContainer {
 	}
 
 	/**
+	 * Get credits repository instance
+	 */
+	getCreditsRepository(): CreditsRepository {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.creditsRepository) {
+			throw new Error("Credits repository not initialized");
+		}
+		return this.creditsRepository;
+	}
+
+	/**
 	 * Get credits service instance
 	 */
 	getCreditsService(): CreditsService {
@@ -134,31 +191,60 @@ export class ServiceContainer {
 	}
 
 	/**
-	 * Get database service instance
+	 * Get experience repository instance
 	 */
-	getDatabaseService(): DatabaseService {
+	getExperienceRepository(): ExperienceRepository {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
-		if (!this.databaseService) {
-			throw new Error("Database service not initialized");
+		if (!this.experienceRepository) {
+			throw new Error("Experience repository not initialized");
 		}
-		return this.databaseService;
+		return this.experienceRepository;
 	}
 
-	/** Get experience service instance, connected to the repository */
-	getExperienceService(): ExperienceService {
+	/**
+	 * Get interview repository instance
+	 */
+	getInterviewRepository(): InterviewRepository {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
-		if (!this.experienceService) {
-			throw new Error("Experience service not initialized");
+		if (!this.interviewRepository) {
+			throw new Error("Interview repository not initialized");
 		}
-		return this.experienceService;
+		return this.interviewRepository;
+	}
+
+	/**
+	 * Get interview service instance
+	 */
+	getInterviewService(): InterviewService {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.interviewService) {
+			throw new Error("Interview service not initialized");
+		}
+		return this.interviewService;
+	}
+
+	getTopicRepository(): TopicRepository {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.topicRepository) {
+			throw new Error("Topic repository not initialized");
+		}
+		return this.topicRepository;
 	}
 
 	/**
@@ -177,19 +263,50 @@ export class ServiceContainer {
 	}
 
 	/**
-	 * Get transcribe service instance
+	 * Get process interview workflow instance
 	 */
-	getTranscribeService(): TranscribeService {
+	getProcessInterviewWorkflow(): ProcessInterviewWorkflow {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
-		if (!this.transcribeService) {
-			throw new Error("Transcribe service not initialized");
+		if (!this.processInterviewWorkflow) {
+			throw new Error("Process interview workflow not initialized");
 		}
-		return this.transcribeService;
+		return this.processInterviewWorkflow;
 	}
+
+	/**
+	 * Get select topic workflow instance
+	 */
+	getSelectTopicWorkflow(): SelectTopicWorkflow {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.selectTopicWorkflow) {
+			throw new Error("Select topic workflow not initialized");
+		}
+		return this.selectTopicWorkflow;
+	}
+
+	/**
+	 * Get transcribe audio workflow instance
+	 */
+	getTranscribeAudioWorkflow(): TranscribeAudioWorkflow {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.transcribeAudioWorkflow) {
+			throw new Error("Transcribe audio workflow not initialized");
+		}
+		return this.transcribeAudioWorkflow;
+	}
+
 
 	/**
 	 * Check if container is initialized
@@ -207,13 +324,10 @@ export class ServiceContainer {
 		this.databaseProvider = null;
 		this.creditsRepository = null;
 		this.creditsService = null;
-		this.databaseService = null;
 		this.topicService = null;
-		this.transcribeService = null;
 		this.experienceRepository = null;
-		this.experienceService = null;
 	}
-	
+
 	/**
 	 * Cleanup resources
 	 */
@@ -224,6 +338,7 @@ export class ServiceContainer {
 
 		try {
 			await this.databaseProvider?.close();
+			await this.aiProvider?.close();
 			this.reset();
 			console.log("Service container cleaned up successfully");
 		} catch (error) {
@@ -239,6 +354,7 @@ export class ServiceContainer {
 		healthy: boolean;
 		providers: {
 			database: boolean;
+			ai: boolean;
 		};
 	}> {
 		if (!this.initialized) {
@@ -246,16 +362,18 @@ export class ServiceContainer {
 				healthy: false,
 				providers: {
 					database: false,
+					ai: false,
 				},
 			};
 		}
 
 		const databaseHealthy = (await this.databaseProvider?.isHealthy()) ?? false;
-
+		const aiHealthy = (await this.aiProvider?.isHealthy()) ?? false;
 		return {
-			healthy: databaseHealthy,
+			healthy: databaseHealthy && aiHealthy,
 			providers: {
 				database: databaseHealthy,
+				ai: aiHealthy,
 			},
 		};
 	}
