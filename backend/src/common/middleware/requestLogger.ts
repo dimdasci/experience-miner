@@ -2,41 +2,29 @@ import pino from "pino";
 import pinoHttp from "pino-http";
 import { serverConfig } from "@/config";
 
-const logger = pino(
-	serverConfig.nodeEnv === "development"
+// Simplified logger config to avoid issues with pino-pretty in production
+const logger = pino({
+	level: serverConfig.logLevel,
+	// Only use pretty logging in development, simple JSON in production
+	...(serverConfig.nodeEnv === "development" 
 		? {
-				level: serverConfig.logLevel,
-				transport: {
-					targets: [
-						{
-							target: "pino-pretty",
-							options: {
-								colorize: true,
-								translateTime: "SYS:standard",
-								ignore: "pid,hostname",
-							},
-							level: "info",
-						},
-						{
-							target: "pino/file",
-							options: {
-								destination: "./logs/app.log",
-								mkdir: true,
-							},
-							level: "debug",
-						},
-					],
-				},
+			transport: {
+				target: "pino-pretty",
+				options: {
+					colorize: true,
+					translateTime: "SYS:standard",
+					ignore: "pid,hostname",
+				}
 			}
+		} 
 		: {
-				// Production: JSON logs to stdout (Railway/Docker captures)
-				level: serverConfig.logLevel,
-				formatters: {
-					level: (label) => ({ level: label }),
-				},
-				timestamp: pino.stdTimeFunctions.isoTime,
+			// Production: Minimal JSON logs
+			formatters: {
+				level: (label) => ({ level: label }),
 			},
-);
+			timestamp: pino.stdTimeFunctions.isoTime,
+		})
+});
 
 export const requestLogger = pinoHttp({
 	logger,
