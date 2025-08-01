@@ -48,6 +48,12 @@ export const CreditsDisplay = forwardRef<CreditsDisplayHandle, CreditsDisplayPro
         onCreditsUpdate?.(newCredits);
         return newCredits;
       } else {
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate credits request detected, using cached value');
+          return credits;
+        }
+        
         throw new Error(response.message || 'Failed to fetch credits');
       }
     } catch (err) {
@@ -63,7 +69,7 @@ export const CreditsDisplay = forwardRef<CreditsDisplayHandle, CreditsDisplayPro
     } finally {
       setLoading(false);
     }
-  }, [credits, lastFetch, onCreditsUpdate]);
+  }, [credits, lastFetch, onCreditsUpdate, updateContextCredits]);
 
   // Initial fetch
   useEffect(() => {

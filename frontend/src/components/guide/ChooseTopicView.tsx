@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { apiService } from '../../services/apiService';
 import { Topic } from '../../types/business';
@@ -14,11 +14,8 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
   const [error, setError] = useState<string | null>(null);
   const [selecting, setSelecting] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTopics();
-  }, []);
-
-  const loadTopics = async () => {
+  // Use debounced loadTopics to prevent multiple rapid requests
+  const loadTopics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,6 +24,11 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
       if (response.success) {
         setTopics(response.responseObject);
       } else {
+        // Don't show error for duplicate requests
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate topics request detected');
+          return;
+        }
         setError(response.message || 'Failed to load topics');
       }
     } catch (err) {
@@ -38,9 +40,24 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Load topics on component mount
+  useEffect(() => {
+    // Add a small delay to prevent multiple requests during component mounting/rendering cycles
+    const timeoutId = setTimeout(() => {
+      loadTopics();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [loadTopics]);
 
   const handleTopicSelect = async (topicId: string) => {
+    // Don't allow multiple selections at once
+    if (selecting) {
+      return;
+    }
+    
     try {
       setSelecting(topicId);
       setError(null);
@@ -52,6 +69,12 @@ const ChooseTopicView = ({ onTopicSelect }: ChooseTopicViewProps) => {
         const interviewId = response.responseObject.interview.id;
         onTopicSelect('interview', String(interviewId));
       } else {
+        // Don't show error for duplicate requests - the original request is being processed
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate topic selection request detected');
+          // Keep the selecting state to prevent multiple clicks
+          return;
+        }
         setError(response.message || 'Failed to select topic');
       }
     } catch (err) {

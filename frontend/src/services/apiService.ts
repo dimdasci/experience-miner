@@ -50,11 +50,34 @@ class ApiService {
         ...options,
       })
 
+      // Parse the JSON response
+      const data = await response.json();
+      
+      // Special handling for 429 status from our deduplication middleware
+      if (response.status === 429) {
+        // Check if this is our own deduplication middleware response
+        if (data.message?.includes("Duplicate request detected")) {
+          // For duplicate requests, just log a warning but don't treat as error
+          if (import.meta.env.DEV) {
+            console.warn('Duplicate request detected:', endpoint);
+          }
+          
+          // Return a special response that indicates this was a duplicate
+          return {
+            success: false,
+            responseObject: {} as T,
+            message: 'Duplicate request - original is being processed',
+            statusCode: 429,
+            error: 'DUPLICATE_REQUEST',
+            isDuplicate: true
+          };
+        }
+      }
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const data = await response.json()
       return data
     } catch (error) {
       // Track API errors with full context

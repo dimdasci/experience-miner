@@ -61,6 +61,7 @@ export interface ApiResponse<T = any> {
   message: string
   statusCode: number
   error?: string
+  isDuplicate?: boolean // Flag for duplicate request detection
 }
 
 // Audio recording types
