@@ -36,11 +36,24 @@ const createProductionConfig = (): pino.LoggerOptions => ({
 	timestamp: pino.stdTimeFunctions.isoTime,
 });
 
-const logger = pino(
-	serverConfig.nodeEnv === "development"
-		? createDevelopmentConfig()
-		: createProductionConfig()
-);
+const createLogger = (): pino.Logger => {
+	try {
+		return pino(
+			serverConfig.nodeEnv === "development"
+				? createDevelopmentConfig()
+				: createProductionConfig()
+		);
+	} catch (error) {
+		// Fall back to basic configuration if transport fails (e.g., pino-pretty not available)
+		console.warn("Failed to initialize logger with transports, falling back to basic config:", (error as Error).message);
+		return pino({
+			level: serverConfig.logLevel,
+			timestamp: pino.stdTimeFunctions.isoTime,
+		});
+	}
+};
+
+const logger = createLogger();
 
 export const requestLogger = pinoHttp({
 	logger,
