@@ -8,5 +8,8 @@ Sentry.init({
   environment: process.env.SENTRY_ENVIRONMENT || "development",
   tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE) || 1.0,
   sendDefaultPii: true,
-  _experiments: { enableLogs: true },
+  // Disable Sentry internal logging in production to avoid pino-pretty dependency
+  _experiments: { 
+    enableLogs: process.env.NODE_ENV === "development" 
+  },
 });
