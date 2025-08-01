@@ -17,7 +17,7 @@ interface GuideRecorderProps {
 const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber, interviewId, existingResponse }: GuideRecorderProps) => {
   const [transcript, setTranscript] = useState('')
   const [isTranscribing, setIsTranscribing] = useState(false)
-  const { updateCredits } = useCredits()
+  const { refreshCredits } = useCredits()
 
   // Reset transcript when question changes or load existing response
   useEffect(() => {
@@ -64,9 +64,9 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
             audioUrl: undefined
           })
           
-          // Update credits in the global context
+          // Update credits in the global context by refreshing from the server
           if (typeof result.responseObject.credits === 'number') {
-            updateCredits(result.responseObject.credits)
+            refreshCredits(true)
           }
           
           // Log successful transcription and auto-submission

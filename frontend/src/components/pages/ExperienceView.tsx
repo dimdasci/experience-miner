@@ -71,7 +71,13 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
       if (response.success) {
         setExperienceData(response.responseObject.extractedFacts)
       } else {
-        setError(response.message || 'Failed to load experience data')
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate experience data request detected - waiting for original request');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to load experience data')
+        }
       }
     } catch (err) {
       setError('Failed to load experience data')

@@ -15,7 +15,7 @@ interface ReviewViewProps {
 
 const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) => {
   const navigate = useNavigate();
-  const { updateCredits } = useCredits();
+  const { refreshCredits } = useCredits();
   const [interview, setInterview] = useState<Interview | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +40,7 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
       
       const interviewId = parseInt(propInterviewId, 10);
       
-      if (Number.Number.isNaN(interviewId)) {
+      if (Number.isNaN(interviewId)) {
         setError('Invalid interview ID format.');
         return;
       }
@@ -51,7 +51,13 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
         setInterview(response.responseObject.interview);
         setAnswers(response.responseObject.answers);
       } else {
-        setError(response.message || 'Failed to load interview');
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate interview request detected - waiting for original request');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to load interview');
+        }
       }
     } catch (err) {
       setError('Failed to load interview');
@@ -74,7 +80,7 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
     }
 
     const interviewId = parseInt(propInterviewId, 10);
-    if (Number.Number.isNaN(interviewId)) {
+    if (Number.isNaN(interviewId)) {
       setExtractionError('Invalid interview ID format');
       return;
     }
@@ -97,9 +103,9 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
       const result = await apiService.extractInterviewData(interviewId);
       
       if (result.success && result.responseObject) {
-        // Update credits in the global context
+        // Update credits in the global context by refreshing from the server
         if (typeof result.responseObject.credits === 'number') {
-          updateCredits(result.responseObject.credits);
+          refreshCredits(true);
         }
         
         // Log successful extraction
@@ -127,7 +133,10 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
         navigate('/experience');
       } else {
         // Handle specific error types
-        if (result.statusCode === 402) {
+        if (result.isDuplicate || result.statusCode === 429) {
+          console.log('Duplicate extraction request detected - original already being processed');
+          // Don't show error for duplicate requests
+        } else if (result.statusCode === 402) {
           setExtractionError('Not enough credits to process this request. Please purchase more credits.');
         } else if (result.statusCode === 409) {
           setExtractionError('Another operation is in progress, please wait and try again.');
@@ -135,11 +144,14 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
           setExtractionError(result.error || 'Failed to extract data from interview');
         }
         
-        UserJourneyLogger.logInterviewProgress({
-          stage: 'error',
-          errorMessage: result.error || 'Failed to extract data',
-          data: { statusCode: result.statusCode }
-        });
+        // Only log real errors, not duplicate requests
+        if (!result.isDuplicate && result.statusCode !== 429) {
+          UserJourneyLogger.logInterviewProgress({
+            stage: 'error',
+            errorMessage: result.error || 'Failed to extract data',
+            data: { statusCode: result.statusCode }
+          });
+        }
       }
     } catch (err) {
       setExtractionError('An error occurred while processing the interview');

@@ -35,7 +35,7 @@ const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: Inte
       
       const interviewId = parseInt(propInterviewId, 10);
       
-      if (Number.Number.isNaN(interviewId)) {
+      if (Number.isNaN(interviewId)) {
         setError('Invalid interview ID format.');
         return;
       }
@@ -46,7 +46,13 @@ const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: Inte
         setInterview(response.responseObject.interview);
         setAnswers(response.responseObject.answers);
       } else {
-        setError(response.message || 'Failed to load interview');
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate interview request detected - waiting for original request');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to load interview');
+        }
       }
     } catch (err) {
       setError('Failed to load interview');
@@ -92,7 +98,13 @@ const InterviewSessionView = ({ onComplete, interviewId: propInterviewId }: Inte
             : answer
         ));
       } else {
-        setError(response.message || 'Failed to save answer');
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate answer update request detected - original already being processed');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to save answer');
+        }
       }
     } catch (err) {
       setError('Failed to save answer');

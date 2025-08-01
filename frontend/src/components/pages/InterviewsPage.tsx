@@ -25,7 +25,13 @@ const InterviewsPage = () => {
       if (response.success) {
         setInterviews(response.responseObject);
       } else {
-        setError(response.message || 'Failed to load interviews');
+        // Special handling for duplicate requests - don't treat as errors
+        if (response.isDuplicate || response.statusCode === 429) {
+          console.log('Duplicate interviews request detected - waiting for original request');
+          return; // Just wait for the original request to complete
+        } else {
+          setError(response.message || 'Failed to load interviews');
+        }
       }
     } catch (err) {
       setError('Failed to load interviews');
