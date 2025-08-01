@@ -21,7 +21,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
     private client: GoogleGenAI;
     private rateLimitConfig: RateLimitConfig;
     private requestTracker: RequestTracker;
-    private isHealthy: boolean = true;
+    private isProviderHealthy: boolean = true;
 
     constructor() {
         this.client = new GoogleGenAI({
@@ -45,10 +45,10 @@ export class GeminiProvider implements IGenerativeAIProvider {
                 model: aiConfig.models.topicGeneration,
                 contents: [{ parts: [{ text: "Test connection" }] }],
             });
-            this.isHealthy = true;
+            this.isProviderHealthy = true;
             Sentry.logger?.info?.("Gemini AI connection established successfully");
         } catch (error) {
-            this.isHealthy = false;
+            this.isProviderHealthy = false;
             Sentry.logger?.error?.("Failed to connect to Gemini AI", {
                 error: error instanceof Error ? error.message : "Unknown error",
             });
@@ -223,7 +223,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
                 });
 
                 if (attempt >= this.rateLimitConfig.maxRetries) {
-                    this.isHealthy = false;
+                    this.isProviderHealthy = false;
                     Sentry.captureException(error, {
                         tags: { service: "gemini", operation: "generateCompletion" },
                         extra: { attempts: attempt, finalBackoff: backoffMs },
@@ -326,7 +326,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
         const oneMinuteAgo = now - 60000;
         const currentMinuteRequests = this.requestTracker.requests.filter(ts => ts > oneMinuteAgo).length;
         return {
-            healthy: this.isHealthy,
+            healthy: this.isProviderHealthy,
             requestsThisMinute: currentMinuteRequests,
             requestsToday: this.requestTracker.dailyRequests,
             dailyLimitRemaining: this.rateLimitConfig.requestsPerDay - this.requestTracker.dailyRequests,
@@ -334,7 +334,11 @@ export class GeminiProvider implements IGenerativeAIProvider {
     }
 
     async close(): Promise<void> {
-        this.isHealthy = false;
+        this.isProviderHealthy = false;
         Sentry.logger?.info?.("Gemini provider closed");
     }
+
+	async isHealthy(): Promise<boolean> {
+		return this.isProviderHealthy;
+	}    
 }
