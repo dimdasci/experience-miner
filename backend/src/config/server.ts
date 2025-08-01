@@ -4,9 +4,7 @@ import "dotenv/config";
 // Server configuration schema
 const serverSchema = z.object({
 	port: z.coerce.number().int().positive().default(8080),
-	nodeEnv: z
-		.enum(["development", "staging", "production", "test"])
-		.default("development"),
+	nodeEnv: z.enum(["development", "staging", "production", "test"]),
 	logLevel: z.enum(["debug", "info", "warn", "error"]).default("info"),
 	frontendUrl: z.string().optional(),
 	railwayEnvironmentName: z.string().optional(),
@@ -23,7 +21,7 @@ const serverSchema = z.object({
 // Parse and validate environment variables
 const serverEnv = serverSchema.parse({
 	port: process.env.PORT,
-	nodeEnv: process.env.NODE_ENV,
+	nodeEnv: process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || "development",
 	logLevel: process.env.LOG_LEVEL,
 	frontendUrl: process.env.FRONTEND_URL,
 	railwayEnvironmentName: process.env.RAILWAY_ENVIRONMENT_NAME,
