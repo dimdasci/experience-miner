@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type {
 	Answer,
-} from "@/types/domain/index.js";
-import type { IAnswerRepository } from "./interfaces/index.js";
+} from "@/types/domain";
+import type { IAnswerRepository } from "./interfaces";
 
 /**
  * PostgreSQL implementation of answer repository

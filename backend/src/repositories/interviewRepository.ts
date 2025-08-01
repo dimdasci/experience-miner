@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type {
 	Interview,
 	InterviewStatus,
-} from "@/types/domain/index.js";
-import type { IInterviewRepository } from "./interfaces/index.js";
+} from "@/types/domain";
+import type { IInterviewRepository } from "./interfaces";
 
 /**
  * PostgreSQL implementation of interview repository

@@ -1,6 +1,6 @@
 import pino from "pino";
 import pinoHttp from "pino-http";
-import { serverConfig } from "@/config/index.js";
+import { serverConfig } from "@/config";
 
 const logger = pino(
 	serverConfig.nodeEnv === "development"

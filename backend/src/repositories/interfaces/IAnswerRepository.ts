@@ -1,7 +1,7 @@
-import type { DatabaseClient } from "@/providers/index.js";
+import type { DatabaseClient } from "@/providers";
 import type {
 	Answer,
-} from "@/types/domain/index.js";
+} from "@/types/domain";
 
 /**
  * Repository interface for answer-related database operations

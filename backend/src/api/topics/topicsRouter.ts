@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
 import express from "express";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import { database } from "@/common/connections/databaseConnection.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
@@ -9,9 +8,8 @@ import {
 import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import type {
-	Answer as BusinessAnswer,
 	Topic,
-} from "@/types/database/index.js";
+} from "@/types/domain";
 
 const topicsRouter = express.Router();
 
@@ -30,8 +28,8 @@ topicsRouter.get(
 		try {
 			// Get existing topics for user
 			const container = ServiceContainer.getInstance();
-			const databaseService = container.getDatabaseService();
-			let topics = await databaseService.getTopicsByUserId(userId);
+			const topicRepository = container.getTopicRepository();
+			let topics = await topicRepository.getByUserId(userId);
 
 			// If no topics exist, seed with initial topics
 			if (topics.length === 0) {
@@ -42,13 +40,13 @@ topicsRouter.get(
 
 				const seededTopics: Topic[] = [];
 				for (const initialTopic of INITIAL_TOPICS) {
-					const topic = await databaseService.createTopic({
+					const topic = await topicRepository.create(
 						userId,
-						title: initialTopic.title,
-						motivational_quote: initialTopic.motivational_quote,
-						questions: initialTopic.questions,
-						status: "available",
-					});
+						initialTopic.title,
+						initialTopic.motivational_quote,
+						initialTopic.questions,
+						"available",
+					);
 					seededTopics.push(topic);
 				}
 				topics = seededTopics;
@@ -113,77 +111,14 @@ topicsRouter.post(
 				.json(ServiceResponse.failure("User not authenticated", null, 401));
 		}
 
-		const client = await database.getClient();
-
 		try {
-			await client.query("BEGIN");
-
-			// 1. Verify topic exists and is available
 			const container = ServiceContainer.getInstance();
-			const databaseService = container.getDatabaseService();
-			const topic = await databaseService.getTopicById(topicId);
-			if (!topic) {
-				await client.query("ROLLBACK");
-				return res
-					.status(404)
-					.json(ServiceResponse.failure("Topic not found", null, 404));
-			}
-
-			if (topic.user_id !== userId) {
-				await client.query("ROLLBACK");
-				return res
-					.status(403)
-					.json(ServiceResponse.failure("Topic not accessible", null, 403));
-			}
-
-			if (topic.status !== "available") {
-				await client.query("ROLLBACK");
-				return res
-					.status(400)
-					.json(ServiceResponse.failure("Topic is not available", null, 400));
-			}
-
-			// 2. Mark topic as used
-			await databaseService.markTopicAsUsedWithTransaction(client, topicId);
-
-			// 3. Create interview
-			const interview = await databaseService.createInterviewWithTransaction(
-				client,
-				{
-					userId,
-					title: topic.title,
-					motivational_quote: topic.motivational_quote,
-				},
-			);
-
-			// 4. Create answer records from topic questions
-			const answers: BusinessAnswer[] = [];
-			const questions = Array.isArray(topic.questions) ? topic.questions : [];
-
-			for (const question of questions) {
-				const answer = await databaseService.createAnswerWithTransaction(
-					client,
-					{
-						interviewId: interview.id,
-						userId,
-						questionNumber: question.order,
-						question: question.text,
-					},
-				);
-				answers.push(answer);
-			}
-
-			await client.query("COMMIT");
-
+			const topicService = container.getTopicService();
+			const result = await topicService.selectTopic(userId, topicId);
 			return res.json(
-				ServiceResponse.success("Topic selected and interview created", {
-					interview,
-					answers,
-				}),
+				ServiceResponse.success("Topic selected and interview created", result)
 			);
 		} catch (error) {
-			await client.query("ROLLBACK");
-			// Track error with context
 			Sentry.captureException(error, {
 				tags: { endpoint: "topics", operation: "select_topic" },
 				contexts: {
@@ -191,7 +126,6 @@ topicsRouter.post(
 					request: { topicId },
 				},
 			});
-			// Supplementary logging for development
 			Sentry.logger?.error?.("Failed to select topic", {
 				user_id: userId,
 				topic_id: topicId,
@@ -200,8 +134,6 @@ topicsRouter.post(
 			return res
 				.status(500)
 				.json(ServiceResponse.failure("Failed to select topic", null, 500));
-		} finally {
-			client.release();
 		}
 	},
 );

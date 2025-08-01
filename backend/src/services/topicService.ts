@@ -1,13 +1,13 @@
 import * as Sentry from "@sentry/node";
-import type { IGenerativeAIProvider } from "@/providers/index.js";
+import type { IGenerativeAIProvider } from "@/providers";
 import {
 	ModelResponse,
 	TopicCandidatesSchema,
 	TopicRankingSchema,
 	TopicRanking,
 	Usage,
-} from "@/types/ai/index.js";
-import type { Topic, TopicStatus } from "@/types/domain/index.js";
+} from "@/types/ai";
+import type { Topic, TopicStatus } from "@/types/domain";
 import { topicSystemPrompt, topicGenerationPrompt, topicRankingPrompt } from "@/constants/topicPrompts";
 import { fillTemplate } from "@/services/utils.js";
 

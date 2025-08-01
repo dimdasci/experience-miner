@@ -1,12 +1,10 @@
-import { serverConfig } from "@/config/index.js";
+import { serverConfig } from "@/config";
 import type {
 	IGenerativeAIProvider,
 	IDatabaseProvider,
-} from "@/providers/index.js";
-import {
 	GeminiProvider,
 	PostgresProvider,
-} from "@/providers/index.js";
+} from "@/providers";
 
 /**
  * Create AI provider instance based on configuration

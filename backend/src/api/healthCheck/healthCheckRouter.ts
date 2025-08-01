@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import { serverConfig } from "@/config/index.js";
+import { serverConfig } from "@/config";
 
 export const healthCheckRouter: Router = Router();
 

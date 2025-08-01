@@ -7,5 +7,5 @@ export { InterviewRepository } from "./interviewRepository.js";
 export { TopicRepository } from "./topicRepository.js";
 
 // Repository interfaces
-export * from "./interfaces/index.js";
+export * from "./interfaces";
 

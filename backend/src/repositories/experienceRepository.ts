@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/node";
-import type { DatabaseClient, IDatabaseProvider } from "@/providers/index.js";
-import type { ExperienceRecord } from "@/types/domain/index.js";
+import type { DatabaseClient, IDatabaseProvider } from "@/providers";
+import type { ExperienceRecord } from "@/types/domain";
 import type { ExtractedFacts } from "@/types/extractedFacts.js";
-import type { IExperienceRepository } from "./interfaces/index.js";
+import type { IExperienceRepository } from "./interfaces";
 
 /**
  * PostgreSQL implementation of experience repository

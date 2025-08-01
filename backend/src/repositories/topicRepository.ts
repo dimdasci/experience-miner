@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
-import type { IDatabaseProvider, DatabaseClient } from "@/providers/index.js";
-import type { Topic } from "@/types/domain/index.js";
-import type { ITopicRepository } from "./interfaces/index.js";
+import type { IDatabaseProvider, DatabaseClient } from "@/providers";
+import type { Topic } from "@/types/domain";
+import type { ITopicRepository } from "./interfaces";
 import type { TopicQuestion } from "@/constants/initialTopics.js";
 /**
  * PostgreSQL implementation of topic repository

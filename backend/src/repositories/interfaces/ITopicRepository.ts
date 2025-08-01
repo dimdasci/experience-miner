@@ -1,6 +1,6 @@
-import type { Topic } from "@/types/domain/index.js";
+import type { Topic } from "@/types/domain";
 import type { TopicQuestion } from "@/constants/initialTopics.js";
-import type { DatabaseClient } from "@/providers/index.js";
+import type { DatabaseClient } from "@/providers";
 /**
  * Repository interface for topic-related database operations
  */

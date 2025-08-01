@@ -1,5 +1,5 @@
 import { logger } from "@/common/middleware/requestLogger.js";
-import { databaseConfig, serverConfig } from "@/config/index.js";
+import { databaseConfig, serverConfig } from "@/config";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import { app } from "./server.js";
 

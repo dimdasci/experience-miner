@@ -1,3 +1,3 @@
 // Provider exports
-export * from "./ai/index.js";
-export * from "./database/index.js";
+export * from "./ai";
+export * from "./database";

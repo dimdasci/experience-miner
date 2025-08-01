@@ -2,7 +2,7 @@
 import { Pool } from "pg";
 import { databaseConfig } from "@/config/database.js";
 import { logger } from "@/common/middleware/requestLogger.js";
-import type { IDatabaseProvider, DatabaseClient } from "@/interfaces/providers/index.js";
+import type { IDatabaseProvider, DatabaseClient } from "@/providers";
 
 /**
  * PostgreSQL Provider implementation using pg connection pool

@@ -1,8 +1,8 @@
-import type { DatabaseClient } from "@/providers/index.js";
+import type { DatabaseClient } from "@/providers";
 import type {
 	Interview,
 	InterviewStatus,
-} from "@/types/domain/index.js";
+} from "@/types/domain";
 
 /**
  * Repository interface for interview-related database operations

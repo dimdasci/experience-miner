@@ -1,4 +1,4 @@
-import type { CreditRecord, SourceType } from "@/types/services/index.js";
+import type { CreditRecord, SourceType } from "@/types/services";
 
 /**
  * Repository interface for credit operations

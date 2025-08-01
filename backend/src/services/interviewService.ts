@@ -1,15 +1,15 @@
 import * as Sentry from "@sentry/node";
-import type { IGenerativeAIProvider } from "@/providers/index.js";
+import type { IGenerativeAIProvider } from "@/providers";
 import {
 	AnswerRepository,
 	InterviewRepository,
 	ExperienceRepository
-} from "@/repositories/index.js";
-import type { ModelResponse, MediaData } from "@/types/ai/index.js";
+} from "@/repositories";
+import type { ModelResponse, MediaData } from "@/types/ai";
 import type {
 	Answer,
 	Interview,
-} from "@/types/domain/index.js";
+} from "@/types/domain";
 import { ExtractedFactsSchema, type ExtractedFacts, type SourceRef } from "@/types/extractedFacts.js";
 import {
 	transcriptionSystemPrompt,
