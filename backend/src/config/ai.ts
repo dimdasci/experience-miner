@@ -44,8 +44,8 @@ export const aiConfig = {
 
 	maxTokens: {
 		transcription: 5000,
-		extraction: 5000,
-		topicGeneration: 5000,
+		extraction: 7500,
+		topicGeneration: 7500,
 		topicReranking: 1000,
 	},
 	minAnswerLength: 32, // Minimum length for answers to be considered valid
