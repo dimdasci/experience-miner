@@ -9,7 +9,7 @@ import type { ZodTypeAny, z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { aiConfig, type RateLimitConfig } from "@/config/ai.js";
 import type { IGenerativeAIProvider } from "@/providers/ai/IGenerativeAIProvider";
-import type { MediaData, ModelResponse, Usage } from "@/types/ai";
+import type { MediaData, ModelResponse, Usage } from "./types.js";
 
 interface RequestTracker {
 	requests: number[];

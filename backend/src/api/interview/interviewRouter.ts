@@ -1,6 +1,7 @@
 import type { IRouter } from "express";
 import { Router } from "express";
-import { authenticateToken } from "@/common/middleware/auth.js";
+import { authenticateToken } from "@/middleware/auth.js";
+import { upload } from "@/utils";
 import {
 	extractFacts,
 	getAllInterviews,
@@ -8,7 +9,6 @@ import {
 	transcribeAudio,
 	updateAnswer,
 } from "./handlers";
-import { upload } from "./utils/fileUpload.js";
 
 export const interviewRouter: IRouter = Router();
 

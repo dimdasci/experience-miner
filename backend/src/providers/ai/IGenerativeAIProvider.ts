@@ -1,5 +1,5 @@
 import type { ZodTypeAny, z } from "zod";
-import type { MediaData, ModelResponse } from "@/types/ai";
+import type { MediaData, ModelResponse } from "./types.js";
 
 export interface IGenerativeAIProvider {
 	generateCompletion<T extends ZodTypeAny>(

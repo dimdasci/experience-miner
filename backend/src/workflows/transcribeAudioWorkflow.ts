@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
-import type { CreditsRepository } from "@/repositories";
-import type { CreditsService, InterviewService } from "@/services";
+import type { CreditsRepository, CreditsService } from "@/credits";
+import type { InterviewService } from "@/interviews";
 
 export class TranscribeAudioWorkflow {
 	private creditsRepo: CreditsRepository;

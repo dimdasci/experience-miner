@@ -2,8 +2,8 @@ import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
 
 /**
  * HTTP handler for updating answer by question number

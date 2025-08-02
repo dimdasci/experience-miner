@@ -1,17 +1,14 @@
+import { AnswerRepository } from "@/answers";
 import { serverConfig } from "@/config";
 import {
 	createAIProvider,
 	createDatabaseProvider,
-} from "@/factories/providerFactory.js";
+} from "@/container/providerFactory.js";
+import { CreditsRepository, CreditsService } from "@/credits";
+import { ExperienceRepository } from "@/experience";
+import { InterviewRepository, InterviewService } from "@/interviews";
 import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
-import {
-	AnswerRepository,
-	CreditsRepository,
-	ExperienceRepository,
-	InterviewRepository,
-	TopicRepository,
-} from "@/repositories";
-import { CreditsService, InterviewService, TopicService } from "@/services";
+import { TopicRepository, TopicService } from "@/topics";
 import {
 	ProcessInterviewWorkflow,
 	SelectTopicWorkflow,

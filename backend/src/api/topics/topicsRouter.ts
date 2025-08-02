@@ -1,13 +1,13 @@
 import * as Sentry from "@sentry/node";
 import express from "express";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
-} from "@/common/middleware/auth.js";
-import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
-import { ServiceContainer } from "@/container/serviceContainer.js";
-import type { Topic } from "@/types/domain";
+} from "@/middleware/auth.js";
+import type { Topic } from "@/topics";
 
 const topicsRouter = express.Router();
 

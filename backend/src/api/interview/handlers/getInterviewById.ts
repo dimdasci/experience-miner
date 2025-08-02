@@ -2,8 +2,8 @@ import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
 
 /**
  * HTTP handler for getting interview by ID with answers
@@ -48,11 +48,13 @@ export const getInterviewById = async (
 	try {
 		const interviewRepo =
 			ServiceContainer.getInstance().getInterviewRepository();
-		const answerRepo =
-			ServiceContainer.getInstance().getAnswerRepository();
+		const answerRepo = ServiceContainer.getInstance().getAnswerRepository();
 
 		const interview = await interviewRepo.getById(userId, interviewIdNumber);
-		const answers = await answerRepo.getByInterviewId(userId, interviewIdNumber);
+		const answers = await answerRepo.getByInterviewId(
+			userId,
+			interviewIdNumber,
+		);
 		Sentry.logger?.info?.("Interview retrieved", {
 			user_id: userId,
 			interviewId: interviewIdNumber,
@@ -72,7 +74,6 @@ export const getInterviewById = async (
 			"Interview retrieved successfully",
 			{ interview, answers },
 		);
-
 
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {

@@ -24,14 +24,14 @@ export class PostgresProvider implements IDatabaseProvider {
 			...databaseConfig.connection,
 			...databaseConfig.pool,
 		});
-		
+
 		// Add event handlers to track critical pool errors
-		this.pool.on('error', (err) => {
+		this.pool.on("error", (err) => {
 			Sentry.captureException(err, {
-				tags: { component: "db_pool" }
+				tags: { component: "db_pool" },
 			});
 		});
-		
+
 		// Test connection on startup
 		this.testConnection();
 	}
@@ -43,23 +43,25 @@ export class PostgresProvider implements IDatabaseProvider {
 			client.release();
 		} catch (error) {
 			Sentry.captureException(error, {
-				tags: { component: "db_pool", operation: "initialize" }
+				tags: { component: "db_pool", operation: "initialize" },
 			});
 		}
 	}
 
 	async query<T>(text: string, params: unknown[] = []): Promise<{ rows: T[] }> {
 		// Check if pool is already ended before attempting to connect
-		if (this.pool['ending'] === true) {
-			const error = new Error('Cannot use a pool after calling end on the pool');
+		if (this.pool.ending === true) {
+			const error = new Error(
+				"Cannot use a pool after calling end on the pool",
+			);
 			// Use Sentry only for critical errors
 			Sentry.captureException(error, {
 				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } }
+				contexts: { query: { text, params } },
 			});
 			throw error;
 		}
-		
+
 		try {
 			const client = await this.pool.connect();
 			try {
@@ -72,7 +74,7 @@ export class PostgresProvider implements IDatabaseProvider {
 			// Only capture database errors with Sentry
 			Sentry.captureException(error, {
 				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } }
+				contexts: { query: { text, params } },
 			});
 			throw error;
 		}
@@ -114,10 +116,10 @@ export class PostgresProvider implements IDatabaseProvider {
 
 	async close(): Promise<void> {
 		// Check if pool is already ended
-		if (this.pool['ending'] === true) {
+		if (this.pool.ending === true) {
 			return;
 		}
-		
+
 		await this.pool.end();
 	}
 

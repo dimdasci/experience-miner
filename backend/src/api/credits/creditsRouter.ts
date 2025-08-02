@@ -2,12 +2,12 @@ import type { IRouter, Response } from "express";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
-} from "@/common/middleware/auth.js";
-import { logger } from "@/common/middleware/requestLogger.js";
-import { ServiceContainer } from "@/container/serviceContainer.js";
+} from "@/middleware/auth.js";
+import { logger } from "@/middleware/requestLogger.js";
 
 export const creditsRouter: IRouter = Router();
 

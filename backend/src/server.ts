@@ -8,11 +8,11 @@ import { experienceRouter } from "@/api/experience/experienceRouter.js";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter.js";
 import { interviewRouter } from "@/api/interview/interviewRouter.js";
 import { topicsRouter } from "@/api/topics/topicsRouter.js";
-import { errorHandler } from "@/common/middleware/errorHandler.js";
-import { aiRateLimiter, rateLimiter } from "@/common/middleware/rateLimiter.js";
-import { deduplicateRequests } from "@/common/middleware/requestDeduplication.js";
-import { requestLogger } from "@/common/middleware/requestLogger.js";
 import { serverConfig } from "@/config/server.js";
+import { errorHandler } from "@/middleware/errorHandler.js";
+import { aiRateLimiter, rateLimiter } from "@/middleware/rateLimiter.js";
+import { deduplicateRequests } from "@/middleware/requestDeduplication.js";
+import { requestLogger } from "@/middleware/requestLogger.js";
 
 const app: Application = express();
 

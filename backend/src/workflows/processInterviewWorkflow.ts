@@ -1,19 +1,10 @@
 import * as Sentry from "@sentry/node";
-
+import type { CreditsRepository, CreditsService } from "@/credits";
+import type { ExperienceRepository } from "@/experience";
+import type { ExtractedFacts } from "@/experience/types";
+import type { InterviewRepository, InterviewService } from "@/interviews";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
-import type {
-	CreditsRepository,
-	ExperienceRepository,
-	InterviewRepository,
-	TopicRepository,
-} from "@/repositories";
-import type {
-	CreditsService,
-	InterviewService,
-	TopicService,
-} from "@/services";
-import type { Topic } from "@/types/domain";
-import type { ExtractedFacts } from "@/types/extractedFacts.js";
+import type { Topic, TopicRepository, TopicService } from "@/topics";
 
 export class ProcessInterviewWorkflow {
 	private databaseProvider: IDatabaseProvider;
@@ -121,24 +112,25 @@ export class ProcessInterviewWorkflow {
 		if (!topicCandidatesResult.data) {
 			throw new Error("Failed to generate topic candidates");
 		}
+		const newTopics = topicCandidatesResult.data;
 		const generationTokenCount =
 			topicCandidatesResult.usage.inputTokens +
 			topicCandidatesResult.usage.outputTokens;
 
-		// Rerank Topics
-		const rerankedTopicsResult = await this.topicService.rerankAllTopics(
-			topicCandidatesResult.data,
-			await this.topicRepo.getAvailable(userId),
-			extractFactsResult.data,
-		);
+		// TODO: Rerank Topics
+		// const rerankedTopicsResult = await this.topicService.rerankAllTopics(
+		// 	topicCandidatesResult.data,
+		// 	await this.topicRepo.getAvailable(userId),
+		// 	extractFactsResult.data,
+		// );
 
-		if (!rerankedTopicsResult.data) {
-			throw new Error("Failed to rerank topics");
-		}
-		const rerankedTopics = rerankedTopicsResult.data;
-		const rerankingTokenCount =
-			rerankedTopicsResult.usage.inputTokens +
-			rerankedTopicsResult.usage.outputTokens;
+		// if (!rerankedTopicsResult.data) {
+		// 	throw new Error("Failed to rerank topics");
+		// }
+		// const rerankedTopics = rerankedTopicsResult.data;
+		// const rerankingTokenCount =
+		// 	rerankedTopicsResult.usage.inputTokens +
+		// 	rerankedTopicsResult.usage.outputTokens;
 
 		await this.databaseProvider.transaction(async (client: DatabaseClient) => {
 			this.persistTransaction(
@@ -146,10 +138,10 @@ export class ProcessInterviewWorkflow {
 				userId,
 				interviewId,
 				extractedFacts,
-				rerankedTopics,
+				newTopics, // rerankedTopics,
 				extractionTokenCount,
 				generationTokenCount,
-				rerankingTokenCount,
+				0, //rerankingTokenCount,
 			);
 		});
 
@@ -161,7 +153,7 @@ export class ProcessInterviewWorkflow {
 			consumed_tokens: {
 				extraction: extractionTokenCount,
 				topic_generation: generationTokenCount,
-				topic_reranking: rerankingTokenCount,
+				topic_reranking: 0, // rerankingTokenCount,
 			},
 			extracted: {
 				companies: extractedFacts.companies.length,
