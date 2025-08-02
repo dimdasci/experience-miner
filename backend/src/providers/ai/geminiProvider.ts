@@ -36,7 +36,9 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			lastReset: new Date(),
 		};
 
-		this.testConnection();
+		this.testConnection().catch(() => {
+			// Test connection error is already logged in testConnection
+		});
 	}
 
 	private async testConnection(): Promise<void> {
@@ -103,7 +105,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		});
 	}
 
-	private async sleep(ms: number): Promise<void> {
+	private sleep(ms: number): Promise<void> {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
@@ -144,7 +146,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 
 		// Request construction
 		const request: GenerateContentParameters = isStructuredCall
-			? await this.makeStructuredRequest(
+			? this.makeStructuredRequest(
 					model,
 					systemPrompt,
 					userPrompt,
@@ -153,7 +155,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 					temperature,
 					maxOutputTokens,
 				)
-			: await this.makeRequest(
+			: this.makeRequest(
 					model,
 					systemPrompt,
 					userPrompt,
@@ -260,14 +262,14 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		throw new Error("Unexpected end of retry loop");
 	}
 
-	private async makeRequest(
+	private makeRequest(
 		model: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media?: MediaData,
 		temperature?: number,
 		maxOutputTokens?: number,
-	): Promise<GenerateContentParameters> {
+	): GenerateContentParameters {
 		const config = {
 			systemInstruction: systemPrompt,
 			temperature: temperature,
@@ -282,10 +284,10 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			model: model,
 			contents: contents,
 			config: config,
-		} as GenerateContentParameters;
+		};
 	}
 
-	private async makeStructuredRequest(
+	private makeStructuredRequest(
 		model: string,
 		systemPrompt: string,
 		userPrompt: string,
@@ -293,7 +295,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		media?: MediaData,
 		temperature?: number,
 		maxOutputTokens?: number,
-	): Promise<GenerateContentParameters> {
+	): GenerateContentParameters {
 		const config = {
 			systemInstruction: systemPrompt,
 			temperature: temperature,
@@ -308,7 +310,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			model: model,
 			contents: contents,
 			config: config,
-		} as GenerateContentParameters;
+		};
 	}
 
 	private makeContent(
@@ -361,12 +363,12 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		};
 	}
 
-	async close(): Promise<void> {
+	close(): void {
 		this.isProviderHealthy = false;
 		Sentry.logger?.info?.("Gemini provider closed");
 	}
 
-	async isHealthy(): Promise<boolean> {
+	isHealthy(): boolean {
 		return this.isProviderHealthy;
 	}
 }

@@ -96,7 +96,7 @@ topicsRouter.post(
 				.json(ServiceResponse.failure("Topic ID is required", null, 400));
 		}
 
-		const topicId = parseInt(topicIdParam, 10);
+		const topicId = Number.parseInt(topicIdParam, 10);
 		if (Number.isNaN(topicId)) {
 			return res
 				.status(400)

@@ -38,7 +38,7 @@ export class ProcessInterviewWorkflow {
 
 	async execute(userId: string, interviewId: number): Promise<void> {
 		// Check for concurrent operations
-		if (await this.creditsService.checkUserLock(userId)) {
+		if (this.creditsService.checkUserLock(userId)) {
 			throw new Error(
 				"Another operation is in progress, please wait and try again",
 			);
@@ -133,7 +133,7 @@ export class ProcessInterviewWorkflow {
 		// 	rerankedTopicsResult.usage.outputTokens;
 
 		await this.databaseProvider.transaction(async (client: DatabaseClient) => {
-			this.persistTransaction(
+			await this.persistTransaction(
 				client,
 				userId,
 				interviewId,
@@ -176,35 +176,46 @@ export class ProcessInterviewWorkflow {
 		rerankingTokenCount: number,
 	): Promise<void> {
 		// Save extracted facts
-		this.experienceRepo.saveOrUpdateRecord(userId, facts);
+		await this.experienceRepo.saveOrUpdateRecord(userId, facts);
 		Sentry.logger?.info?.("Extracted facts saved", {
 			user_id: userId,
 		});
 
 		// Save or update topics
-		this.topicRepo.createOrUpdate(userId, topics, client);
+		await this.topicRepo.createOrUpdate(userId, topics, client);
 
 		// Update interview status
-		this.interviewRepo.updateStatus(userId, interviewId, "completed", client);
+		await this.interviewRepo.updateStatus(
+			userId,
+			interviewId,
+			"completed",
+			client,
+		);
 
 		// Consume credits
-		this.creditsRepo.consumeCredits(
-			userId,
-			extractionTokenCount,
-			"extractor",
-			client,
-		);
-		this.creditsRepo.consumeCredits(
-			userId,
-			generationTokenCount,
-			"topic_generator",
-			client,
-		);
-		this.creditsRepo.consumeCredits(
-			userId,
-			rerankingTokenCount,
-			"topic_ranker",
-			client,
-		);
+		if (extractionTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				extractionTokenCount,
+				"extractor",
+				client,
+			);
+		}
+		if (generationTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				generationTokenCount,
+				"topic_generator",
+				client,
+			);
+		}
+		if (rerankingTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				rerankingTokenCount,
+				"topic_ranker",
+				client,
+			);
+		}
 	}
 }

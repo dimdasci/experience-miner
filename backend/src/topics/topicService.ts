@@ -59,15 +59,15 @@ export class TopicService {
 				TopicCandidatesSchema,
 			);
 
-			if (!generationResult.data) {
-				Sentry.logger?.error?.("Topic generation returned no data", {
-					user_id: userId,
-					prompt: prompt,
-				});
-			} else {
+			if (generationResult.data) {
 				Sentry.logger?.info?.("Topic generation completed successfully", {
 					user_id: userId,
 					topicCount: generationResult.data?.topics.length || 0,
+				});
+			} else {
+				Sentry.logger?.error?.("Topic generation returned no data", {
+					user_id: userId,
+					prompt: prompt,
 				});
 			}
 

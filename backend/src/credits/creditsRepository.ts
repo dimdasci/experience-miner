@@ -19,7 +19,7 @@ export class CreditsRepository implements ICreditsRepository {
 			"SELECT COALESCE(SUM(amount), 0) as total FROM credits WHERE user_id = $1",
 			[userId],
 		);
-		return parseInt(result.rows[0]?.total || "0", 10);
+		return Number.parseInt(result.rows[0]?.total || "0", 10);
 	}
 
 	async addCredits(

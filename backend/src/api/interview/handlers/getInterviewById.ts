@@ -31,7 +31,7 @@ export const getInterviewById = async (
 	}
 
 	// convert to integer
-	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
 	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		Sentry.logger?.error?.("Invalid interview ID", {
 			user_id: userId,

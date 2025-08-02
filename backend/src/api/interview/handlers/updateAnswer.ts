@@ -27,8 +27,8 @@ export const updateAnswer = async (
 	}
 
 	// convert interviewId and questionNumber to numbers
-	const interviewIdNumber = parseInt(interviewId ?? "", 10);
-	const questionNumberNumber = parseInt(questionNumber ?? "", 10);
+	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
+	const questionNumberNumber = Number.parseInt(questionNumber ?? "", 10);
 
 	if (
 		Number.isNaN(interviewIdNumber) ||

@@ -73,7 +73,7 @@ export class TopicRepository implements ITopicRepository {
 	}
 
 	async getAvailable(userId: string): Promise<Topic[]> {
-		return this.getByUserId(userId, "available");
+		return await this.getByUserId(userId, "available");
 	}
 
 	async createOrUpdate(

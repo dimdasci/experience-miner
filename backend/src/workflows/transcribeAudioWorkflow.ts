@@ -23,7 +23,7 @@ export class TranscribeAudioWorkflow {
 		mimeType: string,
 	): Promise<string> {
 		// Check for concurrent operations
-		if (await this.creditsService.checkUserLock(userId)) {
+		if (this.creditsService.checkUserLock(userId)) {
 			throw new Error(
 				"Another operation is in progress, please wait and try again",
 			);
@@ -53,7 +53,7 @@ export class TranscribeAudioWorkflow {
 				transcriptionResult.usage.inputTokens +
 				transcriptionResult.usage.outputTokens;
 
-			this.creditsRepo.consumeCredits(userId, tokensCount, "transcriber");
+			await this.creditsRepo.consumeCredits(userId, tokensCount, "transcriber");
 
 			return transcription;
 		} catch (error) {

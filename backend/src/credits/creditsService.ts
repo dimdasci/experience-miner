@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/node";
 const userProcessingLocks = new Map<string, number>();
 
 export class CreditsService {
-	async checkUserLock(userId: string): Promise<boolean> {
+	checkUserLock(userId: string): boolean {
 		return userProcessingLocks.has(userId);
 	}
 

@@ -350,7 +350,7 @@ export class ServiceContainer {
 
 		try {
 			await this.databaseProvider?.close();
-			await this.aiProvider?.close();
+			this.aiProvider?.close();
 			this.reset();
 			console.log("Service container cleaned up successfully");
 		} catch (error) {
@@ -379,8 +379,9 @@ export class ServiceContainer {
 			};
 		}
 
-		const databaseHealthy = (await this.databaseProvider?.isHealthy()) ?? false;
-		const aiHealthy = (await this.aiProvider?.isHealthy()) ?? false;
+		const databaseHealthy: boolean =
+			(await this.databaseProvider?.isHealthy()) ?? false;
+		const aiHealthy: boolean = this.aiProvider?.isHealthy() ?? false;
 		return {
 			healthy: databaseHealthy && aiHealthy,
 			providers: {

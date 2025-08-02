@@ -25,7 +25,7 @@ export const extractFacts = async (
 	}
 
 	// Validate interviewId
-	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
 	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",

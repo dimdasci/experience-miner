@@ -70,7 +70,7 @@ export class SupabaseConnection {
 		}
 	}
 
-	async close(): Promise<void> {
+	close(): void {
 		// Supabase client doesn't have explicit close method
 		Sentry.logger?.info?.("Supabase connection closed");
 	}

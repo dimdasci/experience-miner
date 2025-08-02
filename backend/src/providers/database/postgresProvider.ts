@@ -33,7 +33,9 @@ export class PostgresProvider implements IDatabaseProvider {
 		});
 
 		// Test connection on startup
-		this.testConnection();
+		this.testConnection().catch(() => {
+			// Test connection error is already logged in testConnection
+		});
 	}
 
 	private async testConnection(): Promise<void> {
