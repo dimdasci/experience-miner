@@ -1,8 +1,8 @@
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
 
 /**
  * HTTP handler for extracting structured facts from interview
@@ -25,7 +25,7 @@ export const extractFacts = async (
 	}
 
 	// Validate interviewId
-	const interviewIdNumber = parseInt(interviewId ?? "", 10);
+	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
 	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		const serviceResponse = ServiceResponse.failure(
 			"Interview ID is required",

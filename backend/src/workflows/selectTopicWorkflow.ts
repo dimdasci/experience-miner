@@ -1,8 +1,7 @@
+import type { Answer, IAnswerRepository } from "@/answers";
+import type { IInterviewRepository, Interview } from "@/interviews";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
-import type { IAnswerRepository } from "@/repositories/interfaces/IAnswerRepository";
-import type { IInterviewRepository } from "@/repositories/interfaces/IInterviewRepository";
-import type { ITopicRepository } from "@/repositories/interfaces/ITopicRepository";
-import type { Answer, Interview } from "@/types/domain";
+import type { ITopicRepository } from "@/topics";
 
 export class SelectTopicWorkflow {
 	private topicRepository: ITopicRepository;

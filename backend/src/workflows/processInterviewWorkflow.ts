@@ -1,19 +1,10 @@
 import * as Sentry from "@sentry/node";
-
+import type { CreditsRepository, CreditsService } from "@/credits";
+import type { ExperienceRepository } from "@/experience";
+import type { ExtractedFacts } from "@/experience/types";
+import type { InterviewRepository, InterviewService } from "@/interviews";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
-import type {
-	CreditsRepository,
-	ExperienceRepository,
-	InterviewRepository,
-	TopicRepository,
-} from "@/repositories";
-import type {
-	CreditsService,
-	InterviewService,
-	TopicService,
-} from "@/services";
-import type { Topic } from "@/types/domain";
-import type { ExtractedFacts } from "@/types/extractedFacts.js";
+import type { Topic, TopicRepository, TopicService } from "@/topics";
 
 export class ProcessInterviewWorkflow {
 	private databaseProvider: IDatabaseProvider;
@@ -47,7 +38,7 @@ export class ProcessInterviewWorkflow {
 
 	async execute(userId: string, interviewId: number): Promise<void> {
 		// Check for concurrent operations
-		if (await this.creditsService.checkUserLock(userId)) {
+		if (this.creditsService.checkUserLock(userId)) {
 			throw new Error(
 				"Another operation is in progress, please wait and try again",
 			);
@@ -121,35 +112,36 @@ export class ProcessInterviewWorkflow {
 		if (!topicCandidatesResult.data) {
 			throw new Error("Failed to generate topic candidates");
 		}
+		const newTopics = topicCandidatesResult.data;
 		const generationTokenCount =
 			topicCandidatesResult.usage.inputTokens +
 			topicCandidatesResult.usage.outputTokens;
 
-		// Rerank Topics
-		const rerankedTopicsResult = await this.topicService.rerankAllTopics(
-			topicCandidatesResult.data,
-			await this.topicRepo.getAvailable(userId),
-			extractFactsResult.data,
-		);
+		// TODO: Rerank Topics
+		// const rerankedTopicsResult = await this.topicService.rerankAllTopics(
+		// 	topicCandidatesResult.data,
+		// 	await this.topicRepo.getAvailable(userId),
+		// 	extractFactsResult.data,
+		// );
 
-		if (!rerankedTopicsResult.data) {
-			throw new Error("Failed to rerank topics");
-		}
-		const rerankedTopics = rerankedTopicsResult.data;
-		const rerankingTokenCount =
-			rerankedTopicsResult.usage.inputTokens +
-			rerankedTopicsResult.usage.outputTokens;
+		// if (!rerankedTopicsResult.data) {
+		// 	throw new Error("Failed to rerank topics");
+		// }
+		// const rerankedTopics = rerankedTopicsResult.data;
+		// const rerankingTokenCount =
+		// 	rerankedTopicsResult.usage.inputTokens +
+		// 	rerankedTopicsResult.usage.outputTokens;
 
 		await this.databaseProvider.transaction(async (client: DatabaseClient) => {
-			this.persistTransaction(
+			await this.persistTransaction(
 				client,
 				userId,
 				interviewId,
 				extractedFacts,
-				rerankedTopics,
+				newTopics, // rerankedTopics,
 				extractionTokenCount,
 				generationTokenCount,
-				rerankingTokenCount,
+				0, //rerankingTokenCount,
 			);
 		});
 
@@ -161,7 +153,7 @@ export class ProcessInterviewWorkflow {
 			consumed_tokens: {
 				extraction: extractionTokenCount,
 				topic_generation: generationTokenCount,
-				topic_reranking: rerankingTokenCount,
+				topic_reranking: 0, // rerankingTokenCount,
 			},
 			extracted: {
 				companies: extractedFacts.companies.length,
@@ -184,35 +176,46 @@ export class ProcessInterviewWorkflow {
 		rerankingTokenCount: number,
 	): Promise<void> {
 		// Save extracted facts
-		this.experienceRepo.saveOrUpdateRecord(userId, facts);
+		await this.experienceRepo.saveOrUpdateRecord(userId, facts);
 		Sentry.logger?.info?.("Extracted facts saved", {
 			user_id: userId,
 		});
 
 		// Save or update topics
-		this.topicRepo.createOrUpdate(userId, topics, client);
+		await this.topicRepo.createOrUpdate(userId, topics, client);
 
 		// Update interview status
-		this.interviewRepo.updateStatus(userId, interviewId, "completed", client);
+		await this.interviewRepo.updateStatus(
+			userId,
+			interviewId,
+			"completed",
+			client,
+		);
 
 		// Consume credits
-		this.creditsRepo.consumeCredits(
-			userId,
-			extractionTokenCount,
-			"extractor",
-			client,
-		);
-		this.creditsRepo.consumeCredits(
-			userId,
-			generationTokenCount,
-			"topic_generator",
-			client,
-		);
-		this.creditsRepo.consumeCredits(
-			userId,
-			rerankingTokenCount,
-			"topic_ranker",
-			client,
-		);
+		if (extractionTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				extractionTokenCount,
+				"extractor",
+				client,
+			);
+		}
+		if (generationTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				generationTokenCount,
+				"topic_generator",
+				client,
+			);
+		}
+		if (rerankingTokenCount > 0) {
+			await this.creditsRepo.consumeCredits(
+				userId,
+				rerankingTokenCount,
+				"topic_ranker",
+				client,
+			);
+		}
 	}
 }

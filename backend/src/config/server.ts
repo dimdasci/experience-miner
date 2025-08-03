@@ -21,7 +21,10 @@ const serverSchema = z.object({
 // Parse and validate environment variables
 const serverEnv = serverSchema.parse({
 	port: process.env.PORT,
-	nodeEnv: process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || "development",
+	nodeEnv:
+		process.env.RAILWAY_ENVIRONMENT_NAME ||
+		process.env.NODE_ENV ||
+		"development",
 	logLevel: process.env.LOG_LEVEL,
 	frontendUrl: process.env.FRONTEND_URL,
 	railwayEnvironmentName: process.env.RAILWAY_ENVIRONMENT_NAME,

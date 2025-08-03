@@ -3,9 +3,9 @@ import type { IRouter } from "express";
 import { type Response, Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
-import { authenticateToken } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
+import { authenticateToken } from "@/middleware/auth.js";
 
 export const experienceRouter: IRouter = Router();
 

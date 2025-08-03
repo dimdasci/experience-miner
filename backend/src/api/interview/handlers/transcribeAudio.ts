@@ -2,8 +2,8 @@ import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
 
 /**
  * HTTP handler for transcribing audio to text
@@ -45,7 +45,7 @@ export const transcribeAudio = async (
 		const serviceResponse = ServiceResponse.success(
 			"Audio transcribed successfully",
 			{
-				transcript: transcription
+				transcript: transcription,
 			},
 		);
 
@@ -53,7 +53,7 @@ export const transcribeAudio = async (
 			user_id: userId,
 			result: transcription,
 			serviceResponse,
-		});		
+		});
 		return res.status(serviceResponse.statusCode).json(serviceResponse);
 	} catch (error) {
 		let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;

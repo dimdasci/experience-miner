@@ -2,3 +2,4 @@
 
 export { GeminiProvider } from "./geminiProvider.js";
 export type { IGenerativeAIProvider } from "./IGenerativeAIProvider.js";
+export type { MediaData, ModelResponse, Usage } from "./types.js";

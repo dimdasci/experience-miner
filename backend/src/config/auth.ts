@@ -34,10 +34,4 @@ export const authConfig = {
 			},
 		},
 	},
-
-	// Operational settings
-	validation: {
-		maxConsecutiveFailures: 3,
-		healthCheckIntervalMs: 30000,
-	},
 };

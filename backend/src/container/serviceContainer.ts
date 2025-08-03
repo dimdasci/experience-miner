@@ -1,17 +1,14 @@
+import { AnswerRepository } from "@/answers";
 import { serverConfig } from "@/config";
 import {
 	createAIProvider,
 	createDatabaseProvider,
-} from "@/factories/providerFactory.js";
+} from "@/container/providerFactory.js";
+import { CreditsRepository, CreditsService } from "@/credits";
+import { ExperienceRepository } from "@/experience";
+import { InterviewRepository, InterviewService } from "@/interviews";
 import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
-import {
-	AnswerRepository,
-	CreditsRepository,
-	ExperienceRepository,
-	InterviewRepository,
-	TopicRepository,
-} from "@/repositories";
-import { CreditsService, InterviewService, TopicService } from "@/services";
+import { TopicRepository, TopicService } from "@/topics";
 import {
 	ProcessInterviewWorkflow,
 	SelectTopicWorkflow,
@@ -353,7 +350,7 @@ export class ServiceContainer {
 
 		try {
 			await this.databaseProvider?.close();
-			await this.aiProvider?.close();
+			this.aiProvider?.close();
 			this.reset();
 			console.log("Service container cleaned up successfully");
 		} catch (error) {
@@ -382,8 +379,9 @@ export class ServiceContainer {
 			};
 		}
 
-		const databaseHealthy = (await this.databaseProvider?.isHealthy()) ?? false;
-		const aiHealthy = (await this.aiProvider?.isHealthy()) ?? false;
+		const databaseHealthy: boolean =
+			(await this.databaseProvider?.isHealthy()) ?? false;
+		const aiHealthy: boolean = this.aiProvider?.isHealthy() ?? false;
 		return {
 			healthy: databaseHealthy && aiHealthy,
 			providers: {

@@ -1,13 +1,13 @@
 import * as Sentry from "@sentry/node";
 import express from "express";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
+import { ServiceContainer } from "@/container/serviceContainer.js";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
-} from "@/common/middleware/auth.js";
-import { INITIAL_TOPICS } from "@/constants/initialTopics.js";
-import { ServiceContainer } from "@/container/serviceContainer.js";
-import type { Topic } from "@/types/domain";
+} from "@/middleware/auth.js";
+import type { Topic } from "@/topics";
 
 const topicsRouter = express.Router();
 
@@ -96,7 +96,7 @@ topicsRouter.post(
 				.json(ServiceResponse.failure("Topic ID is required", null, 400));
 		}
 
-		const topicId = parseInt(topicIdParam, 10);
+		const topicId = Number.parseInt(topicIdParam, 10);
 		if (Number.isNaN(topicId)) {
 			return res
 				.status(400)

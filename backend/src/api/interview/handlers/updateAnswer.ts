@@ -2,8 +2,8 @@ import * as Sentry from "@sentry/node";
 import type { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
-import type { AuthenticatedRequest } from "@/common/middleware/auth.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import type { AuthenticatedRequest } from "@/middleware/auth.js";
 
 /**
  * HTTP handler for updating answer by question number
@@ -27,8 +27,8 @@ export const updateAnswer = async (
 	}
 
 	// convert interviewId and questionNumber to numbers
-	const interviewIdNumber = parseInt(interviewId ?? "", 10);
-	const questionNumberNumber = parseInt(questionNumber ?? "", 10);
+	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
+	const questionNumberNumber = Number.parseInt(questionNumber ?? "", 10);
 
 	if (
 		Number.isNaN(interviewIdNumber) ||
