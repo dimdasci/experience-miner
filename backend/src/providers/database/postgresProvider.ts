@@ -8,7 +8,7 @@ import type { DatabaseClient, IDatabaseProvider } from "@/providers";
  * Implements IDatabaseProvider interface
  */
 export class PostgresProvider implements IDatabaseProvider {
-	private pool: Pool;
+	private pool!: Pool;
 	/**
 	 * Helper to extract first row or throw error if not found
 	 */
@@ -20,6 +20,10 @@ export class PostgresProvider implements IDatabaseProvider {
 	}
 
 	constructor() {
+		this.initializePool();
+	}
+
+	private initializePool(): void {
 		this.pool = new Pool({
 			...databaseConfig.connection,
 			...databaseConfig.pool,
@@ -38,6 +42,12 @@ export class PostgresProvider implements IDatabaseProvider {
 		});
 	}
 
+	private ensurePoolAvailable(): void {
+		if (this.pool.ending === true || this.pool.ended === true) {
+			this.initializePool();
+		}
+	}
+
 	private async testConnection(): Promise<void> {
 		try {
 			const client = await this.pool.connect();
@@ -51,18 +61,8 @@ export class PostgresProvider implements IDatabaseProvider {
 	}
 
 	async query<T>(text: string, params: unknown[] = []): Promise<{ rows: T[] }> {
-		// Check if pool is already ended before attempting to connect
-		if (this.pool.ending === true) {
-			const error = new Error(
-				"Cannot use a pool after calling end on the pool",
-			);
-			// Use Sentry only for critical errors
-			Sentry.captureException(error, {
-				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } },
-			});
-			throw error;
-		}
+		// Ensure pool is available before querying
+		this.ensurePoolAvailable();
 
 		try {
 			const client = await this.pool.connect();
@@ -83,12 +83,14 @@ export class PostgresProvider implements IDatabaseProvider {
 	}
 
 	async getClient(): Promise<DatabaseClient> {
+		this.ensurePoolAvailable();
 		return await this.pool.connect();
 	}
 
 	async transaction<T>(
 		callback: (client: DatabaseClient) => Promise<T>,
 	): Promise<T> {
+		this.ensurePoolAvailable();
 		// Always pass a real PoolClient from pg
 		const client: DatabaseClient = await this.pool.connect();
 		try {
@@ -105,6 +107,7 @@ export class PostgresProvider implements IDatabaseProvider {
 	}
 
 	async initialize(): Promise<void> {
+		this.ensurePoolAvailable();
 		try {
 			await this.query("SELECT 1");
 		} catch (error) {
@@ -127,6 +130,7 @@ export class PostgresProvider implements IDatabaseProvider {
 
 	async isHealthy(): Promise<boolean> {
 		try {
+			this.ensurePoolAvailable();
 			await this.query("SELECT 1");
 			return true;
 		} catch {
