@@ -1,5 +1,8 @@
-# Multi-stage build for isolated backend service
-FROM node:18-alpine AS base
+# Multi-stage build for isolated backend service  
+FROM node:22-alpine AS base
+
+# Update packages and install security updates
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 
 # Set working directory
 WORKDIR /app
@@ -7,11 +10,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (all dependencies since we need them at runtime)
+RUN npm ci
 
 # Build stage
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
+
+# Update packages and install security updates
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
@@ -30,7 +36,10 @@ COPY instruments.mjs ./
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
+
+# Update packages and install security updates
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
