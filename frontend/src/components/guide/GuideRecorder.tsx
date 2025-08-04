@@ -51,14 +51,19 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
           questionNumber,
           recording.duration
         )
-        if (result.success && result.responseObject?.transcript) {
-          setTranscript(result.responseObject.transcript)
+        if (result.success && result.responseObject) {
+          // Backend returns the transcript as a string directly in responseObject
+          const transcriptText = typeof result.responseObject === 'string' 
+            ? result.responseObject 
+            : result.responseObject.transcript || result.responseObject;
+            
+          setTranscript(transcriptText)
           
           // Auto-submit the response immediately after transcription
           onDataUpdate({
             questionId: questionId,
             question: questionText,
-            response: result.responseObject.transcript,
+            response: transcriptText,
             timestamp: new Date().toISOString(),
             edited: false, // Mark as not manually edited
             audioUrl: undefined
@@ -73,7 +78,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
             component: 'GuideRecorder',
             data: {
               questionId: questionId,
-              transcriptLength: result.responseObject.transcript.length,
+              transcriptLength: transcriptText.length,
               duration: recording.duration
             }
           })

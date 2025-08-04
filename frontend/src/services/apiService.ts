@@ -147,14 +147,14 @@ class ApiService {
     return this.request('/credits')
   }
 
-  // Audio transcription (matches our backend)
+  // Audio transcription (matches our backend - returns transcript as string)
   async transcribeAudio(
     audioBlob: Blob, 
     question: string, 
     interviewId: number,
     questionNumber: number,
     recordingDuration?: number
-  ): Promise<ApiResponse<{ transcript: string }>> {
+  ): Promise<ApiResponse<string>> {
     const formData = new FormData()
     formData.append('audio', audioBlob, 'recording.webm')
     formData.append('question', question)
@@ -198,7 +198,7 @@ class ApiService {
       }
       return {
         success: false,
-        responseObject: { transcript: '' },
+        responseObject: '',
         message: error instanceof Error ? error.message : 'Transcription failed',
         statusCode: 500,
         error: error instanceof Error ? error.message : 'Transcription failed'
