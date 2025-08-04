@@ -38,6 +38,10 @@ export const INITIAL_TOPICS: InitialTopic[] = [
 				text: "Where do you see your story heading next? What feels like the right direction for you?",
 				order: 5,
 			},
+			{
+				text: "To wrap up, name all the employers and roles you've had in your career so far, in chronological order.",
+				order: 6,
+			},
 		],
 	},
 	{
@@ -66,6 +70,10 @@ export const INITIAL_TOPICS: InitialTopic[] = [
 				text: "Based on your wins and losses so far, what feels like a smart next step or area to focus on in your career?",
 				order: 5,
 			},
+			{
+				text: "To wrap up, can you walk me through the employers and roles you've had, with time frames? Feel free to mention any periods that stand out as especially challenging or rewarding.",
+				order: 6,
+			},
 		],
 	},
 	{
@@ -93,6 +101,10 @@ export const INITIAL_TOPICS: InitialTopic[] = [
 			{
 				text: "What kind of role or contribution would feel meaningful to you going forward?",
 				order: 5,
+			},
+			{
+				text: "To wrap up, would you share a quick overview of your career path—employers, roles, and time frames—and let me know where you feel you made your biggest impact?",
+				order: 6,
 			},
 		],
 	},
