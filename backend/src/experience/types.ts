@@ -11,39 +11,55 @@ export interface ExperienceRecord {
 
 // Generative AI types
 export const SourceRefSchema = z.object({
-	interview_id: z.number(),
-	question_number: z.number(),
-});
-
-export const AchievementSchema = z.object({
-	description: z.string(),
-	sources: z.array(SourceRefSchema),
-});
-
-export const CompanySchema = z.object({
-	name: z.string(),
-	sources: z.array(SourceRefSchema),
+	interview_id: z
+		.number()
+		.describe("Interview ID where the fact was extracted"),
+	question_number: z.number().describe("Question number in the interview"),
 });
 
 export const ProjectSchema = z.object({
-	name: z.string(),
-	description: z.string(),
-	role: z.string(),
-	company: z.string().optional(),
-	sources: z.array(SourceRefSchema),
+	name: z.string().describe("Project name"),
+	goal: z.string().describe("Goal of the project"),
+	achievements: z
+		.array(z.string())
+		.describe("Achievements user made in the project"),
 });
 
 export const RoleSchema = z.object({
-	title: z.string(),
-	company: z.string(),
-	duration: z.string(),
-	sources: z.array(SourceRefSchema),
-});
-
-export const SkillSchema = z.object({
-	name: z.string(),
-	category: z.string().optional(),
-	sources: z.array(SourceRefSchema),
+	title: z
+		.string()
+		.describe(
+			"Job title or role, explicit quote if specified, or the most relevant industry title if not specified explicitly",
+		),
+	company: z.string().describe("Company name, or 'unknown' if not specified"),
+	start_year: z
+		.string()
+		.describe(
+			"Start year of the role, e.g. '2020' or 'unknown' if not specified",
+		),
+	end_year: z
+		.string()
+		.describe(
+			"End year of the role, e.g. '2021' or 'unknown' if not specified",
+		),
+	experience: z
+		.string()
+		.describe(
+			"User experience in this role, as it was described in the interview, or 'unknown' if not specified",
+		),
+	projects: z
+		.array(ProjectSchema)
+		.describe(
+			"Projects user worked on in this role, or empty list if not specified",
+		),
+	skills: z
+		.array(z.string())
+		.describe("Skills used in this role, or empty list if not specified"),
+	sources: z
+		.array(SourceRefSchema)
+		.describe(
+			"Sources of information for this role, e.g. list of interview ID and question number",
+		),
 });
 
 export const ExtractedFactsSchema = z.object({
@@ -51,19 +67,16 @@ export const ExtractedFactsSchema = z.object({
 		text: z.string().describe("Summary text of the professional experience"),
 		basedOnInterviews: z.array(z.number()),
 	}),
-	companies: z.array(CompanySchema),
-	roles: z.array(RoleSchema),
-	projects: z.array(ProjectSchema),
-	achievements: z.array(AchievementSchema),
-	skills: z.array(SkillSchema),
+	roles: z
+		.array(RoleSchema)
+		.describe(
+			"List of roles user had in their career, with details about each role",
+		),
 });
 
 // Export types
 
 export type ExtractedFacts = z.infer<typeof ExtractedFactsSchema>;
-export type Achievement = z.infer<typeof AchievementSchema>;
-export type Company = z.infer<typeof CompanySchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type Role = z.infer<typeof RoleSchema>;
-export type Skill = z.infer<typeof SkillSchema>;
 export type SourceRef = z.infer<typeof SourceRefSchema>;
