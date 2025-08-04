@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { UserJourneyLogger } from '../utils/logger';
+import { useAuth } from './AuthContext';
 
 interface CreditsContextType {
   credits: number | null;
@@ -17,9 +18,14 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<number>(0);
+  const { user, loading: authLoading } = useAuth();
 
   // Fetch credits from the API
   const fetchCredits = useCallback(async (): Promise<number | null> => {
+    if (!user) {
+      console.log('User not authenticated, skipping credits fetch');
+      return null;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -53,20 +59,26 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [credits]);
+  }, [credits, user]);
 
   // Force refresh - mainly for after operations that consume credits
   const refreshCredits = useCallback(async (force = true): Promise<number | null> => {
+    if (!user) {
+      console.log('Cannot refresh credits: no authenticated user');
+      return null;
+    }
     if (!force && Date.now() - lastFetch < 5000) {
       return credits; // Use cached value if not forced and recent
     }
     return fetchCredits();
-  }, [credits, fetchCredits, lastFetch]);
+  }, [credits, fetchCredits, lastFetch, user]);
 
-  // Load credits when the app starts
+  // Load credits when a user is authenticated
   useEffect(() => {
-    fetchCredits();
-  }, []);
+    if (!authLoading && user) {
+      fetchCredits();
+    }
+  }, [authLoading, user, fetchCredits]);
 
   return (
     <CreditsContext.Provider value={{ 
