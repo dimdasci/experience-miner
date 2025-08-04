@@ -1,6 +1,6 @@
 import type { Answer } from "@/answers";
 import { aiConfig } from "@/config";
-import type { ExtractedFacts, SourceRef } from "@/experience/types";
+import type { ExtractedFacts, Role, SourceRef } from "@/experience/types";
 import type { Interview } from "@/interviews/types";
 
 /**
@@ -35,7 +35,7 @@ export function buildInterviewContext(
 		contextParts.push("No answers provided for this interview yet.");
 	}
 
-	return `<interview>\n${contextParts.join("\n\n")}\n</interview>`;
+	return `<interview id="${interview.id}">\n${contextParts.join("\n\n")}\n</interview>`;
 }
 
 /**
@@ -46,61 +46,49 @@ export function buildFactsContext(extractedFacts: ExtractedFacts): string {
 
 	const parts: string[] = [];
 
-	if (extractedFacts.companies?.length > 0) {
-		parts.push("<companies>");
-		parts.push(
-			`${extractedFacts.companies.map((c) => `<company name="${c.name}">${addSource(c.sources)}</company>`).join("\n")}`,
-		);
-	}
-
 	if (extractedFacts.roles?.length > 0) {
 		parts.push("<roles>");
-		parts.push(
-			extractedFacts.roles
-				.map(
-					(r) =>
-						`<role company="${r.company}" duration="${r.duration}">\n${addSource(r.sources)}\n<title>${r.title}</title>\n</role>`,
-				)
-				.join("\n"),
-		);
+		parts.push(extractedFacts.roles.map((r) => addRole(r)).join("\n"));
 		parts.push("</roles>");
 	}
+	parts.push("<summary>/n");
+	parts.push(`<text>${extractedFacts.summary.text}</text>`);
+	parts.push("</summary>");
 
-	if (extractedFacts.projects?.length > 0) {
+	return `<career_path>\n${parts.join("\n")}\n</career_path>`;
+}
+
+/**
+ * Add role information to context
+ */
+function addRole(role: Role): string {
+	const parts: string[] = [];
+	parts.push(
+		`<role company="${role.company}" start="${role.start_year}" end="${role.end_year}">`,
+	);
+	parts.push(`<title>${role.title}</title>`);
+	parts.push(`<experience>${role.experience}</experience>`);
+	if (role.projects && role.projects.length > 0) {
 		parts.push("<projects>");
 		parts.push(
-			extractedFacts.projects
+			role.projects
 				.map(
 					(p) =>
-						`<project name="${p.name}" role="${p.role}" company="${p.company}">\n${addSource(p.sources)}\n<description>${p.description}</description>\n</project>`,
+						`<project>\n<name>${p.name}</name>\n<goal>${p.goal}</goal>\n${p.achievements
+							.map((a) => `<achievement>${a}</achievement>`)
+							.join("\n")}\n</project>`,
 				)
 				.join("\n"),
 		);
 		parts.push("</projects>");
 	}
-
-	if (extractedFacts.skills?.length > 0) {
+	if (role.skills && role.skills.length > 0) {
 		parts.push("<skills>");
-		parts.push(
-			`${extractedFacts.skills.map((s) => `<skill name="${s.name}" category="${s.category}">\n${addSource(s.sources)}\n</skill>`).join("\n")}`,
-		);
+		parts.push(role.skills.map((s) => `<skill>${s}</skill>`).join("\n"));
 		parts.push("</skills>");
 	}
-
-	if (extractedFacts.achievements?.length > 0) {
-		parts.push("<achievements>");
-		parts.push(
-			extractedFacts.achievements
-				.map(
-					(a) =>
-						`<achievement>\n${addSource(a.sources)}\n<description>\n${a.description}\n</description>\n</achievement>`,
-				)
-				.join("\n"),
-		);
-		parts.push("</achievements>");
-	}
-
-	return `<career_path>\n${parts.join("\n")}\n</career_path>`;
+	parts.push(addSource(role.sources));
+	return `<role company="${role.company}" start="${role.start_year}" end="${role.end_year}">\n${addSource(role.sources)}\n<title>${role.title}</title>\n</role>`;
 }
 
 /**

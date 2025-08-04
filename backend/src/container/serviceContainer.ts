@@ -85,10 +85,7 @@ export class ServiceContainer {
 
 			// Initialize services
 			this.creditsService = new CreditsService();
-			this.topicService = new TopicService(
-				this.aiProvider,
-				this.topicRepository,
-			);
+			this.topicService = new TopicService(this.topicRepository);
 			this.answerService = new AnswerService(this.answerRepository);
 
 			// Initialize workflows
@@ -97,7 +94,6 @@ export class ServiceContainer {
 				this.creditsRepository,
 				this.creditsService,
 				this.topicRepository,
-				this.topicService,
 				this.experienceRepository,
 				this.interviewRepository,
 				this.aiProvider,

@@ -177,6 +177,35 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			}),
 			TE.bind("response", ({ request }) => this.callModel(request)),
 			TE.flatMap(({ isStructuredCall, request, response }) => {
+				// Log request and response details to Sentry
+				Sentry.logger?.debug?.("Gemini API request made", {
+					request: {
+						model: request.model,
+						userPrompt: request.contents,
+						maxOutputTokens: request.config?.maxOutputTokens,
+						temperature: request.config?.temperature,
+					},
+					response: {
+						candidates: response.candidates?.map((c) => ({
+							content: c.content,
+							finishReason: c.finishReason,
+							tokenCount: c.tokenCount,
+						})),
+						usage: {
+							promptTokenCount: response.usageMetadata?.promptTokenCount || 0,
+							cachedContentTokenCount:
+								response.usageMetadata?.cachedContentTokenCount || 0,
+							candidatesTokenCount:
+								response.usageMetadata?.candidatesTokenCount || 0,
+							toolUsePromptTokenCount:
+								response.usageMetadata?.toolUsePromptTokenCount || 0,
+							thoughtsTokenCount:
+								response.usageMetadata?.thoughtsTokenCount || 0,
+							totalTokenCount: response.usageMetadata?.totalTokenCount || 0,
+						},
+					},
+				});
+
 				if (isStructuredCall) {
 					if (!response.text) {
 						Sentry.logger?.error?.("Gemini API returned empty response", {

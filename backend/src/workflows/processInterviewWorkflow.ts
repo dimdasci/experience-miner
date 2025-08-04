@@ -13,25 +13,25 @@ import type {
 	IGenerativeAIProvider,
 } from "@/providers";
 import type { ModelResponse } from "@/providers/ai";
-import type { Topic, TopicRepository, TopicService } from "@/topics";
+import type { Topic, TopicRepository } from "@/topics";
 import { ExtractFactsFlow } from "./processInterview/extractFactsFlow";
+import { generateTopicsFlow } from "./processInterview/generateTopicsFlow";
 import { WorkflowBase } from "./shared/workflowBase";
 import type { WorkflowResult } from "./shared/workflowTypes";
 
 export class ProcessInterviewWorkflow extends WorkflowBase {
 	private databaseProvider: IDatabaseProvider;
 	private topicRepo: TopicRepository;
-	private topicService: TopicService;
 	private experienceRepo: ExperienceRepository;
 	private interviewRepo: InterviewRepository;
 	private extractFactsFlow: ExtractFactsFlow;
+	private generateTopicsFlow: generateTopicsFlow;
 
 	constructor(
 		databaseProvider: IDatabaseProvider,
 		creditsRepo: CreditsRepository,
 		creditsService: CreditsService,
 		topicRepo: TopicRepository,
-		topicService: TopicService,
 		experienceRepo: ExperienceRepository,
 		interviewRepo: InterviewRepository,
 		aiProvider: IGenerativeAIProvider,
@@ -40,7 +40,6 @@ export class ProcessInterviewWorkflow extends WorkflowBase {
 		super(creditsRepo, creditsService);
 		this.databaseProvider = databaseProvider;
 		this.topicRepo = topicRepo;
-		this.topicService = topicService;
 		this.experienceRepo = experienceRepo;
 		this.interviewRepo = interviewRepo;
 
@@ -51,6 +50,8 @@ export class ProcessInterviewWorkflow extends WorkflowBase {
 			answerRepo,
 			experienceRepo,
 		);
+
+		this.generateTopicsFlow = new generateTopicsFlow(aiProvider);
 	}
 
 	execute(userId: string, interviewId: number): TE.TaskEither<AppError, void> {
@@ -91,7 +92,7 @@ export class ProcessInterviewWorkflow extends WorkflowBase {
 
 				// Generate Topic Candidates
 				return pipe(
-					this.topicService.generateTopicCandidates(extractedFacts, userId),
+					this.generateTopicsFlow.execute(extractedFacts, userId),
 					TE.map((topicCandidatesResult: ModelResponse<Topic[]>) => ({
 						extractedFacts,
 						extractionTokenCount,
@@ -124,7 +125,7 @@ export class ProcessInterviewWorkflow extends WorkflowBase {
 					// return pipe(
 					// 	this.topicRepo.getAvailable(userId),
 					// 	TE.flatMap((availableTopics) =>
-					// 		this.topicService.rerankAllTopics(newTopics, availableTopics, extractedFacts)
+					// 		this.rerankTopicFlow.execute(newTopics, availableTopics, extractedFacts)
 					// 	),
 					// 	TE.map((rerankedResult) => ({
 					// 		...workflowResult,
