@@ -1,10 +1,13 @@
 import * as Sentry from "@sentry/node";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { IInterviewRepository } from "./IInterviewRepository";
 import type { Interview, InterviewStatus } from "./types.js";
 
 /**
- * PostgreSQL implementation of interview repository
+ * PostgreSQL implementation of interview repository using purely functional patterns
  */
 export class InterviewRepository implements IInterviewRepository {
 	private db: IDatabaseProvider;
@@ -13,117 +16,88 @@ export class InterviewRepository implements IInterviewRepository {
 		this.db = databaseProvider;
 	}
 
-	/**
-	 * Creates a new interview for the given user
-	 * @param userId User ID to associate with the interview
-	 * @param title Title of the interview
-	 * @param motivationalQuote Motivational quote for the interview
-	 * @param client Optional database client for transaction support
-	 * @return Created interview object
-	 */
-	async create(
+	create(
 		userId: string,
 		title: string,
 		motivationalQuote: string,
 		client?: DatabaseClient,
-	): Promise<Interview> {
-		const db = client || (await this.db.getClient());
-		const result = await db.query<Interview>(
-			`INSERT INTO interviews (user_id, title, motivational_quote, status, created_at, updated_at)
+	): TE.TaskEither<AppError, Interview> {
+		const db = client || this.db;
+		const insertQuery = `INSERT INTO interviews (user_id, title, motivational_quote, status, created_at, updated_at)
 			 VALUES ($1, $2, $3, 'draft', NOW(), NOW())
-			 RETURNING *`,
-			[userId, title, motivationalQuote],
+			 RETURNING *`;
+
+		return pipe(
+			db.queryFirst<Interview>(insertQuery, [userId, title, motivationalQuote]),
+			TE.map((interview: Interview) => {
+				Sentry.logger?.info?.("Interview created successfully", {
+					interviewId: interview.id,
+					userId: userId,
+					title: title,
+				});
+				return interview;
+			}),
 		);
-
-		const interview = this.db.getFirstRowOrThrow(
-			result,
-			"Interview insert failed - no rows returned",
-		);
-
-		Sentry.logger?.info?.("Interview created successfully", {
-			interviewId: interview.id,
-			userId: userId,
-			title: title,
-		});
-
-		return interview;
 	}
 
-	async getById(
+	getById(
 		userId: string,
 		interviewId: number,
-	): Promise<Interview | null> {
-		const result = await this.db.query<Interview>(
+	): TE.TaskEither<AppError, Interview> {
+		return this.db.queryFirst<Interview>(
 			"SELECT * FROM interviews WHERE id = $1 AND user_id = $2",
 			[interviewId, userId],
 		);
-
-		return result.rows.length > 0 ? (result.rows[0] ?? null) : null;
 	}
 
-	async getAllByUserId(userId: string): Promise<Interview[]> {
-		const result = await this.db.query<Interview>(
-			`SELECT * FROM interviews 
-			 WHERE user_id = $1 
-			 ORDER BY created_at DESC`,
-			[userId],
+	getAllByUserId(userId: string): TE.TaskEither<AppError, Interview[]> {
+		return pipe(
+			this.db.query<Interview>(
+				`SELECT * FROM interviews 
+				 WHERE user_id = $1 
+				 ORDER BY created_at DESC`,
+				[userId],
+			),
+			TE.map((result) => result.rows),
 		);
-
-		return result.rows.length > 0 ? result.rows : [];
 	}
 
-	/**
-	 * Updates the status of an interview
-	 * @param interviewId ID of the interview to update
-	 * @param status New status to set
-	 * @param client Optional database client for transaction support
-	 * @return Updated interview object
-	 */
-	async updateStatus(
+	updateStatus(
 		userId: string,
 		interviewId: number,
 		status: InterviewStatus,
 		client?: DatabaseClient,
-	): Promise<Interview> {
-		const db = client || (await this.db.getClient());
-		const result = await db.query<Interview>(
-			`UPDATE interviews 
+	): TE.TaskEither<AppError, Interview> {
+		const db = client || this.db;
+		const updateQuery = `UPDATE interviews 
 			 SET status = $1, updated_at = NOW() 
 			 WHERE id = $2 AND user_id = $3
-			 RETURNING *`,
-			[status, interviewId, userId],
+			 RETURNING *`;
+
+		return pipe(
+			db.queryFirst<Interview>(updateQuery, [status, interviewId, userId]),
+			TE.map((interview: Interview) => {
+				Sentry.logger?.info?.("Interview status updated", {
+					interviewId,
+					newStatus: status,
+				});
+				return interview;
+			}),
 		);
-
-		const interview = this.db.getFirstRowOrThrow(
-			result,
-			"Interview update failed - interview not found",
-		);
-
-		Sentry.logger?.info?.("Interview status updated", {
-			interviewId,
-			newStatus: status,
-		});
-
-		return interview;
 	}
 
-	async delete(userId: string, interviewId: number): Promise<void> {
-		// Delete in correct order due to foreign key constraints
-
-		// First delete answers
-		await this.db.query(
-			"DELETE FROM answers WHERE interview_id = $1 AND user_id = $2",
-			[interviewId, userId],
+	delete(userId: string, interviewId: number): TE.TaskEither<AppError, void> {
+		return pipe(
+			this.db.query("DELETE FROM interviews WHERE id = $1 AND user_id = $2", [
+				interviewId,
+				userId,
+			]),
+			// Log successful deletion
+			TE.map(() => {
+				Sentry.logger?.info?.("Interview and related data deleted", {
+					interviewId,
+				});
+			}),
 		);
-
-		// Then delete the interview
-		await this.db.query(
-			"DELETE FROM interviews WHERE id = $1 AND user_id = $2",
-			[interviewId, userId],
-		);
-
-		Sentry.logger?.info?.("Interview and related data deleted", {
-			interviewId,
-		});
 	}
 }

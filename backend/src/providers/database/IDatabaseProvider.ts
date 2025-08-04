@@ -1,62 +1,89 @@
-/**
- * Generic database client interface for different implementations
- */
+import type * as E from "fp-ts/lib/Either";
+import type * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 
-// DatabaseClient is structurally compatible with PoolClient
+/**
+ * Functional database client interface using TaskEither patterns
+ */
 export interface DatabaseClient {
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for generic client methods
-	query<T = any>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+	/**
+	 * Execute a SQL query with functional error handling
+	 */
+	query<T>(
+		sql: string,
+		params?: unknown[],
+	): TE.TaskEither<AppError, { rows: T[] }>;
+
+	/**
+	 * Extract first row from query result using Either for pure functional composition
+	 */
+	getFirstRow<T>(
+		result: E.Either<AppError, { rows: T[] }>,
+	): E.Either<AppError, T>;
+
+	/**
+	 * Functional pipeline helper: query and extract first row in one operation
+	 */
+	queryFirst<T>(sql: string, params?: unknown[]): TE.TaskEither<AppError, T>;
+
+	/**
+	 * Release the client connection
+	 */
 	release(): void;
 }
 
 /**
- * Database Provider interface for abstracting different database implementations
- * Supports query execution, transactions, and connection management
+ * Functional Database Provider interface with pure functional error handling
+ * All methods use TaskEither and Either patterns for composable error handling
  */
 export interface IDatabaseProvider {
 	/**
-	 * Execute a SQL query with optional parameters
-	 * @param sql - The SQL query string
-	 * @param params - Optional query parameters
-	 * @returns Promise with query results
+	 * Execute a SQL query with functional error handling
 	 */
-	query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[] }>;
+	query<T>(
+		sql: string,
+		params?: unknown[],
+	): TE.TaskEither<AppError, { rows: T[] }>;
 
 	/**
-	 * Extract first row from query result or throw error if not found
-	 * @param result - Query result object with rows
-	 * @param errorMessage - Error message to throw if no row found
+	 * Extract first row from query result using Either for pure functional composition
 	 */
-	getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T;
+	getFirstRow<T>(
+		result: E.Either<AppError, { rows: T[] }>,
+	): E.Either<AppError, T>;
 
 	/**
-	 * Execute multiple operations within a database transaction
-	 * @param callback - Function to execute within transaction
-	 * @returns Promise with transaction result
+	 * Functional pipeline helper: query and extract first row in one operation
 	 */
-	transaction<T>(callback: (client: DatabaseClient) => Promise<T>): Promise<T>;
+	queryFirst<T>(sql: string, params?: unknown[]): TE.TaskEither<AppError, T>;
 
 	/**
-	 * Get a database client for manual connection management
-	 * @returns Promise with database client
+	 * Get a functional database client for manual connection management
 	 */
-	getClient(): Promise<DatabaseClient>;
+	getClient(): TE.TaskEither<AppError, DatabaseClient>;
+
+	/**
+	 * Execute multiple operations within a transaction with functional error handling
+	 */
+	transaction<T>(
+		callback: (client: DatabaseClient) => TE.TaskEither<AppError, T>,
+	): TE.TaskEither<AppError, T>;
 
 	/**
 	 * Initialize database connection and perform setup
-	 * @returns Promise that resolves when initialization is complete
+	 * @returns TaskEither that resolves when initialization is complete
 	 */
-	initialize(): Promise<void>;
+	initialize(): TE.TaskEither<AppError, void>;
 
 	/**
 	 * Close database connections and cleanup resources
-	 * @returns Promise that resolves when cleanup is complete
+	 * @returns TaskEither that resolves when cleanup is complete
 	 */
-	close(): Promise<void>;
+	close(): TE.TaskEither<AppError, void>;
 
 	/**
 	 * Health check for database connectivity
-	 * @returns Promise with boolean indicating database health
+	 * @returns TaskEither with boolean indicating database health
 	 */
-	isHealthy(): Promise<boolean>;
+	isHealthy(): TE.TaskEither<AppError, boolean>;
 }

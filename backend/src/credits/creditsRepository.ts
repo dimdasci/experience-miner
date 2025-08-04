@@ -1,11 +1,15 @@
 import * as Sentry from "@sentry/node";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { creditsConfig } from "@/config/credits.js";
+import type { AppError } from "@/errors";
+import { AppErrors } from "@/errors";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { ICreditsRepository } from "./ICreditsRepository";
 import type { CreditRecord, SourceType } from "./types.js";
 
 /**
- * PostgreSQL implementation of credits repository
+ * PostgreSQL implementation of credits repository using purely functional patterns
  */
 export class CreditsRepository implements ICreditsRepository {
 	private db: IDatabaseProvider;
@@ -14,106 +18,136 @@ export class CreditsRepository implements ICreditsRepository {
 		this.db = databaseProvider;
 	}
 
-	async getCurrentBalance(userId: string): Promise<number> {
-		const result = await this.db.query<{ total: string }>(
-			"SELECT COALESCE(SUM(amount), 0) as total FROM credits WHERE user_id = $1",
-			[userId],
+	getCurrentBalance(userId: string): TE.TaskEither<AppError, number> {
+		return pipe(
+			this.db.queryFirst<{ total: string }>(
+				"SELECT COALESCE(SUM(amount), 0) as total FROM credits WHERE user_id = $1",
+				[userId],
+			),
+			TE.map((row: { total: string }) => Number.parseInt(row.total || "0", 10)),
 		);
-		return Number.parseInt(result.rows[0]?.total || "0", 10);
 	}
 
-	async addCredits(
+	addCredits(
 		userId: string,
 		amount: number,
 		sourceType: SourceType,
 		sourceAmount: number = amount,
 		sourceUnit: string = "CREDITS",
 		client?: DatabaseClient,
-	): Promise<CreditRecord> {
-		const db = client || (await this.db.getClient());
-
+	): TE.TaskEither<AppError, CreditRecord> {
+		// Early validation
 		if (amount <= 0) {
-			throw new Error("Amount must be greater than zero");
+			return TE.left(
+				AppErrors.validationFailed(
+					"amount",
+					amount,
+					"must be greater than zero",
+				),
+			);
 		}
-		const result = await db.query<CreditRecord>(
-			`INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
-			 VALUES ($1, $2, $3, $4, $5)
-			 RETURNING *`,
-			[userId, amount, sourceAmount, sourceType, sourceUnit],
+
+		const db = client || this.db;
+		const insertQuery = `INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
+							 VALUES ($1, $2, $3, $4, $5)
+							 RETURNING *`;
+
+		return pipe(
+			db.queryFirst<CreditRecord>(insertQuery, [
+				userId,
+				amount,
+				sourceAmount,
+				sourceType,
+				sourceUnit,
+			]),
+			// Log success and return
+			TE.map((transaction: CreditRecord) => {
+				Sentry.logger?.info?.("Credits added successfully", {
+					user_id: userId,
+					amount,
+					sourceType,
+					sourceAmount,
+					sourceUnit,
+					transaction_id: transaction.id,
+				});
+				return transaction;
+			}),
 		);
-
-		const transaction = this.db.getFirstRowOrThrow(
-			result,
-			"Credit transaction insert failed - no rows returned",
-		);
-
-		Sentry.logger?.info?.("Credits added successfully", {
-			user_id: userId,
-			amount,
-			sourceType,
-			sourceAmount,
-			sourceUnit,
-			transaction_id: transaction.id,
-		});
-
-		return transaction;
 	}
 
-	async consumeCredits(
+	consumeCredits(
 		userId: string,
 		tokensUsed: number,
-		sourceType:
-			| "transcriber"
-			| "extractor"
-			| "topic_generator"
-			| "topic_ranker",
+		sourceType: SourceType,
 		client?: DatabaseClient,
-	): Promise<CreditRecord> {
-		let rate: number;
-		const db = client || (await this.db.getClient());
-
+	): TE.TaskEither<AppError, CreditRecord> {
+		// Early validation
 		if (tokensUsed <= 0) {
-			throw new Error("Tokens used must be greater than zero");
+			return TE.left(
+				AppErrors.validationFailed(
+					"tokensUsed",
+					tokensUsed,
+					"must be greater than zero",
+				),
+			);
 		}
+
+		const insertQuery = `INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
+							 VALUES ($1, $2, $3, $4, $5)
+							 RETURNING *`;
+
+		return pipe(
+			this.getRate(sourceType),
+			TE.map((rate) => {
+				const sourceAmount = tokensUsed / 1000; // Convert to K_TOKENS
+				const creditsToConsume = Math.max(1, Math.ceil(sourceAmount * rate));
+				return { sourceAmount, creditsToConsume };
+			}),
+			// Execute credit consumption and extract first row
+			TE.flatMap(({ sourceAmount, creditsToConsume }) => {
+				const db = client || this.db;
+				return db.queryFirst<CreditRecord>(insertQuery, [
+					userId,
+					-creditsToConsume,
+					sourceAmount,
+					sourceType,
+					"K_TOKENS",
+				]);
+			}),
+			// Log success and return
+			TE.map((credits: CreditRecord) => {
+				Sentry.logger?.info?.("Credits consumed successfully", {
+					user_id: userId,
+					tokensUsed,
+					sourceType,
+					creditsConsumed: credits.amount,
+				});
+				return credits;
+			}),
+		);
+	}
+
+	/**
+	 * Get rate for source type - pure function that returns TaskEither
+	 */
+	private getRate(sourceType: SourceType): TE.TaskEither<AppError, number> {
 		switch (sourceType) {
 			case "transcriber":
-				rate = creditsConfig.rates.transcriber;
-				break;
+				return TE.right(creditsConfig.rates.transcriber);
 			case "extractor":
-				rate = creditsConfig.rates.extractor;
-				break;
+				return TE.right(creditsConfig.rates.extractor);
 			case "topic_generator":
-				rate = creditsConfig.rates.topicGeneration;
-				break;
+				return TE.right(creditsConfig.rates.topicGeneration);
 			case "topic_ranker":
-				rate = creditsConfig.rates.topicReranking;
-				break;
+				return TE.right(creditsConfig.rates.topicReranking);
 			default:
-				throw new Error(`Unknown source type: ${sourceType}`);
+				return TE.left(
+					AppErrors.validationFailed(
+						"sourceType",
+						sourceType,
+						"unknown source type",
+					),
+				);
 		}
-
-		const sourceAmount = tokensUsed / 1000; // Convert to K_TOKENS
-		const creditsToConsume = Math.max(1, Math.ceil(sourceAmount * rate)); // Minimum 1 credit
-
-		const result = await db.query<CreditRecord>(
-			`INSERT INTO credits (user_id, amount, source_amount, source_type, source_unit)
-				VALUES ($1, $2, $3, $4, $5)
-				RETURNING *`,
-			[userId, -creditsToConsume, sourceAmount, sourceType, "K_TOKENS"],
-		);
-
-		const credits = this.db.getFirstRowOrThrow(
-			result,
-			"Credit transaction insert failed - no rows returned",
-		);
-
-		Sentry.logger?.info?.("Credits consumed successfully", {
-			user_id: userId,
-			tokensUsed,
-			sourceType,
-			creditsConsumed: credits.amount,
-		});
-
-		return credits;
 	}
 }

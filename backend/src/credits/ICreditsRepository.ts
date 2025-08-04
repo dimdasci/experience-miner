@@ -1,13 +1,16 @@
+import type * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
+import type { DatabaseClient } from "@/providers";
 import type { CreditRecord, SourceType } from "./types.js";
 
 /**
- * Repository interface for credit operations
+ * Repository interface for credit operations using functional patterns
  */
 export interface ICreditsRepository {
 	/**
 	 * Get current credit balance for user
 	 */
-	getCurrentBalance(userId: string): Promise<number>;
+	getCurrentBalance(userId: string): TE.TaskEither<AppError, number>;
 
 	/**
 	 * Add credits to user account
@@ -18,7 +21,8 @@ export interface ICreditsRepository {
 		sourceType: SourceType,
 		sourceAmount?: number,
 		sourceUnit?: string,
-	): Promise<CreditRecord>;
+		client?: DatabaseClient,
+	): TE.TaskEither<AppError, CreditRecord>;
 
 	/**
 	 * Consume credits based on token usage and source type
@@ -31,5 +35,6 @@ export interface ICreditsRepository {
 			| "extractor"
 			| "topic_generator"
 			| "topic_ranker",
-	): Promise<CreditRecord>;
+		client?: DatabaseClient,
+	): TE.TaskEither<AppError, CreditRecord>;
 }

@@ -5,9 +5,12 @@ import {
 	GoogleGenAI,
 } from "@google/genai";
 import * as Sentry from "@sentry/node";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import type { ZodTypeAny, z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { aiConfig, type RateLimitConfig } from "@/config/ai.js";
+import { AppError, BadRequestError, ServiceUnavailableError } from "@/errors";
 import type { IGenerativeAIProvider } from "@/providers/ai/IGenerativeAIProvider";
 import type { MediaData, ModelResponse, Usage } from "./types.js";
 
@@ -109,8 +112,8 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
-	// Overload signatures
-	async generateCompletion<T extends ZodTypeAny>(
+	// Functional overload signatures
+	generateCompletion<T extends ZodTypeAny>(
 		model: string,
 		systemPrompt: string,
 		userPrompt: string,
@@ -118,9 +121,9 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		temperature: number | undefined,
 		maxOutputTokens: number | undefined,
 		responseSchema: T,
-	): Promise<ModelResponse<z.infer<T>>>;
+	): TE.TaskEither<AppError, ModelResponse<z.infer<T>>>;
 
-	async generateCompletion(
+	generateCompletion(
 		model: string,
 		systemPrompt: string,
 		userPrompt: string,
@@ -128,10 +131,10 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		temperature: number | undefined,
 		maxOutputTokens: number | undefined,
 		responseSchema: string,
-	): Promise<string>;
+	): TE.TaskEither<AppError, ModelResponse<string>>;
 
-	// Implementation
-	async generateCompletion<T extends ZodTypeAny>(
+	// Functional implementation
+	generateCompletion<T extends ZodTypeAny>(
 		model: string,
 		systemPrompt: string,
 		userPrompt: string,
@@ -139,127 +142,163 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		temperature?: number,
 		maxOutputTokens?: number,
 		responseSchema?: T | string,
-	): Promise<ModelResponse<z.infer<T>> | string> {
-		const isStructuredCall =
-			responseSchema &&
-			typeof (responseSchema as ZodTypeAny).safeParse === "function";
+	): TE.TaskEither<
+		AppError,
+		ModelResponse<z.infer<T>> | ModelResponse<string>
+	> {
+		return pipe(
+			TE.Do,
+			TE.bind("isStructuredCall", () =>
+				TE.right(
+					responseSchema &&
+						typeof (responseSchema as ZodTypeAny).safeParse === "function",
+				),
+			),
+			TE.bind("request", ({ isStructuredCall }) => {
+				const request: GenerateContentParameters = isStructuredCall
+					? this.makeStructuredRequest(
+							model,
+							systemPrompt,
+							userPrompt,
+							zodToJsonSchema(responseSchema as ZodTypeAny),
+							media,
+							temperature,
+							maxOutputTokens,
+						)
+					: this.makeRequest(
+							model,
+							systemPrompt,
+							userPrompt,
+							media,
+							temperature,
+							maxOutputTokens,
+						);
+				return TE.right(request);
+			}),
+			TE.bind("response", ({ request }) => this.callModel(request)),
+			TE.flatMap(({ isStructuredCall, request, response }) => {
+				if (isStructuredCall) {
+					if (!response.text) {
+						Sentry.logger?.error?.("Gemini API returned empty response", {
+							model: request.model,
+							hasUsageMetadata: !!response.usageMetadata,
+							responseKeys: Object.keys(response),
+							fullResponse: response,
+						});
+						return TE.left(new BadRequestError("Gemini API response is empty"));
+					}
 
-		// Request construction
-		const request: GenerateContentParameters = isStructuredCall
-			? this.makeStructuredRequest(
-					model,
-					systemPrompt,
-					userPrompt,
-					zodToJsonSchema(responseSchema as ZodTypeAny),
-					media,
-					temperature,
-					maxOutputTokens,
-				)
-			: this.makeRequest(
-					model,
-					systemPrompt,
-					userPrompt,
-					media,
-					temperature,
-					maxOutputTokens,
-				);
+					// At this point, response.text is guaranteed to be defined
+					const responseText = response.text;
 
-		// Single call
-		const response = await this.callModel(request);
-
-		// Response processing
-		if (isStructuredCall) {
-			if (!response.text) {
-				throw new Error("Gemini API response is empty");
-			}
-			try {
-				const parsedObject = (responseSchema as ZodTypeAny).parse(
-					JSON.parse(response.text),
-				);
-				return {
-					data: parsedObject,
-					usage: {
-						inputTokens: response.usageMetadata?.promptTokenCount || 0,
-						outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
-					} as Usage,
-				} as ModelResponse<z.infer<T>>;
-			} catch (error) {
-				Sentry.logger?.error?.("Failed to parse Gemini API response", {
-					error: error instanceof Error ? error.message : "Unknown error",
-					schema: zodToJsonSchema(responseSchema as ZodTypeAny),
-					result: response.text,
-				});
-				throw new Error("Failed to parse Gemini API response");
-			}
-		} else {
-			return {
-				data: response.text ?? "",
-				usage: {
-					inputTokens: response.usageMetadata?.promptTokenCount || 0,
-					outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
-				} as Usage,
-			} as ModelResponse<string>;
-		}
+					return TE.tryCatch(
+						() =>
+							Promise.resolve({
+								data: (responseSchema as ZodTypeAny).parse(
+									JSON.parse(responseText),
+								),
+								usage: {
+									inputTokens: response.usageMetadata?.promptTokenCount || 0,
+									outputTokens:
+										response.usageMetadata?.candidatesTokenCount || 0,
+								} as Usage,
+							} as ModelResponse<z.infer<T>>),
+						(error) => {
+							Sentry.logger?.error?.("Failed to parse Gemini API response", {
+								error: error instanceof Error ? error.message : "Unknown error",
+								schema: zodToJsonSchema(responseSchema as ZodTypeAny),
+								responseText: responseText,
+								responseLength: responseText.length,
+							});
+							return new BadRequestError("Failed to parse Gemini API response");
+						},
+					);
+				} else {
+					return TE.right({
+						data: response.text ?? "",
+						usage: {
+							inputTokens: response.usageMetadata?.promptTokenCount || 0,
+							outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
+						} as Usage,
+					} as ModelResponse<string>);
+				}
+			}),
+		);
 	}
 
-	private async callModel(
+	private callModel(
 		request: GenerateContentParameters,
-	): Promise<GenerateContentResponse> {
-		// Implementation for calling the model with the request
-		if (!this.isHealthy) {
-			throw new Error("Gemini AI connection is not healthy");
-		}
-		let attempt = 0;
-		let backoffMs = 1000;
-
-		while (attempt < this.rateLimitConfig.maxRetries) {
-			const rateLimitCheck = this.canMakeRequest();
-			if (!rateLimitCheck.allowed && rateLimitCheck.waitTime) {
-				if (rateLimitCheck.waitTime > 5000) {
-					throw new Error(
-						`Rate limit exceeded. Wait ${Math.ceil(rateLimitCheck.waitTime / 1000)} seconds.`,
+	): TE.TaskEither<AppError, GenerateContentResponse> {
+		return TE.tryCatch(
+			async () => {
+				// Health check
+				if (!this.isHealthy) {
+					throw new ServiceUnavailableError(
+						"Gemini AI connection is not healthy",
 					);
 				}
-				await this.sleep(rateLimitCheck.waitTime);
-			}
 
-			try {
-				this.trackRequest();
-				const result: GenerateContentResponse =
-					await this.client.models.generateContent(request);
+				let attempt = 0;
+				let backoffMs = 1000;
 
-				backoffMs = 1000;
-				Sentry.logger?.debug?.("Gemini API request successful", {
-					attempt: attempt + 1,
-				});
+				while (attempt < this.rateLimitConfig.maxRetries) {
+					const rateLimitCheck = this.canMakeRequest();
+					if (!rateLimitCheck.allowed && rateLimitCheck.waitTime) {
+						if (rateLimitCheck.waitTime > 5000) {
+							throw new ServiceUnavailableError(
+								`Rate limit exceeded. Wait ${Math.ceil(rateLimitCheck.waitTime / 1000)} seconds.`,
+							);
+						}
+						await this.sleep(rateLimitCheck.waitTime);
+					}
 
-				return result;
-			} catch (error) {
-				attempt++;
-				Sentry.logger?.warn?.("Gemini API request failed", {
-					attempt,
-					maxRetries: this.rateLimitConfig.maxRetries,
-					error: error instanceof Error ? error.message : "Unknown error",
-					backoffMs,
-				});
+					try {
+						this.trackRequest();
+						const result: GenerateContentResponse =
+							await this.client.models.generateContent(request);
 
-				if (attempt >= this.rateLimitConfig.maxRetries) {
-					this.isProviderHealthy = false;
-					Sentry.captureException(error, {
-						tags: { service: "gemini", operation: "generateCompletion" },
-						extra: { attempts: attempt, finalBackoff: backoffMs },
-					});
-					throw new Error(
-						`Gemini AI request failed after ${attempt} attempts: ${
-							error instanceof Error ? error.message : "Unknown error"
-						}`,
-					);
+						backoffMs = 1000;
+						Sentry.logger?.debug?.("Gemini API request successful", {
+							attempt: attempt + 1,
+						});
+
+						return result;
+					} catch (error) {
+						attempt++;
+						Sentry.logger?.warn?.("Gemini API request failed", {
+							attempt,
+							maxRetries: this.rateLimitConfig.maxRetries,
+							error: error instanceof Error ? error.message : "Unknown error",
+							backoffMs,
+						});
+
+						if (attempt >= this.rateLimitConfig.maxRetries) {
+							this.isProviderHealthy = false;
+							Sentry.captureException(error, {
+								tags: { service: "gemini", operation: "generateCompletion" },
+								extra: { attempts: attempt, finalBackoff: backoffMs },
+							});
+							throw new ServiceUnavailableError(
+								`Gemini AI request failed after ${attempt} attempts: ${
+									error instanceof Error ? error.message : "Unknown error"
+								}`,
+							);
+						}
+						await this.sleep(backoffMs);
+						backoffMs *= this.rateLimitConfig.backoffMultiplier;
+					}
 				}
-				await this.sleep(backoffMs);
-				backoffMs *= this.rateLimitConfig.backoffMultiplier;
-			}
-		}
-		throw new Error("Unexpected end of retry loop");
+				throw new ServiceUnavailableError("Unexpected end of retry loop");
+			},
+			(error) => {
+				if (error instanceof AppError) {
+					return error;
+				}
+				return new ServiceUnavailableError(
+					error instanceof Error ? error.message : String(error),
+				);
+			},
+		);
 	}
 
 	private makeRequest(

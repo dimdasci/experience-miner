@@ -1,7 +1,16 @@
+import type * as TE from "fp-ts/lib/TaskEither";
 import type { ZodTypeAny, z } from "zod";
+import type { AppError } from "@/errors";
 import type { MediaData, ModelResponse } from "./types.js";
 
+/**
+ * Functional AI provider interface using TaskEither for composable error handling
+ * Following the golden standard established by IDatabaseProvider
+ */
 export interface IGenerativeAIProvider {
+	/**
+	 * Generate completion with structured response schema
+	 */
 	generateCompletion<T extends ZodTypeAny>(
 		model: string,
 		systemPrompt: string,
@@ -10,8 +19,11 @@ export interface IGenerativeAIProvider {
 		temperature?: number,
 		maxOutputTokens?: number,
 		responseSchema?: T,
-	): Promise<ModelResponse<z.infer<T>>>;
+	): TE.TaskEither<AppError, ModelResponse<z.infer<T>>>;
 
+	/**
+	 * Generate completion with string response
+	 */
 	generateCompletion(
 		model: string,
 		systemPrompt: string,
@@ -20,16 +32,16 @@ export interface IGenerativeAIProvider {
 		temperature?: number,
 		maxOutputTokens?: number,
 		responseSchema?: string,
-	): Promise<ModelResponse<string>>;
+	): TE.TaskEither<AppError, ModelResponse<string>>;
 
 	/**
-	 * Close database connections and cleanup resources
+	 * Close connections and cleanup resources
 	 */
 	close(): void;
 
 	/**
-	 * Health check for database connectivity
-	 * @returns Boolean indicating database health
+	 * Health check for provider connectivity
+	 * @returns Boolean indicating provider health
 	 */
 	isHealthy(): boolean;
 }
