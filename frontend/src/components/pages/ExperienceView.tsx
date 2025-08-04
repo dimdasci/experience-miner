@@ -1,33 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Briefcase, Award, Code, Target, AlertCircle, Clock } from 'lucide-react'
+import { User, Briefcase, Target, AlertCircle, Calendar } from 'lucide-react'
 import { apiService } from '../../services/apiService'
 import { UserJourneyLogger } from '../../utils/logger'
-import { 
-  Achievement, 
-  Company, 
-  Project, 
-  Role, 
-  Skill
-} from '../../types/business'
-
-// Define the structure we'll use directly from the API
-interface ExtractedFacts {
-  achievements: Achievement[];
-  companies: Company[];
-  projects: Project[];
-  roles: Role[];
-  skills: Skill[];
-  summary: {
-    basedOnInterviews: number[];
-    text?: string; // Optional for UI display
-    lastUpdated?: string; // Optional for UI display
-  };
-  metadata?: {
-    totalExtractions: number;
-    lastExtractionAt: string;
-    creditsUsed: number;
-  };
-}
+import { ExtractedFacts, ProfessionalSummary } from '../../types/business'
 
 interface ExperienceViewProps {
   onRestart?: () => void
@@ -46,29 +21,8 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
       const response = await apiService.getExperienceData()
       
       if (response.success) {
-        // Use the data directly from the API with minimal transformation
-        const backendData = response.responseObject.extractedFacts;
-        
-        // Just add some UI-specific fields if they don't exist
-        const extractedData: ExtractedFacts = {
-          achievements: backendData.achievements || [],
-          companies: backendData.companies || [],
-          projects: backendData.projects || [],
-          roles: backendData.roles || [],
-          skills: backendData.skills || [],
-          summary: {
-            basedOnInterviews: backendData.summary?.basedOnInterviews || [],
-            text: backendData.summary?.text || "No summary available",
-            lastUpdated: new Date().toISOString()
-          },
-          metadata: {
-            totalExtractions: backendData.metadata?.totalExtractions || 1,
-            lastExtractionAt: backendData.metadata?.lastExtractionAt || new Date().toISOString(),
-            creditsUsed: backendData.metadata?.creditsUsed || 0
-          }
-        };
-        
-        setExperienceData(extractedData);
+        const professionalSummary = response.responseObject as ProfessionalSummary;
+        setExperienceData(professionalSummary.extractedFacts);
       } else {
         // Special handling for duplicate requests - don't treat as errors
         if (response.isDuplicate || response.statusCode === 429) {
@@ -160,12 +114,6 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
         <p className="text-gray-600">
           Organized insights from your career interviews
         </p>
-        {experienceData.metadata?.lastExtractionAt && (
-          <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            Last updated: {new Date(experienceData.metadata.lastExtractionAt).toLocaleDateString()}
-          </div>
-        )}
       </header>
 
       <div className="space-y-6">
@@ -183,165 +131,100 @@ const ExperienceView: React.FC<ExperienceViewProps> = ({
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Companies */}
-          {experienceData.companies && experienceData.companies.length > 0 && (
-            <div className="bg-white rounded-lg border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="w-5 h-5 text-blue-600" />
-                <h2 className="text-xl font-semibold">Companies</h2>
-              </div>
-              <div className="space-y-2">
-                {experienceData.companies.map((company, index) => (
-                  <div key={index} className="p-3 bg-blue-50 rounded border">
-                    <div className="font-medium">{company.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {company.sources.map((source, idx) => (
-                        <span key={idx} className="inline-block mr-2">
-                          Interview {source.interview_id} • Q{source.question_number}
-                          {idx < company.sources.length - 1 ? ', ' : ''}
+        {/* Roles */}
+        {experienceData.roles && experienceData.roles.length > 0 && (
+          <div className="space-y-6">
+            {experienceData.roles.map((role, roleIndex) => (
+              <div key={roleIndex} className="bg-white rounded-lg border shadow-sm p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <h2 className="text-xl font-semibold">{role.title}</h2>
+                      <div className="text-lg text-gray-700">{role.company}</div>
+                    </div>
+                  </div>
+                  {(role.start_year !== 'unknown' || role.end_year !== 'unknown') && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {role.start_year !== 'unknown' ? role.start_year : '?'} - {role.end_year !== 'unknown' ? role.end_year : '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Role Experience */}
+                {role.experience && role.experience !== 'unknown' && (
+                  <div className="mb-4">
+                    <p className="text-gray-700 leading-relaxed">{role.experience}</p>
+                  </div>
+                )}
+
+                {/* Projects for this role */}
+                {role.projects && role.projects.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="w-4 h-4 text-orange-600" />
+                      <h3 className="font-semibold text-gray-900">Projects</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {role.projects.map((project, projectIndex) => (
+                        <div key={projectIndex} className="p-4 bg-orange-50 rounded">
+                          <div className="font-medium mb-2">{project.name}</div>
+                          <div className="text-sm text-gray-600 mb-3">{project.goal}</div>
+                          {project.achievements && project.achievements.length > 0 && (
+                            <div>
+                              <div className="text-xs font-semibold text-orange-700 mb-2">Achievements:</div>
+                              <ul className="text-sm text-gray-700 space-y-1">
+                                {project.achievements.map((achievement, achIndex) => (
+                                  <li key={achIndex}>• {achievement}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills for this role */}
+                {role.skills && role.skills.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {role.skills.map((skill, skillIndex) => (
+                        <span key={skillIndex} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                          {skill}
                         </span>
                       ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Roles */}
-          {experienceData.roles && experienceData.roles.length > 0 && (
-            <div className="bg-white rounded-lg border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-purple-600" />
-                <h2 className="text-xl font-semibold">Roles</h2>
-              </div>
-              <div className="space-y-3">
-                {experienceData.roles.map((role, index) => (
-                  <div key={index} className="p-3 bg-purple-50 rounded border">
-                    <div className="font-medium">{role.title}</div>
-                    <div className="text-sm text-gray-600">{role.company}</div>
-                    {role.duration && (
-                      <div className="text-xs text-gray-500">{role.duration}</div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-1">
-                      {role.sources.map((source, idx) => (
-                        <span key={idx} className="inline-block mr-2">
-                          Interview {source.interview_id} • Q{source.question_number}
-                          {idx < role.sources.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Projects */}
-          {experienceData.projects && experienceData.projects.length > 0 && (
-            <div className="bg-white rounded-lg border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Target className="w-5 h-5 text-orange-600" />
-                <h2 className="text-xl font-semibold">Projects</h2>
-              </div>
-              <div className="space-y-3">
-                {experienceData.projects.map((project, index) => (
-                  <div key={index} className="p-3 bg-orange-50 rounded border">
-                    <div className="font-medium mb-1">{project.name}</div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {project.description}
-                    </div>
-                    {project.role && (
-                      <div className="text-xs font-medium text-orange-700 mb-1">
-                        Role: {project.role}
-                      </div>
-                    )}
-                    {project.company && (
-                      <div className="text-xs text-gray-600 mb-1">
-                        Company: {project.company}
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-500">
-                      {project.sources.map((source, idx) => (
-                        <span key={idx} className="inline-block mr-2">
-                          Interview {source.interview_id} • Q{source.question_number}
-                          {idx < project.sources.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Skills */}
-          {experienceData.skills && experienceData.skills.length > 0 && (
-            <div className="bg-white rounded-lg border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Code className="w-5 h-5 text-green-600" />
-                <h2 className="text-xl font-semibold">Skills</h2>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {experienceData.skills.map((skill, index) => (
-                  <div key={index} className="group relative">
-                    <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full cursor-help">
-                      {skill.name}
-                    </span>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-xs">
-                      {skill.sources.map((source, idx) => (
-                        <span key={idx} className="inline-block mr-1">
-                          Interview {source.interview_id} • Q{source.question_number}
-                          {idx < skill.sources.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Achievements */}
-        {experienceData.achievements && experienceData.achievements.length > 0 && (
-          <div className="bg-white rounded-lg border shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-amber-600" />
-              <h2 className="text-xl font-semibold">Key Achievements</h2>
-            </div>
-            <div className="space-y-2">
-              {experienceData.achievements.map((achievement, index) => (
-                <div key={index} className="p-3 bg-amber-50 rounded border flex items-start gap-2">
-                  <Award className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <span className="text-sm">{achievement.description}</span>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {achievement.sources.map((source, idx) => (
-                        <span key={idx} className="inline-block mr-2">
-                          Interview {source.interview_id} • Q{source.question_number}
-                          {idx < achievement.sources.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </div>
+                {/* Sources */}
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="text-xs text-gray-500">
+                    Sources: {role.sources.map((source, idx) => (
+                      <span key={idx}>
+                        Interview {source.interview_id} • Q{source.question_number}
+                        {idx < role.sources.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Metadata and Action Buttons */}
+        {/* Action Buttons */}
         <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="font-medium text-gray-900">Experience Summary</h3>
-              <div className="text-sm text-gray-600 mt-1">
-                {experienceData.metadata?.totalExtractions || 0} extraction(s) • {experienceData.metadata?.creditsUsed || 0} credits used
-              </div>
+          <div className="text-center mb-4">
+            <h3 className="font-medium text-gray-900">Experience Summary</h3>
+            <div className="text-sm text-gray-600 mt-1">
+              {experienceData.roles.length} role(s) • {experienceData.summary.basedOnInterviews.length} interview(s)
             </div>
           </div>
           

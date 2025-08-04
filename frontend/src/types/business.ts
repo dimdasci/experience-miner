@@ -48,77 +48,39 @@ export interface SourceRef {
   question_number: number;
 }
 
-export interface ProfessionalSummary {
-  extractedFacts: {
-    achievements: Achievement[];
-    companies: Company[];
-    projects: Project[];
-    roles: Role[];
-    skills: Skill[];
-    summary: {
-      basedOnInterviews: number[];
-      // Keep these frontend-specific fields for UI purposes
-      text?: string;
-      lastUpdated?: string;
-    };
-    // Keep metadata for UI purposes
-    metadata?: {
-      totalExtractions: number;
-      lastExtractionAt: string;
-      creditsUsed: number;
-    };
-  };
-}
-
-export interface Achievement {
-  description: string;
-  sources: SourceRef[];
-  // Keep this for backward compatibility with existing frontend components
-  sourceInterviewId?: string;
-  sourceQuestionNumber?: number;
-  extractedAt?: string;
-}
-
-export interface Company {
-  name: string;
-  sources: SourceRef[];
-  // Keep this for backward compatibility with existing frontend components
-  sourceInterviewId?: string;
-  sourceQuestionNumber?: number;
-  extractedAt?: string;
-}
-
 export interface Project {
   name: string;
-  description: string;
-  role: string;
-  company?: string;
-  sources: SourceRef[];
-  // Keep this for backward compatibility with existing frontend components
-  sourceInterviewId?: string;
-  sourceQuestionNumber?: number;
-  extractedAt?: string;
+  goal: string;
+  achievements: string[];
 }
 
 export interface Role {
   title: string;
   company: string;
-  duration: string; // flexible format
+  start_year: string;
+  end_year: string;
+  experience: string;
+  projects: Project[];
+  skills: string[];
   sources: SourceRef[];
-  // Keep this for backward compatibility with existing frontend components
-  sourceInterviewId?: string;
-  sourceQuestionNumber?: number;
-  extractedAt?: string;
 }
 
-export interface Skill {
-  name: string;
-  category?: string; // optional: technical, leadership, etc.
-  sources: SourceRef[];
-  // Keep this for backward compatibility with existing frontend components
-  sourceInterviewId?: string;
-  sourceQuestionNumber?: number;
-  extractedAt?: string;
+export interface ExtractedFacts {
+  summary: {
+    text: string;
+    basedOnInterviews: number[];
+  };
+  roles: Role[];
+}
+
+export interface ProfessionalSummary {
+  extractedFacts: ExtractedFacts;
+  // Keep metadata for UI purposes
+  metadata?: {
+    totalExtractions: number;
+    lastExtractionAt: string;
+    creditsUsed: number;
+  };
 }
 
 // API Request/Response types

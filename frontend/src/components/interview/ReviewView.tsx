@@ -102,30 +102,19 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
     try {
       const result = await apiService.extractInterviewData(interviewId);
       
-      if (result.success && result.responseObject) {
+      if (result.success) {
         // Update credits in the global context by refreshing from the server
-        if (typeof result.responseObject.credits === 'number') {
-          refreshCredits(true);
-        }
+        refreshCredits(true);
         
         // Log successful extraction
         UserJourneyLogger.logInterviewProgress({
-          stage: 'completed',
-          extractedFactsCount: Object.keys(result.responseObject.extractedFacts).length
+          stage: 'completed'
         });
         UserJourneyLogger.logUserAction({
           action: 'interview_extraction_completed',
           component: 'ReviewView',
           data: {
-            interviewId,
-            remainingCredits: result.responseObject.credits,
-            extractedFacts: {
-              companies: result.responseObject.extractedFacts.companies?.length || 0,
-              roles: result.responseObject.extractedFacts.roles?.length || 0,
-              projects: result.responseObject.extractedFacts.projects?.length || 0,
-              achievements: result.responseObject.extractedFacts.achievements?.length || 0,
-              skills: result.responseObject.extractedFacts.skills?.length || 0
-            }
+            interviewId
           }
         });
         
