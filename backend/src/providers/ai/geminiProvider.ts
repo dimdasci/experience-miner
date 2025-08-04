@@ -5,8 +5,8 @@ import {
 	GoogleGenAI,
 } from "@google/genai";
 import * as Sentry from "@sentry/node";
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import type { ZodTypeAny, z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { aiConfig, type RateLimitConfig } from "@/config/ai.js";

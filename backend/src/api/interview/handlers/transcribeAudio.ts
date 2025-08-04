@@ -1,4 +1,4 @@
-import * as TE from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import { AppErrors, BadRequestError } from "@/errors";
 import type { AuthenticatedRequest } from "@/middleware/auth.js";

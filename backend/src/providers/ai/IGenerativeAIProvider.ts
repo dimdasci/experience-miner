@@ -1,4 +1,4 @@
-import type * as TE from "fp-ts/lib/TaskEither";
+import type * as TE from "fp-ts/lib/TaskEither.js";
 import type { ZodTypeAny, z } from "zod";
 import type { AppError } from "@/errors";
 import type { MediaData, ModelResponse } from "./types.js";

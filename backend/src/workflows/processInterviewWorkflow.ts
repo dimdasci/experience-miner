@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import type { AnswerRepository } from "@/answers";
 import type { CreditsRepository, CreditsService } from "@/credits";
 import { type AppError, BadRequestError } from "@/errors";

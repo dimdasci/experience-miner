@@ -1,5 +1,5 @@
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import { AppErrors } from "@/errors";
 import type { AuthenticatedRequest } from "@/middleware/auth.js";

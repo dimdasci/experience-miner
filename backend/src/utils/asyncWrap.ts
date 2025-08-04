@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import { ServiceResponse } from "@/api/models/serviceResponse.js";
 import type { AppError } from "@/errors";
 

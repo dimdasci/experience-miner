@@ -1,4 +1,4 @@
-import type * as TE from "fp-ts/lib/TaskEither";
+import type * as TE from "fp-ts/lib/TaskEither.js";
 import type { AppError } from "@/errors";
 import type { DatabaseClient } from "@/providers";
 import type { Topic, TopicQuestion } from "./types.js";

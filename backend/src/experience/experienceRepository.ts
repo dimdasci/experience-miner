@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/node";
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import type { AppError } from "@/errors";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { IExperienceRepository } from "./IExperienceRepository";

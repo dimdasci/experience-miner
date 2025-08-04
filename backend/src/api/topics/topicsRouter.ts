@@ -1,5 +1,5 @@
 import express from "express";
-import * as TE from "fp-ts/lib/TaskEither";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import { ServiceContainer } from "@/container/serviceContainer.js";
 import { AppErrors, BadRequestError } from "@/errors";
 import {

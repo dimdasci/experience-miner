@@ -1,5 +1,5 @@
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function.js";
+import * as TE from "fp-ts/lib/TaskEither.js";
 import { type AppError, NotFoundError } from "@/errors";
 import type { AnswerRepository } from "./answerRepository";
 import type { Answer } from "./types";

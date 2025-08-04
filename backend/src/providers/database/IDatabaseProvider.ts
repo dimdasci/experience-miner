@@ -1,5 +1,5 @@
-import type * as E from "fp-ts/lib/Either";
-import type * as TE from "fp-ts/lib/TaskEither";
+import type * as E from "fp-ts/lib/Either.js";
+import type * as TE from "fp-ts/lib/TaskEither.js";
 import type { AppError } from "@/errors";
 
 /**
