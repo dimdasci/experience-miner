@@ -53,9 +53,7 @@ const GuideRecorder = ({ onDataUpdate, questionId, questionText, questionNumber,
         )
         if (result.success && result.responseObject) {
           // Backend returns the transcript as a string directly in responseObject
-          const transcriptText = typeof result.responseObject === 'string' 
-            ? result.responseObject 
-            : result.responseObject.transcript || result.responseObject;
+          const transcriptText = String(result.responseObject);
             
           setTranscript(transcriptText)
           
