@@ -1,23 +1,60 @@
 import * as Sentry from "@sentry/node";
-import { Pool } from "pg";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
+import { Pool, type PoolClient } from "pg";
 import { databaseConfig } from "@/config/database.js";
-import type { DatabaseClient, IDatabaseProvider } from "@/providers";
+import type { AppError } from "@/errors";
+import { AppErrors } from "@/errors";
+import type { DatabaseClient, IDatabaseProvider } from "./IDatabaseProvider.js";
+
+/**
+ * Functional database client wrapper around pg PoolClient
+ */
+class FunctionalDatabaseClient implements DatabaseClient {
+	constructor(
+		private pgClient: PoolClient,
+		private provider: PostgresProvider,
+	) {}
+
+	query<T>(
+		sql: string,
+		params?: unknown[],
+	): TE.TaskEither<AppError, { rows: T[] }> {
+		return TE.tryCatch(
+			async () => {
+				const result = await this.pgClient.query(sql, params);
+				return { rows: result.rows };
+			},
+			(error) =>
+				AppErrors.internalError(
+					"Database query failed",
+					error instanceof Error ? error.message : error,
+				),
+		);
+	}
+
+	getFirstRow<T>(
+		result: E.Either<AppError, { rows: T[] }>,
+	): E.Either<AppError, T> {
+		return this.provider.getFirstRow(result);
+	}
+
+	queryFirst<T>(sql: string, params?: unknown[]): TE.TaskEither<AppError, T> {
+		return this.provider.queryFirst<T>(sql, params);
+	}
+
+	release(): void {
+		this.pgClient.release();
+	}
+}
 
 /**
  * PostgreSQL Provider implementation using pg connection pool
- * Implements IDatabaseProvider interface
+ * Implements purely functional IDatabaseProvider interface
  */
 export class PostgresProvider implements IDatabaseProvider {
 	private pool!: Pool;
-	/**
-	 * Helper to extract first row or throw error if not found
-	 */
-	getFirstRowOrThrow<T>(result: { rows: T[] }, errorMessage: string): T {
-		if (!result.rows || result.rows.length === 0 || !result.rows[0]) {
-			throw new Error(errorMessage);
-		}
-		return result.rows[0];
-	}
 
 	constructor() {
 		this.initializePool();
@@ -60,81 +97,175 @@ export class PostgresProvider implements IDatabaseProvider {
 		}
 	}
 
-	async query<T>(text: string, params: unknown[] = []): Promise<{ rows: T[] }> {
-		// Ensure pool is available before querying
-		this.ensurePoolAvailable();
+	// Functional interface implementations
 
-		try {
-			const client = await this.pool.connect();
-			try {
-				const result = await client.query(text, params);
-				return { rows: result.rows };
-			} finally {
-				client.release();
+	/**
+	 * Execute a SQL query with functional error handling
+	 */
+	query<T>(
+		sql: string,
+		params?: unknown[],
+	): TE.TaskEither<AppError, { rows: T[] }> {
+		return TE.tryCatch(
+			async () => {
+				// Ensure pool is available before querying
+				this.ensurePoolAvailable();
+
+				const client = await this.pool.connect();
+				try {
+					const result = await client.query(sql, params);
+					return { rows: result.rows };
+				} finally {
+					client.release();
+				}
+			},
+			(error) => {
+				// Only capture database errors with Sentry
+				Sentry.captureException(error, {
+					tags: { component: "db_pool", operation: "query" },
+					contexts: { query: { text: sql, params } },
+				});
+				return AppErrors.internalError(
+					"Database query failed",
+					error instanceof Error ? error.message : error,
+				);
+			},
+		);
+	}
+
+	/**
+	 * Extract first row from query result using Either for pure functional composition
+	 */
+	getFirstRow<T>(
+		result: E.Either<AppError, { rows: T[] }>,
+	): E.Either<AppError, T> {
+		return E.flatMap(result, (queryResult) => {
+			if (
+				!queryResult.rows ||
+				queryResult.rows.length === 0 ||
+				!queryResult.rows[0]
+			) {
+				return E.left(AppErrors.notFound("Row", "first"));
 			}
-		} catch (error) {
-			// Only capture database errors with Sentry
-			Sentry.captureException(error, {
-				tags: { component: "db_pool", operation: "query" },
-				contexts: { query: { text, params } },
-			});
-			throw error;
-		}
+			return E.right(queryResult.rows[0]);
+		});
 	}
 
-	async getClient(): Promise<DatabaseClient> {
-		this.ensurePoolAvailable();
-		return await this.pool.connect();
+	/**
+	 * Get a functional database client for manual connection management
+	 */
+	getClient(): TE.TaskEither<AppError, DatabaseClient> {
+		return TE.tryCatch(
+			async () => {
+				this.ensurePoolAvailable();
+				const pgClient = await this.pool.connect();
+				return new FunctionalDatabaseClient(pgClient, this);
+			},
+			(error) =>
+				AppErrors.internalError(
+					"Failed to get database client",
+					error instanceof Error ? error.message : error,
+				),
+		);
 	}
 
-	async transaction<T>(
-		callback: (client: DatabaseClient) => Promise<T>,
-	): Promise<T> {
-		this.ensurePoolAvailable();
-		// Always pass a real PoolClient from pg
-		const client: DatabaseClient = await this.pool.connect();
-		try {
-			await client.query("BEGIN");
-			const result = await callback(client);
-			await client.query("COMMIT");
-			return result;
-		} catch (error) {
-			await client.query("ROLLBACK");
-			throw error;
-		} finally {
-			client.release();
-		}
+	/**
+	 * Execute multiple operations within a transaction with functional error handling
+	 */
+	transaction<T>(
+		callback: (client: DatabaseClient) => TE.TaskEither<AppError, T>,
+	): TE.TaskEither<AppError, T> {
+		return pipe(
+			this.getClient(),
+			TE.flatMap((client) => {
+				const cleanup = () => client.release();
+
+				return pipe(
+					// Begin transaction
+					client.query("BEGIN"),
+					TE.flatMap(() => callback(client)),
+					TE.flatMap((result) =>
+						pipe(
+							// Commit transaction
+							client.query("COMMIT"),
+							TE.map(() => {
+								cleanup();
+								return result;
+							}),
+						),
+					),
+					TE.mapLeft((error) => {
+						// Rollback on error (fire and forget)
+						client.query("ROLLBACK")();
+						cleanup();
+						return error;
+					}),
+				);
+			}),
+		);
 	}
 
-	async initialize(): Promise<void> {
-		this.ensurePoolAvailable();
-		try {
-			await this.query("SELECT 1");
-		} catch (error) {
-			throw new Error(
-				`PostgreSQL initialization failed: ${
-					error instanceof Error ? error.message : "Unknown error"
-				}`,
-			);
-		}
+	/**
+	 * Initialize database connection and perform setup
+	 */
+	initialize(): TE.TaskEither<AppError, void> {
+		return TE.tryCatch(
+			async () => {
+				this.ensurePoolAvailable();
+				const result = await this.query("SELECT 1")();
+				if (result._tag === "Left") {
+					throw result.left;
+				}
+			},
+			(error) =>
+				AppErrors.internalError(
+					`PostgreSQL initialization failed: ${
+						error instanceof Error ? error.message : "Unknown error"
+					}`,
+				),
+		);
 	}
 
-	async close(): Promise<void> {
-		// Check if pool is already ended
-		if (this.pool.ending === true) {
-			return;
-		}
-
-		await this.pool.end();
+	/**
+	 * Close database connections and cleanup resources
+	 */
+	close(): TE.TaskEither<AppError, void> {
+		return TE.tryCatch(
+			async () => {
+				// Check if pool is already ended
+				if (this.pool.ending === true) {
+					return;
+				}
+				await this.pool.end();
+			},
+			(error) =>
+				AppErrors.internalError(
+					"Failed to close database connections",
+					error instanceof Error ? error.message : error,
+				),
+		);
 	}
 
-	async isHealthy(): Promise<boolean> {
-		try {
-			this.ensurePoolAvailable();
-			await this.query("SELECT 1");
-			return true;
-		} catch {
-			return false;
-		}
+	/**
+	 * Functional pipeline helper: query and extract first row in one operation
+	 */
+	queryFirst<T>(sql: string, params?: unknown[]): TE.TaskEither<AppError, T> {
+		return pipe(
+			this.query<T>(sql, params), // returns TaskEither because it's an async database call
+			// getFirstRow() uses Either, so
+			// we need TE.fromEither to to lift the synchronous Either result into the async TaskEither context
+			TE.flatMap((result) => TE.fromEither(this.getFirstRow(E.right(result)))),
+		);
+	}
+
+	/**
+	 * Health check for database connectivity
+	 */
+	isHealthy(): TE.TaskEither<AppError, boolean> {
+		return pipe(
+			this.query("SELECT 1"),
+			TE.map(() => true),
+			TE.orElse(() => TE.right(false)),
+		);
 	}
 }

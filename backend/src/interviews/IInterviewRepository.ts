@@ -1,8 +1,11 @@
+import type * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 import type { DatabaseClient } from "@/providers";
 import type { Interview, InterviewStatus } from "./types.js";
 
 /**
- * Repository interface for interview-related database operations
+ * Functional repository interface for interview-related database operations
+ * Uses TaskEither for composable error handling
  */
 export interface IInterviewRepository {
 	/**
@@ -13,17 +16,20 @@ export interface IInterviewRepository {
 		title: string,
 		motivationalQuote: string,
 		client?: DatabaseClient,
-	): Promise<Interview>;
+	): TE.TaskEither<AppError, Interview>;
 
 	/**
 	 * Get interview by ID
 	 */
-	getById(userId: string, interviewId: number): Promise<Interview | null>;
+	getById(
+		userId: string,
+		interviewId: number,
+	): TE.TaskEither<AppError, Interview>;
 
 	/**
 	 * Get all interviews for a user
 	 */
-	getAllByUserId(userId: string): Promise<Interview[]>;
+	getAllByUserId(userId: string): TE.TaskEither<AppError, Interview[]>;
 
 	/**
 	 * Update interview status
@@ -33,10 +39,10 @@ export interface IInterviewRepository {
 		interviewId: number,
 		status: InterviewStatus,
 		client?: DatabaseClient,
-	): Promise<Interview>;
+	): TE.TaskEither<AppError, Interview>;
 
 	/**
 	 * Delete interview and related data
 	 */
-	delete(userId: string, interviewId: number): Promise<void>;
+	delete(userId: string, interviewId: number): TE.TaskEither<AppError, void>;
 }

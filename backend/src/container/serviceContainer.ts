@@ -1,4 +1,4 @@
-import { AnswerRepository } from "@/answers";
+import { AnswerRepository, AnswerService } from "@/answers";
 import { serverConfig } from "@/config";
 import {
 	createAIProvider,
@@ -6,7 +6,7 @@ import {
 } from "@/container/providerFactory.js";
 import { CreditsRepository, CreditsService } from "@/credits";
 import { ExperienceRepository } from "@/experience";
-import { InterviewRepository, InterviewService } from "@/interviews";
+import { InterviewRepository } from "@/interviews";
 import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
 import { TopicRepository, TopicService } from "@/topics";
 import {
@@ -25,12 +25,12 @@ export class ServiceContainer {
 	private databaseProvider: IDatabaseProvider | null = null;
 
 	private answerRepository: AnswerRepository | null = null;
+	private answerService: AnswerService | null = null;
 
 	private creditsRepository: CreditsRepository | null = null;
 	private creditsService: CreditsService | null = null;
 
 	private interviewRepository: InterviewRepository | null = null;
-	private interviewService: InterviewService | null = null;
 
 	private topicRepository: TopicRepository | null = null;
 	private topicService: TopicService | null = null;
@@ -85,13 +85,11 @@ export class ServiceContainer {
 
 			// Initialize services
 			this.creditsService = new CreditsService();
-			this.topicService = new TopicService(this.aiProvider);
-			this.interviewService = new InterviewService(
+			this.topicService = new TopicService(
 				this.aiProvider,
-				this.interviewRepository,
-				this.answerRepository,
-				this.experienceRepository,
+				this.topicRepository,
 			);
+			this.answerService = new AnswerService(this.answerRepository);
 
 			// Initialize workflows
 			this.processInterviewWorkflow = new ProcessInterviewWorkflow(
@@ -101,8 +99,9 @@ export class ServiceContainer {
 				this.topicRepository,
 				this.topicService,
 				this.experienceRepository,
-				this.interviewService,
 				this.interviewRepository,
+				this.aiProvider,
+				this.answerRepository,
 			);
 			this.selectTopicWorkflow = new SelectTopicWorkflow(
 				this.topicRepository,
@@ -113,7 +112,7 @@ export class ServiceContainer {
 			this.transcribeAudioWorkflow = new TranscribeAudioWorkflow(
 				this.creditsRepository,
 				this.creditsService,
-				this.interviewService,
+				this.aiProvider,
 			);
 
 			this.initialized = true;
@@ -234,18 +233,18 @@ export class ServiceContainer {
 	}
 
 	/**
-	 * Get interview service instance
+	 * Get answer service instance
 	 */
-	getInterviewService(): InterviewService {
+	getAnswerService(): AnswerService {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
-		if (!this.interviewService) {
-			throw new Error("Interview service not initialized");
+		if (!this.answerService) {
+			throw new Error("Answer service not initialized");
 		}
-		return this.interviewService;
+		return this.answerService;
 	}
 
 	getTopicRepository(): TopicRepository {
@@ -379,8 +378,11 @@ export class ServiceContainer {
 			};
 		}
 
+		const databaseHealthResult = await this.databaseProvider?.isHealthy()();
 		const databaseHealthy: boolean =
-			(await this.databaseProvider?.isHealthy()) ?? false;
+			databaseHealthResult?._tag === "Right"
+				? databaseHealthResult.right
+				: false;
 		const aiHealthy: boolean = this.aiProvider?.isHealthy() ?? false;
 		return {
 			healthy: databaseHealthy && aiHealthy,

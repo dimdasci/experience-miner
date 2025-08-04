@@ -1,8 +1,11 @@
+import type * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 import type { DatabaseClient } from "@/providers";
 import type { Answer } from "./types.js";
 
 /**
- * Repository interface for answer-related database operations
+ * Functional repository interface for answer-related database operations
+ * Uses TaskEither for composable error handling
  */
 export interface IAnswerRepository {
 	/**
@@ -14,7 +17,7 @@ export interface IAnswerRepository {
 		questionNumber: number,
 		question: string,
 		client?: DatabaseClient,
-	): Promise<Answer>;
+	): TE.TaskEither<AppError, Answer>;
 
 	/**
 	 * Update an existing answer
@@ -25,20 +28,18 @@ export interface IAnswerRepository {
 		answerText: string,
 		recordingDurationSeconds?: number,
 		client?: DatabaseClient,
-	): Promise<Answer>;
+	): TE.TaskEither<AppError, Answer>;
 
 	/**
 	 * Get answers by interview ID
 	 */
-	getByInterviewId(userId: string, interviewId: number): Promise<Answer[]>;
+	getByInterviewId(
+		userId: string,
+		interviewId: number,
+	): TE.TaskEither<AppError, Answer[]>;
 
 	/**
 	 * Get answer by ID
 	 */
-	getById(userId: string, answerId: number): Promise<Answer | null>;
-
-	/**
-	 * Delete answers for an interview
-	 */
-	deleteByInterviewId(userId: string, interviewId: number): Promise<void>;
+	getById(userId: string, answerId: number): TE.TaskEither<AppError, Answer>;
 }

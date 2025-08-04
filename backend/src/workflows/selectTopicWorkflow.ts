@@ -1,7 +1,10 @@
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import type { Answer, IAnswerRepository } from "@/answers";
+import { type AppError, BadRequestError, NotFoundError } from "@/errors";
 import type { IInterviewRepository, Interview } from "@/interviews";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
-import type { ITopicRepository } from "@/topics";
+import type { ITopicRepository, Topic } from "@/topics";
 
 export class SelectTopicWorkflow {
 	private topicRepository: ITopicRepository;
@@ -21,47 +24,77 @@ export class SelectTopicWorkflow {
 		this.databaseProvider = databaseProvider;
 	}
 
-	async execute(
+	execute(
 		userId: string,
 		topicId: number,
-	): Promise<{ interview: Interview; answers: Answer[] }> {
-		// Read topic details before starting transaction
-
-		// 1. Verify topic exists and is available
-		const topic = await this.topicRepository.getById(userId, topicId);
-		if (!topic) throw new Error("Topic not found");
-		if (topic.status !== "available") throw new Error("Topic is not available");
-
-		// Execute as transaction to ensure atomicity
-		return await this.databaseProvider.transaction(
-			async (client: DatabaseClient) => {
-				// 1. Mark topic as used
-				await this.topicRepository.markAsUsed(userId, topicId, client);
-
-				// 2. Create interview
-				const interview = await this.interviewRepository.create(
-					userId,
-					topic.title,
-					topic.motivational_quote,
-					client,
-				);
-
-				// 4. Create answer records
-				const answers: Answer[] = [];
-				const questions = Array.isArray(topic.questions) ? topic.questions : [];
-				for (const question of questions) {
-					const answer = await this.answerRepository.create(
-						interview.id,
-						userId,
-						question.order,
-						question.text,
-						client,
-					);
-					answers.push(answer);
+	): TE.TaskEither<AppError, { interview: Interview; answers: Answer[] }> {
+		return pipe(
+			// 1. Verify topic exists and is available
+			this.topicRepository.getById(userId, topicId),
+			TE.flatMap((topic: Topic | null) => {
+				if (!topic) {
+					return TE.left(new NotFoundError("Topic not found"));
 				}
+				if (topic.status !== "available") {
+					return TE.left(new BadRequestError("Topic is not available"));
+				}
+				return TE.right(topic);
+			}),
+			// 2. Execute transaction to ensure atomicity
+			TE.flatMap((topic: Topic) =>
+				this.databaseProvider.transaction((client: DatabaseClient) =>
+					pipe(
+						// Mark topic as used
+						this.topicRepository.markAsUsed(userId, topicId, client),
+						TE.flatMap(() =>
+							// Create interview
+							this.interviewRepository.create(
+								userId,
+								topic.title,
+								topic.motivational_quote,
+								client,
+							),
+						),
+						TE.flatMap((interview: Interview) =>
+							// Create answer records
+							this.createAnswers(interview, topic, userId, client),
+						),
+					),
+				),
+			),
+		);
+	}
 
-				return { interview, answers };
-			},
+	private createAnswers(
+		interview: Interview,
+		topic: Topic,
+		userId: string,
+		client: DatabaseClient,
+	): TE.TaskEither<AppError, { interview: Interview; answers: Answer[] }> {
+		const questions = Array.isArray(topic.questions) ? topic.questions : [];
+
+		if (questions.length === 0) {
+			return TE.right({ interview, answers: [] });
+		}
+
+		// Create all answers sequentially to maintain order
+		const createAnswerTasks = questions.map((question) =>
+			this.answerRepository.create(
+				interview.id,
+				userId,
+				question.order,
+				question.text,
+				client,
+			),
+		);
+
+		// Use sequenceArray to execute all tasks and collect results
+		return pipe(
+			TE.sequenceArray(createAnswerTasks),
+			TE.map((answers: readonly Answer[]) => ({
+				interview,
+				answers: [...answers],
+			})),
 		);
 	}
 }

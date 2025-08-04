@@ -1,9 +1,15 @@
 import * as Sentry from "@sentry/node";
+import * as A from "fp-ts/lib/Array";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 import type { DatabaseClient, IDatabaseProvider } from "@/providers";
 import type { ITopicRepository } from "./ITopicRepository";
 import type { Topic, TopicQuestion } from "./types.js";
+
 /**
- * PostgreSQL implementation of topic repository
+ * PostgreSQL implementation of topic repository using purely functional patterns
+ * Following the golden standard established by CreditsRepository
  */
 export class TopicRepository implements ITopicRepository {
 	private db: IDatabaseProvider;
@@ -12,146 +18,153 @@ export class TopicRepository implements ITopicRepository {
 		this.db = databaseProvider;
 	}
 
-	async create(
+	create(
 		userId: string,
 		title: string,
 		motivationalQuote: string,
 		questions: TopicQuestion[],
 		status: string,
 		client?: DatabaseClient,
-	): Promise<Topic> {
-		const db = client ?? this.db;
-
-		const result = await db.query<Topic>(
-			`INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
+	): TE.TaskEither<AppError, Topic> {
+		const db = client || this.db;
+		const insertQuery = `INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-		 RETURNING *`,
-			[userId, title, motivationalQuote, JSON.stringify(questions), status],
-		);
+		 RETURNING *`;
 
-		return this.db.getFirstRowOrThrow(
-			result,
-			"Topic insert failed - no rows returned",
-		);
+		return db.queryFirst<Topic>(insertQuery, [
+			userId,
+			title,
+			motivationalQuote,
+			JSON.stringify(questions),
+			status,
+		]);
 	}
 
-	async getByUserId(userId: string, status?: string): Promise<Topic[]> {
+	getByUserId(
+		userId: string,
+		status?: string,
+	): TE.TaskEither<AppError, Topic[]> {
 		const sql = status
 			? "SELECT * FROM topics WHERE user_id = $1 AND status = $2 ORDER BY created_at ASC"
 			: "SELECT * FROM topics WHERE user_id = $1 ORDER BY created_at ASC";
 
 		const params = status ? [userId, status] : [userId];
 
-		const result = await this.db.query<Topic>(sql, params);
-		return result.rows.length > 0 ? result.rows : [];
+		return pipe(
+			this.db.query<Topic>(sql, params),
+			TE.map((result) => result.rows),
+		);
 	}
 
-	async getById(userId: string, topicId: number): Promise<Topic> {
-		const result = await this.db.query<Topic>(
+	getById(userId: string, topicId: number): TE.TaskEither<AppError, Topic> {
+		return this.db.queryFirst<Topic>(
 			"SELECT * FROM topics WHERE id = $1 AND user_id = $2",
 			[topicId, userId],
 		);
-
-		return this.db.getFirstRowOrThrow(result, "Topic not found");
 	}
 
-	async markAsUsed(
+	markAsUsed(
 		userId: string,
 		topicId: number,
 		client?: DatabaseClient,
-	): Promise<Topic> {
-		const db = client ?? this.db;
-		const result = await db.query<Topic>(
-			`UPDATE topics 
+	): TE.TaskEither<AppError, Topic> {
+		const db = client || this.db;
+		const updateQuery = `UPDATE topics 
 			 SET status = 'used', updated_at = NOW() 
 			 WHERE id = $1 AND user_id = $2
-			 RETURNING *`,
-			[topicId, userId],
-		);
+			 RETURNING *`;
 
-		return this.db.getFirstRowOrThrow(result, "Failed to mark topic as used");
+		return db.queryFirst<Topic>(updateQuery, [topicId, userId]);
 	}
 
-	async getAvailable(userId: string): Promise<Topic[]> {
-		return await this.getByUserId(userId, "available");
+	getAvailable(userId: string): TE.TaskEither<AppError, Topic[]> {
+		return this.getByUserId(userId, "available");
 	}
 
-	async createOrUpdate(
+	createOrUpdate(
 		userId: string,
 		topics: Topic[],
 		client?: DatabaseClient,
-	): Promise<void> {
+	): TE.TaskEither<AppError, void> {
+		// Early validation
 		if (topics.length === 0) {
-			return;
+			return TE.right(undefined);
 		}
 
-		for (const topic of topics) {
-			try {
-				if (topic.id === undefined) {
-					await this.create(
-						topic.user_id,
-						topic.title,
-						topic.motivational_quote,
-						topic.questions,
-						topic.status,
-						client,
-					);
-				} else {
-					await this.updateStatuses(
-						userId,
-						[{ id: topic.id, status: topic.status }],
-						client,
-					);
-				}
+		// Create a functional pipeline that processes each topic
+		const processTopics: TE.TaskEither<AppError, undefined[]> = pipe(
+			topics,
+			A.map(
+				(topic): TE.TaskEither<AppError, undefined> =>
+					pipe(
+						topic.id === undefined
+							? pipe(
+									this.create(
+										topic.user_id,
+										topic.title,
+										topic.motivational_quote,
+										topic.questions,
+										topic.status,
+										client,
+									),
+									TE.map((_: Topic): void => undefined),
+								)
+							: this.updateStatus(userId, topic.id, topic.status, client),
+						TE.map((): undefined => {
+							Sentry.logger?.debug?.("Topic is persisted", {
+								action: topic.id ? "updated" : "created",
+								topicId: topic.id,
+								title: topic.title,
+								userId: topic.user_id,
+							});
+						}),
+						TE.mapLeft((error: AppError): AppError => {
+							Sentry.logger?.error?.("Failed to save generated topic", {
+								title: topic.title,
+								userId: topic.user_id,
+								error: error instanceof Error ? error.message : String(error),
+							});
+							return error;
+						}),
+					),
+			),
+			A.sequence(TE.ApplicativePar),
+		);
 
-				Sentry.logger?.debug?.("Topic is persisted", {
-					action: topic.id ? "updated" : "created",
-					topicId: topic.id,
-					title: topic.title,
-					userId: topic.user_id,
-				});
-			} catch (error) {
-				Sentry.logger?.error?.("Failed to save generated topic", {
-					title: topic.title,
-					userId: topic.user_id,
-					error: error instanceof Error ? error.message : String(error),
-				});
-				throw error;
-			}
-		}
+		return pipe(
+			processTopics,
+			TE.map((): void => undefined),
+		);
 	}
 
-	async updateStatuses(
+	updateStatus(
 		userId: string,
-		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
+		topicId: number,
+		status: "available" | "used" | "irrelevant",
 		client?: DatabaseClient,
-	): Promise<void> {
-		if (updates.length === 0) {
-			return;
-		}
-		const db = client ?? this.db;
-		for (const update of updates) {
-			try {
-				await db.query(
-					`UPDATE topics 
-				 SET status = $1, updated_at = NOW() 
-				 WHERE id = $2 AND user_id = $3`,
-					[update.status, update.id, userId],
-				);
+	): TE.TaskEither<AppError, void> {
+		const db = client || this.db;
+		const updateQuery = `UPDATE topics 
+			 SET status = $1, updated_at = NOW() 
+			 WHERE id = $2 AND user_id = $3`;
 
+		return pipe(
+			db.query(updateQuery, [status, topicId, userId]),
+			TE.map((): void => {
 				Sentry.logger?.debug?.("Topic status updated", {
-					topicId: update.id,
-					newStatus: update.status,
+					topicId,
+					newStatus: status,
 				});
-			} catch (error) {
+			}),
+			TE.mapLeft((error: AppError): AppError => {
 				Sentry.logger?.error?.("Failed to update topic status", {
-					userId: userId,
-					topicId: update.id,
-					status: update.status,
+					userId,
+					topicId,
+					status,
 					error: error instanceof Error ? error.message : String(error),
 				});
-				throw error;
-			}
-		}
+				return error;
+			}),
+		);
 	}
 }

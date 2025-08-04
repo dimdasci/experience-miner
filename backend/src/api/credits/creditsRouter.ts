@@ -1,13 +1,15 @@
-import type { IRouter, Response } from "express";
+import type { IRouter } from "express";
 import { Router } from "express";
-import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import { AppErrors } from "@/errors";
 import {
 	type AuthenticatedRequest,
 	authenticateToken,
 } from "@/middleware/auth.js";
 import { logger } from "@/middleware/requestLogger.js";
+import { wrapTaskEither } from "@/utils/asyncWrap.js";
 
 export const creditsRouter: IRouter = Router();
 
@@ -15,50 +17,27 @@ export const creditsRouter: IRouter = Router();
 creditsRouter.get(
 	"/",
 	authenticateToken,
-	async (req: AuthenticatedRequest, res: Response) => {
+	wrapTaskEither((req: AuthenticatedRequest) => {
 		const userId = req.user?.id;
 		const userPrefix = req.user?.email?.split("@")[0] ?? "unknown";
 
 		if (!userId) {
-			const serviceResponse = ServiceResponse.failure(
-				"Invalid user authentication",
-				null,
-				StatusCodes.UNAUTHORIZED,
-			);
-			return res.status(serviceResponse.statusCode).json(serviceResponse);
+			return TE.left(AppErrors.unauthorized("Invalid user authentication"));
 		}
 
-		try {
-			const container = ServiceContainer.getInstance();
-			const creditsRepo = container.getCreditsRepository();
-			const credits = await creditsRepo.getCurrentBalance(userId);
+		const container = ServiceContainer.getInstance();
+		const creditsRepo = container.getCreditsRepository();
 
-			logger.info("Credits balance retrieved", {
-				user_id: userId,
-				user: userPrefix,
-				credits,
-			});
-
-			const serviceResponse = ServiceResponse.success(
-				"Credits retrieved successfully",
-				{ credits },
-			);
-
-			return res.status(serviceResponse.statusCode).json(serviceResponse);
-		} catch (error) {
-			logger.error("Failed to retrieve credits", {
-				user_id: userId,
-				user: userPrefix,
-				error: error instanceof Error ? error.message : "Unknown error",
-			});
-
-			const serviceResponse = ServiceResponse.failure(
-				"Failed to retrieve credits",
-				null,
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
-
-			return res.status(serviceResponse.statusCode).json(serviceResponse);
-		}
-	},
+		return pipe(
+			creditsRepo.getCurrentBalance(userId),
+			TE.map((credits) => {
+				logger.info("Credits balance retrieved", {
+					user_id: userId,
+					user: userPrefix,
+					credits,
+				});
+				return { credits };
+			}),
+		);
+	}, "Credits retrieved successfully"),
 );

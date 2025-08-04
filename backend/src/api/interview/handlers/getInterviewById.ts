@@ -1,18 +1,16 @@
 import * as Sentry from "@sentry/node";
-import type { Response } from "express";
-import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@/api/models/serviceResponse.js";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/lib/TaskEither";
 import { ServiceContainer } from "@/container/serviceContainer.js";
+import { AppErrors, BadRequestError } from "@/errors";
 import type { AuthenticatedRequest } from "@/middleware/auth.js";
+import { wrapTaskEither } from "@/utils/asyncWrap.js";
 
 /**
- * HTTP handler for getting interview by ID with answers
- * Thin adapter that delegates to interview service
+ * Functional HTTP handler for getting interview by ID with answers
+ * Uses TaskEither composition for clean error handling
  */
-export const getInterviewById = async (
-	req: AuthenticatedRequest,
-	res: Response,
-) => {
+export const getInterviewById = wrapTaskEither((req: AuthenticatedRequest) => {
 	const { id: interviewId } = req.params;
 	const userId = req.user?.id;
 
@@ -22,75 +20,43 @@ export const getInterviewById = async (
 	});
 
 	if (!userId) {
-		const serviceResponse = ServiceResponse.failure(
-			"Invalid user authentication",
-			null,
-			StatusCodes.UNAUTHORIZED,
-		);
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
+		return TE.left(AppErrors.unauthorized("Invalid user authentication"));
 	}
 
-	// convert to integer
+	// Validate interviewId
 	const interviewIdNumber = Number.parseInt(interviewId ?? "", 10);
 	if (Number.isNaN(interviewIdNumber) || interviewIdNumber <= 0) {
 		Sentry.logger?.error?.("Invalid interview ID", {
 			user_id: userId,
 			interviewId,
 		});
-		const serviceResponse = ServiceResponse.failure(
-			"Interview ID is required",
-			null,
-			StatusCodes.BAD_REQUEST,
-		);
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
+		return TE.left(new BadRequestError("Interview ID is required"));
 	}
 
-	try {
-		const interviewRepo =
-			ServiceContainer.getInstance().getInterviewRepository();
-		const answerRepo = ServiceContainer.getInstance().getAnswerRepository();
+	const interviewRepo = ServiceContainer.getInstance().getInterviewRepository();
+	const answerRepo = ServiceContainer.getInstance().getAnswerRepository();
 
-		const interview = await interviewRepo.getById(userId, interviewIdNumber);
-		const answers = await answerRepo.getByInterviewId(
-			userId,
-			interviewIdNumber,
-		);
-		Sentry.logger?.info?.("Interview retrieved", {
-			user_id: userId,
-			interviewId: interviewIdNumber,
-			result: { interview, answers },
-		});
+	return pipe(
+		// Get interview and answers in parallel
+		TE.Do,
+		TE.bind("interview", () =>
+			interviewRepo.getById(userId, interviewIdNumber),
+		),
+		TE.bind("answers", () =>
+			answerRepo.getByInterviewId(userId, interviewIdNumber),
+		),
+		TE.flatMap(({ interview, answers }) => {
+			if (!interview) {
+				return TE.left(AppErrors.notFound("Interview", interviewIdNumber));
+			}
 
-		if (!interview) {
-			const serviceResponse = ServiceResponse.failure(
-				"Interview not found",
-				null,
-				StatusCodes.NOT_FOUND,
-			);
-			return res.status(serviceResponse.statusCode).json(serviceResponse);
-		}
+			Sentry.logger?.info?.("Interview retrieved successfully", {
+				user_id: userId,
+				interviewId: interviewIdNumber,
+				answerCount: answers.length,
+			});
 
-		const serviceResponse = ServiceResponse.success(
-			"Interview retrieved successfully",
-			{ interview, answers },
-		);
-
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
-	} catch (error) {
-		let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-
-		if (error instanceof Error && error.message === "Access denied") {
-			statusCode = StatusCodes.FORBIDDEN;
-		}
-
-		const serviceResponse = ServiceResponse.failure(
-			`Failed to retrieve interview: ${
-				error instanceof Error ? error.message : "Unknown error"
-			}`,
-			null,
-			statusCode,
-		);
-
-		return res.status(serviceResponse.statusCode).json(serviceResponse);
-	}
-};
+			return TE.right({ interview, answers });
+		}),
+	);
+}, "Interview retrieved successfully");

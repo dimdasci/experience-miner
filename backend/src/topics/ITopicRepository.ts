@@ -1,7 +1,11 @@
+import type * as TE from "fp-ts/lib/TaskEither";
+import type { AppError } from "@/errors";
 import type { DatabaseClient } from "@/providers";
 import type { Topic, TopicQuestion } from "./types.js";
+
 /**
- * Repository interface for topic-related database operations
+ * Functional repository interface for topic-related database operations
+ * Uses TaskEither for composable error handling
  */
 export interface ITopicRepository {
 	/**
@@ -14,17 +18,20 @@ export interface ITopicRepository {
 		questions: TopicQuestion[],
 		status: string,
 		client?: DatabaseClient,
-	): Promise<Topic>;
+	): TE.TaskEither<AppError, Topic>;
 
 	/**
 	 * Get topics by user ID with optional status filter
 	 */
-	getByUserId(userId: string, status?: string): Promise<Topic[]>;
+	getByUserId(
+		userId: string,
+		status?: string,
+	): TE.TaskEither<AppError, Topic[]>;
 
 	/**
 	 * Get topic by ID
 	 */
-	getById(userId: string, topicId: number): Promise<Topic | null>;
+	getById(userId: string, topicId: number): TE.TaskEither<AppError, Topic>;
 
 	/**
 	 * Mark topic as used
@@ -33,28 +40,29 @@ export interface ITopicRepository {
 		userId: string,
 		topicId: number,
 		client?: DatabaseClient,
-	): Promise<Topic>;
+	): TE.TaskEither<AppError, Topic>;
 
 	/**
 	 * Get available topics for user (status = 'available')
 	 */
-	getAvailable(userId: string): Promise<Topic[]>;
+	getAvailable(userId: string): TE.TaskEither<AppError, Topic[]>;
 
 	/**
-	 * Save multiple  topics
+	 * Save multiple topics
 	 */
 	createOrUpdate(
 		userId: string,
 		topics: Topic[],
 		client?: DatabaseClient,
-	): Promise<void>;
+	): TE.TaskEither<AppError, void>;
 
 	/**
-	 * Update topic statuses in batch
+	 * Update single topic status
 	 */
-	updateStatuses(
+	updateStatus(
 		userId: string,
-		updates: Array<{ id: number; status: "available" | "used" | "irrelevant" }>,
+		topicId: number,
+		status: "available" | "used" | "irrelevant",
 		client?: DatabaseClient,
-	): Promise<void>;
+	): TE.TaskEither<AppError, void>;
 }
