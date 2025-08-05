@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import ChooseTopicView from '../guide/ChooseTopicView';
-import InterviewSessionView from '../guide/InterviewSessionView';
-import ReviewView from '../interview/ReviewView';
+import ChooseTopicContainer from '../guide/containers/ChooseTopicContainer';
+import InterviewSessionContainer from '../guide/containers/InterviewSessionContainer';
+import ReviewContainer from '../interview/containers/ReviewContainer';
 
 const GuidePage = () => {
   const { step, id } = useParams();
@@ -22,19 +22,18 @@ const GuidePage = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 'topics':
-        return <ChooseTopicView onTopicSelect={handleNavigateToStep} />;
+        return <ChooseTopicContainer onTopicSelect={handleNavigateToStep} />;
       case 'interview':
-        return <InterviewSessionView onComplete={(interviewId) => handleNavigateToStep('review', String(interviewId))} interviewId={id} />;
+        return <InterviewSessionContainer onComplete={(interviewId) => handleNavigateToStep('review', String(interviewId))} interviewId={id} />;
       case 'review':
         return (
-          <ReviewView 
-            onExtract={() => {}} // No longer needed - extraction handled internally
+          <ReviewContainer
             onDraft={() => navigate('/interviews')}
             interviewId={id}
           />
         );
       default:
-        return <ChooseTopicView onTopicSelect={handleNavigateToStep} />;
+        return <ChooseTopicContainer onTopicSelect={handleNavigateToStep} />;
     }
   };
 

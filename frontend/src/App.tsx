@@ -3,8 +3,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CreditsProvider } from './contexts/CreditsContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import Layout from './components/layout/Layout';
+import AppViewport from './components/layout/AppViewport';
 import GuidePage from './components/pages/GuidePage';
 import InterviewsPage from './components/pages/InterviewsPage';
+import SavedReviewContainer from './components/interview/containers/SavedReviewContainer';
 import ExperiencePage from './components/pages/ExperiencePage';
 
 function App() {
@@ -12,7 +14,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CreditsProvider>
-          <div className="min-h-screen bg-background font-sans antialiased">
+          <AppViewport>
             <ProtectedRoute>
               <Layout>
                 <Routes>
@@ -20,12 +22,13 @@ function App() {
                   <Route path="/guide" element={<GuidePage />} />
                   <Route path="/guide/:step" element={<GuidePage />} />
                   <Route path="/guide/:step/:id" element={<GuidePage />} />
+                  <Route path="/interviews/:id/review" element={<SavedReviewContainer />} />
                   <Route path="/interviews" element={<InterviewsPage />} />
                   <Route path="/experience" element={<ExperiencePage />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>
-          </div>
+          </AppViewport>
         </CreditsProvider>
       </AuthProvider>
     </BrowserRouter>
