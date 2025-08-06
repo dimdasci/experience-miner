@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReviewUI from '../views/ReviewUI';
 import { useReviewInterview } from '../hooks/useReviewInterview';
@@ -8,7 +7,7 @@ interface ReviewContainerProps {
   onDraft: () => void;
 }
 
-const ReviewContainer: React.FC<ReviewContainerProps> = ({ interviewId, onDraft }) => {
+const ReviewContainer = ({ interviewId, onDraft }: ReviewContainerProps) => {
   const navigate = useNavigate();
   const {
     interview,

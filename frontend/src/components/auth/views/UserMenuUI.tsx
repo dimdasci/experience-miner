@@ -8,7 +8,7 @@ interface UserMenuUIProps {
   creditsElement: React.ReactNode;
 }
 
-export const UserMenuUI: React.FC<UserMenuUIProps> = ({ userPrefix, onSignOut, creditsElement }) => (
+export const UserMenuUI = ({ userPrefix, onSignOut, creditsElement }: UserMenuUIProps) => (
   <div className="flex items-center space-x-4">
     {creditsElement}
     <span className="text-sm text-muted-foreground">{userPrefix}</span>

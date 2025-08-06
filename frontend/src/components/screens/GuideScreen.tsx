@@ -3,7 +3,7 @@ import ChooseTopicContainer from '../guide/containers/ChooseTopicContainer';
 import InterviewSessionContainer from '../guide/containers/InterviewSessionContainer';
 import ReviewContainer from '../interview/containers/ReviewContainer';
 
-const GuidePage = () => {
+const GuideScreen = () => {
   const { step, id } = useParams();
   const navigate = useNavigate();
 
@@ -44,4 +44,4 @@ const GuidePage = () => {
   );
 };
 
-export default GuidePage;
+export default GuideScreen;

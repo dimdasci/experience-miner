@@ -1,8 +1,7 @@
-import React from 'react';
 import { CreditsDisplayUI } from '../views/CreditsDisplayUI';
 import { useCreditsDisplay } from '../hooks/useCreditsDisplay';
 
-const CreditsDisplayContainer: React.FC = () => {
+const CreditsDisplayContainer = () => {
   const { credits, loading, error, onRefresh } = useCreditsDisplay();
   return (
     <CreditsDisplayUI

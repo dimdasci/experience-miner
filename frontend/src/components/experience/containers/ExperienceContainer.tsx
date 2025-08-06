@@ -1,9 +1,8 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ExperienceUI from '../views/ExperienceUI';
 import { useExperienceData } from '../hooks/useExperienceData';
 
-const ExperienceContainer: React.FC = () => {
+const ExperienceContainer = () => {
   const { data, loading, error } = useExperienceData();
   const navigate = useNavigate();
 

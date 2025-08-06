@@ -1,6 +1,6 @@
 import ExperienceContainer from '../experience/containers/ExperienceContainer';
 
-const ExperiencePage = () => {
+const ExperienceScreen = () => {
 
   return (
     <div className="p-6">
@@ -9,4 +9,4 @@ const ExperiencePage = () => {
   );
 };
 
-export default ExperiencePage;
+export default ExperienceScreen;

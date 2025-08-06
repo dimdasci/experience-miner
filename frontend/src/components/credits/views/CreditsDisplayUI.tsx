@@ -1,4 +1,3 @@
-import React from 'react';
 import { Coins } from 'lucide-react';
 // UI component for CreditsDisplay, no extra Button import needed
 
@@ -9,7 +8,7 @@ interface CreditsDisplayUIProps {
   onRefresh: () => void;
 }
 
-export const CreditsDisplayUI: React.FC<CreditsDisplayUIProps> = ({ credits, loading, error, onRefresh }) => {
+export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: CreditsDisplayUIProps) => {
   if (error) {
     return (
       <div className="flex items-center space-x-1 text-destructive">

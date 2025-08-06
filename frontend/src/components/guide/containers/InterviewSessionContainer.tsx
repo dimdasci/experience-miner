@@ -1,4 +1,3 @@
-import React from 'react';
 import InterviewUI from '../views/InterviewUI';
 import { useInterview } from '../hooks/useInterview';
 
@@ -7,7 +6,7 @@ interface InterviewSessionContainerProps {
   onComplete: (interviewId: number) => void;
 }
 
-const InterviewSessionContainer: React.FC<InterviewSessionContainerProps> = ({ interviewId, onComplete }) => {
+const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSessionContainerProps) => {
   const {
     interview,
     loading,

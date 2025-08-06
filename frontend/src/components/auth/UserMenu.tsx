@@ -1,7 +1,6 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
 import { LogOut } from 'lucide-react';
-import { CreditsDisplay } from '../credits/CreditsDisplay';
 
 export function UserMenu() {
   const { user, signOut } = useAuth();
@@ -12,7 +11,6 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center space-x-4">
-      <CreditsDisplay />
       <span className="text-sm text-muted-foreground">
         {userPrefix}
       </span>      

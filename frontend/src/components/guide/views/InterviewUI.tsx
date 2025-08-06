@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../ui/button';
 import GuideRecorder from '../GuideRecorder';
 import { Answer } from '../../../types/business';
@@ -22,7 +21,7 @@ interface InterviewUIProps {
   onDataUpdate: (data: any) => void;
 }
 
-const InterviewUI: React.FC<InterviewUIProps> = ({
+const InterviewUI = ({
   loading,
   error,
   saving,
@@ -32,7 +31,7 @@ const InterviewUI: React.FC<InterviewUIProps> = ({
   onRetry,
   onNext,
   onDataUpdate
-}) => {
+}: InterviewUIProps) => {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">

@@ -1,9 +1,8 @@
-import React from 'react';
 import { useUserMenu } from '../hooks/useUserMenu';
 import { UserMenuUI } from '../views/UserMenuUI';
 import { CreditsDisplay } from '../../credits/CreditsDisplay';
 
-const UserMenuContainer: React.FC = () => {
+const UserMenuContainer = () => {
   const { user, userPrefix, signOut } = useUserMenu();
   if (!user) return null;
   return (
