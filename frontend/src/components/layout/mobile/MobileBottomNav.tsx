@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Mic, MessageCircleMore, User } from 'lucide-react';
+import { Mic, MessageCircleMore, IdCard } from 'lucide-react';
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -20,7 +20,7 @@ const MobileBottomNav = () => {
     { 
       path: '/experience', 
       label: 'Experience', 
-      icon: User,
+      icon: IdCard,
       activeCondition: (pathname: string) => pathname.startsWith('/experience')
     }
   ];
