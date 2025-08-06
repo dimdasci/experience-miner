@@ -1,5 +1,5 @@
 import { Button } from '../../ui/button';
-import GuideRecorder from '../GuideRecorder';
+import RecorderContainer from '../containers/RecorderContainer';
 import { Answer } from '../../../types/business';
 
 interface Progress {
@@ -87,7 +87,7 @@ const InterviewUI = ({
           <h2 className="text-lg font-medium text-gray-900 mb-3">
             Q{progress.current}/{progress.total}: {currentQuestionData.question}
           </h2>
-          <GuideRecorder
+          <RecorderContainer
             questionId={String(currentQuestionData.question_number)}
             questionText={currentQuestionData.question}
             questionNumber={currentQuestionData.question_number}

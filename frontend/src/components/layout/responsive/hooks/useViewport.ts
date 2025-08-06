@@ -8,12 +8,20 @@ export const useViewport = (): ViewportType => {
   );
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleResize = () => {
-      setViewport(window.innerWidth >= 1024 ? 'desktop' : 'mobile');
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setViewport(window.innerWidth >= 1024 ? 'desktop' : 'mobile');
+      }, 100); // Debounce for 100ms
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return viewport;

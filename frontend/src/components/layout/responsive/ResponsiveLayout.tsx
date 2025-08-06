@@ -1,7 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense, lazy } from 'react';
 import { useViewport } from './hooks/useViewport';
-import DesktopLayout from './DesktopLayout';
-import MobileLayout from './MobileLayout';
+
+// Lazy load layouts for better performance
+const DesktopLayout = lazy(() => import('./DesktopLayout'));
+const MobileLayout = lazy(() => import('./MobileLayout'));
 
 interface ResponsiveLayoutProps {
   children: ReactNode;
@@ -12,11 +14,13 @@ const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
 
   return (
     <div className="h-full">
-      {viewport === 'desktop' ? (
-        <DesktopLayout>{children}</DesktopLayout>
-      ) : (
-        <MobileLayout>{children}</MobileLayout>
-      )}
+      <Suspense fallback={<div className="h-screen bg-background" />}>
+        {viewport === 'desktop' ? (
+          <DesktopLayout>{children}</DesktopLayout>
+        ) : (
+          <MobileLayout>{children}</MobileLayout>
+        )}
+      </Suspense>
     </div>
   );
 };

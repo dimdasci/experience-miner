@@ -76,7 +76,7 @@ const InterviewsScreen = () => {
   const renderInterviewsList = () => {
     if (loading) {
       return (
-        <div className="p-6 max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="text-gray-600">Loading interviews...</div>
           </div>
@@ -85,7 +85,7 @@ const InterviewsScreen = () => {
     }
 
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Your Interviews
@@ -160,8 +160,10 @@ const InterviewsScreen = () => {
   };
 
   return (
-    <div className="p-6">
-      {renderView()}
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 lg:p-6">
+        {renderView()}
+      </div>
     </div>
   );
 };

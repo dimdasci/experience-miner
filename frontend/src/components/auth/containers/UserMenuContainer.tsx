@@ -1,15 +1,21 @@
 import { useUserMenu } from '../hooks/useUserMenu';
 import { UserMenuUI } from '../views/UserMenuUI';
-import { CreditsDisplay } from '../../credits/CreditsDisplay';
+import { MobileUserMenuUI } from '../views/MobileUserMenuUI';
 
-const UserMenuContainer = () => {
+interface UserMenuContainerProps {
+  variant?: 'desktop' | 'mobile';
+}
+
+const UserMenuContainer = ({ variant = 'desktop' }: UserMenuContainerProps) => {
   const { user, userPrefix, signOut } = useUserMenu();
   if (!user) return null;
+  
+  const UIComponent = variant === 'mobile' ? MobileUserMenuUI : UserMenuUI;
+  
   return (
-    <UserMenuUI
+    <UIComponent
       userPrefix={userPrefix}
       onSignOut={signOut}
-      creditsElement={<CreditsDisplay />}
     />
   );
 };

@@ -1,6 +1,6 @@
 
-import { CreditsDisplay } from '../../credits/CreditsDisplay';
-import { UserMenu } from '../../auth/UserMenu';
+import CreditsDisplayContainer from '../../credits/containers/CreditsDisplayContainer';
+import UserMenuContainer from '../../auth/containers/UserMenuContainer';
 import { ThemeToggle } from '../../ui/ThemeToggle';
 
 const DesktopHeader = () => {
@@ -11,9 +11,9 @@ const DesktopHeader = () => {
       </div>
       
       <div className="flex items-center space-x-6">
-        <CreditsDisplay />
+        <CreditsDisplayContainer />
         <ThemeToggle />
-        <UserMenu />
+        <UserMenuContainer />
       </div>
     </header>
   );
