@@ -1,8 +1,7 @@
-import React from 'react';
 import { useAuthForm } from '../hooks/useAuthForm';
 import { AuthFormUI } from '../views/AuthFormUI';
 
-const AuthFormContainer: React.FC = () => {
+const AuthFormContainer = () => {
   const {
     email,
     setEmail,

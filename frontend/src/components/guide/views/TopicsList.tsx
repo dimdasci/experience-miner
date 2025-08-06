@@ -1,4 +1,3 @@
-import React from 'react';
 import { Topic } from '../../../types/business';
 import { Button } from '../../ui/button';
 
@@ -11,7 +10,7 @@ interface TopicsListProps {
   onSelect: (topicId: string) => void;
 }
 
-const TopicsList: React.FC<TopicsListProps> = ({ topics, loading, error, selecting, onReload, onSelect }) => {
+const TopicsList = ({ topics, loading, error, selecting, onReload, onSelect }: TopicsListProps) => {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">

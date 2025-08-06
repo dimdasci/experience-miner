@@ -1,4 +1,3 @@
-import React from 'react';
 import { User, Briefcase, Target, AlertCircle, Calendar } from 'lucide-react';
 import { ExtractedFacts } from '../../../types/business';
 import { Button } from '../../ui/button';
@@ -11,7 +10,7 @@ interface ExperienceUIProps {
   onExport?: () => void;
 }
 
-const ExperienceUI: React.FC<ExperienceUIProps> = ({ data, loading, error, onRestart, onExport }) => {
+const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceUIProps) => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl text-center">

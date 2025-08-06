@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Interview, Answer } from '../../../types/business';
@@ -18,7 +17,7 @@ interface ReviewUIProps {
   onExport: () => void;
 }
 
-const ReviewUI: React.FC<ReviewUIProps> = ({
+const ReviewUI = ({
   interview,
   answers,
   loading,
@@ -31,7 +30,7 @@ const ReviewUI: React.FC<ReviewUIProps> = ({
   onExtract,
   onExport,
   onClearError
-}) => {
+}: ReviewUIProps) => {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">

@@ -1,6 +1,5 @@
-import React from 'react';
 import { Button } from '../../ui/button';
-import GuideRecorder from '../GuideRecorder';
+import RecorderContainer from '../containers/RecorderContainer';
 import { Answer } from '../../../types/business';
 
 interface Progress {
@@ -22,7 +21,7 @@ interface InterviewUIProps {
   onDataUpdate: (data: any) => void;
 }
 
-const InterviewUI: React.FC<InterviewUIProps> = ({
+const InterviewUI = ({
   loading,
   error,
   saving,
@@ -32,7 +31,7 @@ const InterviewUI: React.FC<InterviewUIProps> = ({
   onRetry,
   onNext,
   onDataUpdate
-}) => {
+}: InterviewUIProps) => {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -88,7 +87,7 @@ const InterviewUI: React.FC<InterviewUIProps> = ({
           <h2 className="text-lg font-medium text-gray-900 mb-3">
             Q{progress.current}/{progress.total}: {currentQuestionData.question}
           </h2>
-          <GuideRecorder
+          <RecorderContainer
             questionId={String(currentQuestionData.question_number)}
             questionText={currentQuestionData.question}
             questionNumber={currentQuestionData.question_number}

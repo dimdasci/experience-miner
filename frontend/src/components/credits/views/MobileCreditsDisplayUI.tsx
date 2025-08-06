@@ -1,19 +1,18 @@
 import { Coins } from 'lucide-react';
-// UI component for CreditsDisplay, no extra Button import needed
 
-interface CreditsDisplayUIProps {
+interface MobileCreditsDisplayUIProps {
   credits: number | null;
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
 }
 
-export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: CreditsDisplayUIProps) => {
+export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: MobileCreditsDisplayUIProps) => {
   if (error) {
     return (
       <div className="flex items-center space-x-1 text-destructive">
-        <Coins className="h-4 w-4" />
-        <span className="text-sm cursor-pointer" onClick={onRefresh}>Error</span>
+        <Coins className="h-3 w-3" />
+        <span className="text-xs cursor-pointer" onClick={onRefresh}>Err</span>
       </div>
     );
   }
@@ -21,8 +20,8 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
   if (loading && credits === null) {
     return (
       <div className="flex items-center space-x-1 text-muted-foreground">
-        <Coins className="h-4 w-4 animate-spin" />
-        <span className="text-sm">Loading...</span>
+        <Coins className="h-3 w-3 animate-spin" />
+        <span className="text-xs">...</span>
       </div>
     );
   }
@@ -32,19 +31,19 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
   const isEmpty = displayCredits <= 0;
 
   return (
-    <div
+    <div 
       className={`flex items-center space-x-1 ${
         isEmpty ? 'text-destructive' : 
         isLow ? 'text-yellow-600' : 
         'text-muted-foreground'
       }`}
       onClick={onRefresh}
-      title="Click to refresh credits"
+      title="Tap to refresh credits"
       style={{ cursor: 'pointer' }}
     >
-      <Coins className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-      <span className="text-sm font-medium">
-        {displayCredits} {displayCredits === 1 ? 'credit' : 'credits'}
+      <Coins className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+      <span className="text-xs font-medium">
+        {displayCredits}
       </span>
     </div>
   );

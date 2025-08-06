@@ -17,7 +17,7 @@ interface AuthFormUIProps {
   onReset: () => void;
 }
 
-export const AuthFormUI: React.FC<AuthFormUIProps> = ({
+export const AuthFormUI = ({
   email,
   otp,
   step,
@@ -28,7 +28,7 @@ export const AuthFormUI: React.FC<AuthFormUIProps> = ({
   onSend,
   onVerify,
   onReset
-}) => (
+}: AuthFormUIProps) => (
   <div className="w-full max-w-md mx-auto space-y-6 p-6">
     <div className="text-center">
       <h1 className="text-2xl font-bold">Remember What You've Accomplished</h1>

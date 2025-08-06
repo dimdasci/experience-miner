@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import TopicsList from '../views/TopicsList';
 import { useTopics } from '../hooks/useTopics';
 import { apiService } from '../../../services/apiService';
@@ -8,7 +8,7 @@ interface ChooseTopicContainerProps {
   onTopicSelect: (step: string, interviewId?: string) => void;
 }
 
-const ChooseTopicContainer: React.FC<ChooseTopicContainerProps> = ({ onTopicSelect }) => {
+const ChooseTopicContainer = ({ onTopicSelect }: ChooseTopicContainerProps) => {
   const { topics, loading, error, reload } = useTopics();
   const [selecting, setSelecting] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);

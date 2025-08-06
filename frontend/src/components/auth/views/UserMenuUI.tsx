@@ -1,16 +1,13 @@
-import React from 'react';
 import { Button } from '../../ui/button';
 import { LogOut } from 'lucide-react';
 
 interface UserMenuUIProps {
   userPrefix: string;
   onSignOut: () => void;
-  creditsElement: React.ReactNode;
 }
 
-export const UserMenuUI: React.FC<UserMenuUIProps> = ({ userPrefix, onSignOut, creditsElement }) => (
+export const UserMenuUI = ({ userPrefix, onSignOut }: UserMenuUIProps) => (
   <div className="flex items-center space-x-4">
-    {creditsElement}
     <span className="text-sm text-muted-foreground">{userPrefix}</span>
     <Button
       variant="ghost"

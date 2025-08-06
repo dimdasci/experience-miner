@@ -1,11 +1,18 @@
-import React from 'react';
 import { CreditsDisplayUI } from '../views/CreditsDisplayUI';
+import { MobileCreditsDisplayUI } from '../views/MobileCreditsDisplayUI';
 import { useCreditsDisplay } from '../hooks/useCreditsDisplay';
 
-const CreditsDisplayContainer: React.FC = () => {
+interface CreditsDisplayContainerProps {
+  variant?: 'desktop' | 'mobile';
+}
+
+const CreditsDisplayContainer = ({ variant = 'desktop' }: CreditsDisplayContainerProps) => {
   const { credits, loading, error, onRefresh } = useCreditsDisplay();
+  
+  const UIComponent = variant === 'mobile' ? MobileCreditsDisplayUI : CreditsDisplayUI;
+  
   return (
-    <CreditsDisplayUI
+    <UIComponent
       credits={credits}
       loading={loading}
       error={error}

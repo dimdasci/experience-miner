@@ -3,7 +3,7 @@ import ChooseTopicContainer from '../guide/containers/ChooseTopicContainer';
 import InterviewSessionContainer from '../guide/containers/InterviewSessionContainer';
 import ReviewContainer from '../interview/containers/ReviewContainer';
 
-const GuidePage = () => {
+const GuideScreen = () => {
   const { step, id } = useParams();
   const navigate = useNavigate();
 
@@ -38,10 +38,12 @@ const GuidePage = () => {
   };
 
   return (
-    <div className="p-6">
-      {renderStep()}
+    <div className="h-full overflow-y-auto">
+      <div className="p-4 lg:p-6">
+        {renderStep()}
+      </div>
     </div>
   );
 };
 
-export default GuidePage;
+export default GuideScreen;
