@@ -200,13 +200,13 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Review Your Responses
+          Review Your Story
         </h1>
         <p className="text-gray-600">
-          Review your answers for "{interview.title}" before processing
+          Topic was "{interview.title}"
         </p>
-        <p className="text-sm text-gray-500 mt-2 italic">
-          "{interview.motivational_quote}"
+        <p className="text-sm text-gray-500 mt-2">
+          Take a look at what you shared before we organize it for you
         </p>
       </div>
 
@@ -295,13 +295,13 @@ const ReviewView = ({ onDraft, interviewId: propInterviewId }: ReviewViewProps) 
             <div className="text-center">
               <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Processing Your Interview
+                Making Your Career Profile
               </h3>
               <p className="text-gray-600 mb-4">
-                Our AI is extracting and organizing your career information. This may take a few moments.
+                We're turning your story into organized career information you can actually use. Hang tight for about 2 minutes.
               </p>
               <div className="text-sm text-gray-500">
-                Please do not close this window...
+                Please don't close this window while we work
               </div>
             </div>
           </div>

@@ -46,15 +46,6 @@ const InterviewsPage = () => {
     }
   };
 
-  const handleInterviewSelect = (interviewId: number) => {
-    // Navigate to interview review with interview ID in URL
-    navigate(`/guide/review/${interviewId}`);
-  };
-
-  const handleExtractFromInterview = (interviewId: number) => {
-    // Navigate to extraction process with interview ID in URL
-    navigate(`/guide/extract/${interviewId}`);
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-UK', {
@@ -78,10 +69,10 @@ const InterviewsPage = () => {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Your Past Interviews
+          Your Interviews
         </h1>
         <p className="text-gray-600">
-          Collection of interviews you've conducted
+          All your interview sessions in one place - both finished and in progress. You can review what you shared and update your career profile anytime.
         </p>
       </div>
 
@@ -95,7 +86,7 @@ const InterviewsPage = () => {
             Try again
           </button>
         </div>
-      )}
+      )} 
 
       <div className="space-y-4">
         {interviews.map((interview) => (
@@ -115,28 +106,16 @@ const InterviewsPage = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {interview.title}
                 </h3>
-                <p className="text-sm text-gray-600 italic">
-                  "{interview.motivational_quote}"
-                </p>
               </div>
               
               <div className="flex gap-2 ml-4">
-                <Button 
+                <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleInterviewSelect(interview.id)}
+                  onClick={() => navigate(`/interviews/${interview.id}/review`)}
                 >
                   Review
                 </Button>
-                {interview.status === 'completed' && (
-                  <Button 
-                    size="sm"
-                    onClick={() => handleExtractFromInterview(interview.id)}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    Re-extract
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -157,14 +136,6 @@ const InterviewsPage = () => {
           </Button>
         </div>
       )}
-
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">About Interviews</h4>
-        <p className="text-blue-700 text-sm">
-          This section contains all your completed and draft interview sessions. 
-          You can review past responses and re-extract insights from completed interviews.
-        </p>
-      </div>
     </div>
   );
 };

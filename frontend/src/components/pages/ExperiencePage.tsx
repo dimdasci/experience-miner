@@ -1,18 +1,10 @@
-import { useNavigate } from 'react-router-dom';
-import ExperienceView from './ExperienceView';
+import ExperienceContainer from '../experience/containers/ExperienceContainer';
 
 const ExperiencePage = () => {
-  const navigate = useNavigate();
-
-  const handleStartNewInterview = () => {
-    navigate('/guide');
-  };
 
   return (
     <div className="p-6">
-      <ExperienceView 
-        onRestart={handleStartNewInterview}
-      />
+      <ExperienceContainer />
     </div>
   );
 };
