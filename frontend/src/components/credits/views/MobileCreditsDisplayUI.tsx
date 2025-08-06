@@ -43,7 +43,7 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
     >
       <Coins className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       <span className="text-xs font-medium">
-        {displayCredits}
+        {displayCredits} {displayCredits === 1 ? 'credit' : 'credits'}
       </span>
     </div>
   );
