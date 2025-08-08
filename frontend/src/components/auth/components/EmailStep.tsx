@@ -14,9 +14,6 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
     <div>
       <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onSend(); }} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email address
-          </label>
           <Input
             id="email"
             type="email"
@@ -28,9 +25,14 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading || !email}>
-          {loading ? 'Sending...' : 'Send verification code'}
-        </Button>
+        <div className="text-center w-full">
+          <Button type="submit" disabled={loading || !email}>
+            {loading ? 'Sending...' : 'Get Started'}
+          </Button>
+          <p className="mt-4 text-sm text-muted-foreground">
+            By clicking "Get Started," you agree to our "Terms of Service" and "Privacy Policy".
+          </p>
+        </div>
       </form>
     </div>
   );

@@ -26,7 +26,7 @@ const TopicsList = ({ topics, loading, error, selecting, onReload, onSelect }: T
     <div className="max-w-4xl mx-auto">
       <SectionHeader 
         title="Interview Topics"
-        subtitle="Choose any topic to start - you can do them in any order. More topics will appear as you dive deeper into your career story."
+        subtitle="Pick a starting point. We'll suggest new topics as we learn more about your story."
       />
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">

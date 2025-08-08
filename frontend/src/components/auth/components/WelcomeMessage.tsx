@@ -1,4 +1,4 @@
-import { HeartHandshake } from 'lucide-react';
+import Logo  from '@/components/ui/Logo';
 
 interface WelcomeMessageProps {
   step: 'email' | 'otp';
@@ -8,19 +8,16 @@ const WelcomeMessage = ({ step }: WelcomeMessageProps) => {
   return (
     <>
       <div className="text-center">
-        <h1 className="text-2xl font-bold">Remember What You've Accomplished</h1>
-        <p className="text-muted-foreground mt-2">
-          Beat the blank page - rediscover your professional experiences through conversational interviews
-        </p>
+        <Logo/>
+        <h1 className="text-2xl font-bold">Uncover hidden gems in your career</h1>
+        { step === 'email' ? (
+          <>
+            <p className="text-muted-foreground mt-2">
+              AI-guided conversations help you remember and organize achievements for stronger applications
+            </p>
+          </>
+        ) : null}
       </div>
-
-      {step === 'email' && (
-        <div className="w-full max-w-md mx-auto space-y-6 p-6 text-center">
-          <div className="mt-2">Get free credits to try it out.</div>
-          <div className="mt-2">Early preview version - help us make it better</div>
-          <HeartHandshake />
-        </div>
-      )}
     </>
   );
 };

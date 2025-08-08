@@ -33,7 +33,7 @@ const InterviewList = ({
   return (
     <div className="max-w-4xl mx-auto">
       <SectionHeader 
-        title="Your Interviews" 
+        title="All Your Stories" 
         subtitle="All your interview sessions in one place - both finished and in progress. You can review what you shared and update your career profile anytime."
       />
 
