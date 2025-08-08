@@ -3,6 +3,7 @@ import { MoreVertical, X } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { MobileThemeToggle } from '../../ui/MobileThemeToggle';
 import UserMenuContainer from '../../auth/containers/UserMenuContainer';
+import MobileFooter from './MobileFooter';
 
 const MobileOverflowMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +42,10 @@ const MobileOverflowMenu = () => {
               
               <div className="px-2 py-2">
                 <UserMenuContainer variant="mobile" />
+              </div>
+              
+              <div className="px-2">
+                <MobileFooter />
               </div>
             </div>
           </div>

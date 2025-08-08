@@ -1,6 +1,9 @@
-import { Button } from '../../ui/button';
-import { Loader2, AlertCircle } from 'lucide-react';
 import { Interview, Answer } from '../../../types/business';
+import SectionHeader from '../../ui/section-header';
+import ReviewAnswersList from '../components/ReviewAnswersList';
+import ReviewAnswer from '../components/ReviewAnswer';
+import ReviewNavigation from '../components/ReviewNavigation';
+import ProcessingModal from '../../guide/components/ProcessingModal';
 
 interface ReviewUIProps {
   interview: Interview | null;
@@ -66,31 +69,22 @@ const ReviewUI = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Review Your Story</h1>
-        <p className="text-gray-600">Topic was "{interview.title}"</p>
-        <p className="text-sm text-gray-500 mt-2">Take a look at what you shared before we organize it for you</p>
-      </div>
+      <SectionHeader 
+        title="Review Your Story" 
+        subtitle={`Topic was "${interview.title}" - Take a look at what you shared before we organize it for you`}
+      />
 
-      <div className="space-y-6">
+      <ReviewAnswersList>
         {answers.map(answer => (
-          <div key={answer.id} className="bg-white border rounded-lg p-6">
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Question {answer.question_number}</h3>
-              <p className="text-gray-700 mb-4">{answer.question}</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-medium text-gray-900 mb-2">Your Response:</h4>
-              <p className="text-gray-700 whitespace-pre-wrap">{answer.answer || 'No response recorded'}</p>
-              {answer.recording_duration_seconds && (
-                <div className="mt-3 text-sm text-gray-500">
-                  Recording duration: {answer.recording_duration_seconds} seconds
-                </div>
-              )}
-            </div>
-          </div>
+          <ReviewAnswer 
+            key={answer.id} 
+            questionNumber={answer.question_number}
+            question={answer.question} 
+            answer={answer.answer}
+            recordingDuration={answer.recording_duration_seconds}
+          />
         ))}
-      </div>
+      </ReviewAnswersList>
 
       {answers.length === 0 && (
         <div className="text-center py-12">
@@ -103,51 +97,22 @@ const ReviewUI = ({
         </div>
       )}
 
-      <div className="mt-8 flex justify-between items-center bg-gray-50 rounded-lg p-6">
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-1">Ready to process your responses?</h3>
-          <p className="text-gray-600 text-sm">
-            Extract structured insights from your interview or save as draft ({answeredQuestions.length} of {answers.length} questions answered)
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onDraft}>Save as Draft</Button>
-          <Button variant="outline" onClick={onResume}>Resume Interview</Button>
-          <Button variant="outline" onClick={onExport}>Export</Button>
-          <Button onClick={onExtract} className="bg-green-600 hover:bg-green-700" disabled={answeredQuestions.length === 0 || isExtracting}>
-            {isExtracting ? (<><Loader2 className="w-4 h-4 animate-spin mr-2"/>Processing...</>) : 'Complete & Analyze'}
-          </Button>
-        </div>
-      </div>
+      <ReviewNavigation 
+        onDraft={onDraft} 
+        onResume={onResume}
+        onExport={onExport} 
+        onExtract={onExtract}
+        answeredCount={answeredQuestions.length}
+        totalCount={answers.length}
+        isExtracting={isExtracting}
+      />
 
-      {isExtracting && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <div className="text-center">
-              <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4"/>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Making Your Career Profile</h3>
-              <p className="text-gray-600 mb-4">We're turning your story into organized career information you can actually use. Hang tight for about 2 minutes.</p>
-              <div className="text-sm text-gray-500">Please don't close this window while we work</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {extractionError && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <div className="text-center">
-              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4"/>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Error</h3>
-              <p className="text-gray-600 mb-6">{extractionError}</p>
-              <div className="flex gap-3 justify-center">
-                <Button variant="outline" onClick={onClearError}>Close</Button>
-                <Button onClick={onExtract} className="bg-blue-600 hover:bg-blue-700">Try Again</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProcessingModal 
+        isProcessing={isExtracting}
+        error={extractionError}
+        onRetry={onExtract}
+        onCancel={onClearError}
+      />
     </div>
   );
 };

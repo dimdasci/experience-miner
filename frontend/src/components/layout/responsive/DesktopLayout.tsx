@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import DesktopHeader from '../desktop/DesktopHeader';
 import DesktopNavigation from '../desktop/DesktopNavigation';
+import DesktopFooter from '../desktop/DesktopFooter';
 
 interface DesktopLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
         <main className="flex-1 bg-background overflow-y-auto">
           {children}
         </main>
+        <DesktopFooter />
       </div>
     </div>
   );
