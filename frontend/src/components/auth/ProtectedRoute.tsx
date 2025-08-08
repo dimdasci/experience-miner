@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { AuthForm } from './AuthForm';
+import AuthFormContainer from './containers/AuthFormContainer';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <AuthForm />
+        <AuthFormContainer />
       </div>
     );
   }

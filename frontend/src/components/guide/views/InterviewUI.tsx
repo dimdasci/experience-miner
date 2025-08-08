@@ -1,6 +1,10 @@
-import { Button } from '../../ui/button';
 import RecorderContainer from '../containers/RecorderContainer';
 import { Answer } from '../../../types/business';
+import SectionHeader from '../../ui/section-header';
+import InterviewProgress from '../components/InterviewProgress';
+import QuestionAnswerPair from '../components/QuestionAnswerPair';
+import FocusedQuestion from '../components/FocusedQuestion';
+import InterviewNavigation from '../components/InterviewNavigation';
 
 interface Progress {
   current: number;
@@ -65,43 +69,38 @@ const InterviewUI = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {interviewTitle}
-          </h1>
-          <div className="text-sm text-gray-500">
-            Question {progress.current} of {progress.total}
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progress.percentage}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="bg-white border rounded-lg p-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-3">
-            Q{progress.current}/{progress.total}: {currentQuestionData.question}
-          </h2>
-          <RecorderContainer
-            questionId={String(currentQuestionData.question_number)}
-            questionText={currentQuestionData.question}
-            questionNumber={currentQuestionData.question_number}
-            interviewId={currentQuestionData.interview_id}
-            existingResponse={currentQuestionData.answer ?? undefined}
-            onDataUpdate={onDataUpdate}
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button onClick={onNext} disabled={saving}>
-            {progress.isComplete ? 'Finish' : 'Next'}
-          </Button>
-        </div>
-      </div>
+      <SectionHeader 
+        title={interviewTitle}
+        className="mb-6"
+      />
+      
+      <InterviewProgress 
+        current={progress.current} 
+        total={progress.total} 
+        percentage={progress.percentage} 
+      />
+      
+      <QuestionAnswerPair>
+        <FocusedQuestion 
+          question={currentQuestionData.question} 
+          number={progress.current}
+          total={progress.total}
+        />
+        <RecorderContainer
+          questionId={String(currentQuestionData.question_number)}
+          questionText={currentQuestionData.question}
+          questionNumber={currentQuestionData.question_number}
+          interviewId={currentQuestionData.interview_id}
+          existingResponse={currentQuestionData.answer ?? undefined}
+          onDataUpdate={onDataUpdate}
+        />
+      </QuestionAnswerPair>
+      
+      <InterviewNavigation 
+        onNext={onNext} 
+        isComplete={progress.isComplete} 
+        disabled={saving} 
+      />
     </div>
   );
 };

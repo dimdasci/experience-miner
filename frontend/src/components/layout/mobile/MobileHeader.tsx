@@ -1,3 +1,4 @@
+import Logo from '../../ui/Logo';
 import CreditsDisplayContainer from '../../credits/containers/CreditsDisplayContainer';
 import MobileOverflowMenu from './MobileOverflowMenu';
 
@@ -11,7 +12,7 @@ const MobileHeader = () => {
     >
       <div className="px-4 py-3 flex justify-between items-center">
         {/* Brand logo */}
-        <h1 className="text-lg font-semibold">espejo</h1>
+        <Logo />
         
         {/* Right side: Credits + Menu */}
         <div className="flex items-center space-x-3">
