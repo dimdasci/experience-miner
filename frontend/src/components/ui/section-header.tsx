@@ -9,8 +9,8 @@ interface SectionHeaderProps {
 const SectionHeader = ({ title, subtitle, className }: SectionHeaderProps) => {
   return (
     <div className={cn("mb-8", className)}>
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
-      {subtitle && <p className="text-gray-600">{subtitle}</p>}
+      <h1 className="text-display font-bold text-primary mb-2">{title}</h1>
+      {subtitle && <p className="text-body-lg text-secondary">{subtitle}</p>}
     </div>
   );
 };

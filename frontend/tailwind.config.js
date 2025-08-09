@@ -8,67 +8,31 @@ module.exports = {
     './src/**/*.{ts,tsx}',
   ],
   theme: {
-    container: {
-      center: true,
-      padding: '2rem',
-      screens: {
-        '2xl': '1400px',
-      },
-    },
     extend: {
+      fontFamily: {
+        'sans': ['Inter', 'sans-serif'],
+        'serif': ['Lora', 'serif'],
+      },
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
+        // Espejo design system colors (remove hsl() wrappers, keep var() references)
+        'background': 'var(--background)',
+        'surface': 'var(--surface)', 
+        'accent': 'var(--accent)',
+        'accent-hover': 'var(--accent-hover)',
+        'primary': 'var(--text-primary)',        // Keep existing usage pattern
+        'secondary': 'var(--text-secondary)',    // Keep existing usage pattern  
+        'border-subtle': 'var(--border-subtle)',
+        'neutral-bg': 'var(--neutral-bg)',
+        // Special mappings for specific use cases
+        'foreground': 'var(--text-primary)', // For bg-foreground → bg-foreground usage (caret)
       },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-      keyframes: {
-        'accordion-down': {
-          from: { height: 0 },
-          to: { height: 'var(--radix-accordion-content-height)' },
-        },
-        'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: 0 },
-        },
-      },
-      animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
+      fontSize: {
+        'display': ['2.5rem', '3rem'],     // 40px / 48px line-height
+        'headline': ['1.5rem', '2rem'],    // 24px / 32px line-height  
+        'body-lg': ['1.125rem', '1.75rem'], // 18px / 28px line-height
+        'body': ['1rem', '1.5rem'],        // 16px / 24px line-height
+        'body-sm': ['0.875rem', '1.25rem'], // 14px / 20px line-height
+        'caption': ['0.75rem', '1rem'],    // 12px / 16px line-height
       },
     },
   },
