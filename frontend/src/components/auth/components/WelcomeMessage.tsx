@@ -8,11 +8,13 @@ const WelcomeMessage = ({ step }: WelcomeMessageProps) => {
   return (
     <>
       <div className="text-center">
-        <Logo/>
-        <h1 className="text-2xl font-bold">Uncover hidden gems in your career</h1>
+        <div className="mb-8">
+          <Logo/>
+        </div>
+        <h1 className="text-display font-bold leading-tight mb-6">Uncover hidden gems in your career</h1>
         { step === 'email' ? (
           <>
-            <p className="text-secondary mt-2">
+            <p className="text-headline text-secondary">
               AI-guided conversations help you remember and organize achievements for stronger applications
             </p>
           </>

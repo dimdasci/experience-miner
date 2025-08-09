@@ -13,15 +13,15 @@ interface OTPStepProps {
 
 const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPStepProps) => {
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg p-16 space-y-8">
       <div className="text-center">
-        <h2 className="text-lg font-medium">Check your email</h2>
-        <p className="text-sm text-secondary mt-1">
+        <h2 className="text-headline font-medium">Check your email</h2>
+        <p className="text-body-sm text-secondary mt-2">
           We sent a 6-digit code to <strong>{email}</strong>
         </p>
       </div>
 
-      <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onVerify(); }} className="space-y-4">
+      <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onVerify(); }} className="space-y-8 max-w-sm mx-auto">
         <div className="flex justify-center">
           <InputOTP
             maxLength={6}
@@ -44,17 +44,18 @@ const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPSte
           type="submit"
           className="w-full"
           disabled={loading || otp.length !== 6}
+          variant={otp.length !== 6 ? 'secondary' : 'default'}
         >
           {loading ? 'Verifying...' : 'Verify code'}
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center max-w-sm mx-auto">
         <Button
           variant="link"
           onClick={onReset}
           disabled={loading}
-          className="text-sm"
+          className="text-body-sm"
         >
           Use a different email
         </Button>

@@ -11,9 +11,9 @@ interface EmailStepProps {
 
 const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) => {
   return (
-    <div>
-      <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onSend(); }} className="space-y-4">
-        <div>
+    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg p-16">
+      <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onSend(); }} className="space-y-8">
+        <div className="max-w-sm mx-auto">
           <Input
             id="email"
             type="email"
@@ -25,13 +25,21 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
           />
         </div>
 
-        <div className="text-center w-full">
-          <Button type="submit" disabled={loading || !email}>
+        <div className="text-center w-full max-w-sm mx-auto">
+          <p className="mb-4 text-body-sm text-secondary">
+            By clicking "Get Started," you agree to our<br />
+            <a href="/terms" className="text-accent hover:underline">Terms of Service</a>
+            {' '}and{' '}
+            <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a>.
+          </p>
+          <Button 
+            type="submit" 
+            disabled={loading || !email}
+            variant={!email ? 'secondary' : 'default'}
+            className="w-full"
+          >
             {loading ? 'Sending...' : 'Get Started'}
           </Button>
-          <p className="mt-4 text-sm text-secondary">
-            By clicking "Get Started," you agree to our "Terms of Service" and "Privacy Policy".
-          </p>
         </div>
       </form>
     </div>

@@ -27,7 +27,7 @@ export const AuthFormUI = ({
   onVerify,
   onReset
 }: AuthFormUIProps) => (
-  <div className="w-full max-w-md mx-auto space-y-6 p-6">
+  <div className="w-full max-w-3xl mx-auto space-y-12 p-6">
     <WelcomeMessage step={step} />
 
     {error && (
@@ -37,12 +37,19 @@ export const AuthFormUI = ({
     )}
 
     {step === 'email' ? (
-      <EmailStep
-        email={email}
-        loading={loading}
-        onEmailChange={onEmailChange}
-        onSend={onSend}
-      />
+      <>
+        <EmailStep
+          email={email}
+          loading={loading}
+          onEmailChange={onEmailChange}
+          onSend={onSend}
+        />
+        <div className="text-center w-full max-w-lg mx-auto">
+          <p className="text-body-lg text-secondary">
+            New here? This gets you started with free credits.
+          </p>
+        </div>
+      </>
     ) : (
       <OTPStep
         email={email}
