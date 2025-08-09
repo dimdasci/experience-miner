@@ -11,9 +11,7 @@ const InterviewsScreen = () => {
     const handleDraft = () => navigate('/interviews');
     return (
       <div className="h-full overflow-y-auto">
-        <div className="p-4 lg:p-6">
-          <ReviewContainer interviewId={id} onDraft={handleDraft} />
-        </div>
+        <ReviewContainer interviewId={id} onDraft={handleDraft} />
       </div>
     );
   }
@@ -21,9 +19,7 @@ const InterviewsScreen = () => {
   // Delegate interview list management to proper container
   return (
     <div className="h-full overflow-y-auto">
-      <div className="p-4 lg:p-6">
-        <InterviewListContainer />
-      </div>
+      <InterviewListContainer />
     </div>
   );
 

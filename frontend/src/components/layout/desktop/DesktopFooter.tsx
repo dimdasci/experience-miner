@@ -1,9 +1,10 @@
 const DesktopFooter = () => {
   return (
-    <footer className="border-t bg-background px-6 py-4 mt-8">
-      <div className="flex justify-center space-x-6 text-sm text-gray-600">
-        <a href="/terms" className="hover:text-gray-900">Terms of Service</a>
-        <a href="/privacy" className="hover:text-gray-900">Privacy Policy</a>
+    <footer className="flex-shrink-0 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-subtle">
+      <div className="flex justify-center items-center space-x-8 text-body-sm">
+        <a href="/terms" className="text-secondary hover:text-primary transition-colors">Terms of Service</a>
+        <a href="/privacy" className="text-secondary hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="/contacts" className="text-secondary hover:text-primary transition-colors">Contacts</a>
       </div>
     </footer>
   );

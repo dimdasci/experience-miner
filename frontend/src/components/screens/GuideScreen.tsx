@@ -39,9 +39,7 @@ const GuideScreen = () => {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="p-4 lg:p-6">
-        {renderStep()}
-      </div>
+      {renderStep()}
     </div>
   );
 };

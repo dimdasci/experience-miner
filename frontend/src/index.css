@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    font-size: 14px; /* Match reference implementation (inherited from Google AI Studio) */
     /* Espejo design system - Graphite & Terracotta (Light Mode) */
     --background: #f9fafb;         /* gray-50 */
     --surface: #ffffff;            /* white */

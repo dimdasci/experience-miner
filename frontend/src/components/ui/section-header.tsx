@@ -8,9 +8,11 @@ interface SectionHeaderProps {
 
 const SectionHeader = ({ title, subtitle, className }: SectionHeaderProps) => {
   return (
-    <div className={cn("mb-8", className)}>
-      <h1 className="text-display font-bold text-primary mb-2">{title}</h1>
-      {subtitle && <p className="text-body-lg text-secondary">{subtitle}</p>}
+    <div className={cn("py-12 md:py-16", className)}>
+      <div className="text-center mb-12">
+        <h1 className="text-display font-bold text-primary tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-2 text-body-lg text-secondary">{subtitle}</p>}
+      </div>
     </div>
   );
 };
