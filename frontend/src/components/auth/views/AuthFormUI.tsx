@@ -31,7 +31,7 @@ export const AuthFormUI = ({
     <WelcomeMessage step={step} />
 
     {error && (
-      <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-md text-sm">
+      <div className="bg-accent/10 border border-accent/20 text-accent p-3 rounded-md text-sm">
         {error}
       </div>
     )}

@@ -48,7 +48,7 @@ const MobileBottomNav = () => {
                 active:scale-95 active:bg-primary/20
                 ${isActive 
                   ? 'text-primary bg-primary/10' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  : 'text-secondary hover:text-primary hover:bg-neutral-bg'
                 }
               `}
             >

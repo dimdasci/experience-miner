@@ -7,7 +7,7 @@ export const MobileThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-1 rounded-md hover:bg-muted transition-colors"
+      className="p-1 rounded-md hover:bg-neutral-bg transition-colors"
       aria-label="Toggle theme"
     >
       {theme === 'dark' ? (

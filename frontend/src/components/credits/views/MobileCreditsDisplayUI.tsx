@@ -10,7 +10,7 @@ interface MobileCreditsDisplayUIProps {
 export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: MobileCreditsDisplayUIProps) => {
   if (error) {
     return (
-      <div className="flex items-center space-x-1 text-destructive">
+      <div className="flex items-center space-x-1 text-accent">
         <Coins className="h-3 w-3" />
         <span className="text-xs cursor-pointer" onClick={onRefresh}>Err</span>
       </div>
@@ -19,7 +19,7 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
 
   if (loading && credits === null) {
     return (
-      <div className="flex items-center space-x-1 text-muted-foreground">
+      <div className="flex items-center space-x-1 text-secondary">
         <Coins className="h-3 w-3 animate-spin" />
         <span className="text-xs">...</span>
       </div>
@@ -33,9 +33,9 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
   return (
     <div 
       className={`flex items-center space-x-1 ${
-        isEmpty ? 'text-destructive' : 
+        isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
-        'text-muted-foreground'
+        'text-secondary'
       }`}
       onClick={onRefresh}
       title="Tap to refresh credits"

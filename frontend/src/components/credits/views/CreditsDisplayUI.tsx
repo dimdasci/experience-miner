@@ -11,7 +11,7 @@ interface CreditsDisplayUIProps {
 export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: CreditsDisplayUIProps) => {
   if (error) {
     return (
-      <div className="flex items-center space-x-1 text-destructive">
+      <div className="flex items-center space-x-1 text-accent">
         <Coins className="h-4 w-4" />
         <span className="text-sm cursor-pointer" onClick={onRefresh}>Error</span>
       </div>
@@ -20,7 +20,7 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
 
   if (loading && credits === null) {
     return (
-      <div className="flex items-center space-x-1 text-muted-foreground">
+      <div className="flex items-center space-x-1 text-secondary">
         <Coins className="h-4 w-4 animate-spin" />
         <span className="text-sm">Loading...</span>
       </div>
@@ -34,9 +34,9 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
   return (
     <div
       className={`flex items-center space-x-1 ${
-        isEmpty ? 'text-destructive' : 
+        isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
-        'text-muted-foreground'
+        'text-secondary'
       }`}
       onClick={onRefresh}
       title="Click to refresh credits"

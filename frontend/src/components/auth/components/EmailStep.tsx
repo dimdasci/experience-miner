@@ -29,7 +29,7 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
           <Button type="submit" disabled={loading || !email}>
             {loading ? 'Sending...' : 'Get Started'}
           </Button>
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-secondary">
             By clicking "Get Started," you agree to our "Terms of Service" and "Privacy Policy".
           </p>
         </div>

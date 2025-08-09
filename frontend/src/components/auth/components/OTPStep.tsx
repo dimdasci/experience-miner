@@ -16,7 +16,7 @@ const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPSte
     <div className="space-y-4">
       <div className="text-center">
         <h2 className="text-lg font-medium">Check your email</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-secondary mt-1">
           We sent a 6-digit code to <strong>{email}</strong>
         </p>
       </div>

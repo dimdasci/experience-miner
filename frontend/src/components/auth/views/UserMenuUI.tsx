@@ -8,7 +8,7 @@ interface UserMenuUIProps {
 
 export const UserMenuUI = ({ userPrefix, onSignOut }: UserMenuUIProps) => (
   <div className="flex items-center space-x-4">
-    <span className="text-sm text-muted-foreground">{userPrefix}</span>
+    <span className="text-sm text-secondary">{userPrefix}</span>
     <Button
       variant="ghost"
       size="sm"
