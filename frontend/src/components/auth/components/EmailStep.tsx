@@ -14,12 +14,15 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
     <div className="w-full max-w-lg mx-auto bg-surface rounded-lg p-16">
       <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onSend(); }} className="space-y-8">
         <div className="max-w-sm mx-auto">
+          <label htmlFor="email" className="block text-body font-medium mb-2">
+            Sign in or sign up with just your email
+          </label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={e => onEmailChange(e.target.value)}
-            placeholder="Enter your email"
+            placeholder="email"
             required
             disabled={loading}
           />
