@@ -14,25 +14,15 @@ const StoryTextArea = ({
   onTranscriptBlur 
 }: StoryTextAreaProps) => {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        Your Story:
-      </label>
-      <textarea
-        value={transcript}
-        onChange={(e) => onTranscriptChange(e.target.value)}
-        onBlur={onTranscriptBlur}
-        placeholder="Record your answer or type here"
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        rows={6}
-        disabled={isTranscribing}
-      />
-      {hasTranscript && (
-        <p className="text-xs text-gray-500">
-          Story saved. Use navigation buttons below to continue.
-        </p>
-      )}
-    </div>
+    <textarea
+      className="w-full h-full bg-transparent p-6 border-0 focus:ring-0 focus:outline-none resize-none text-body-lg text-primary leading-relaxed"
+      value={transcript}
+      onChange={(e) => onTranscriptChange(e.target.value)}
+      onBlur={onTranscriptBlur}
+      aria-label="Your answer"
+      placeholder="Start writing your answer..."
+      disabled={isTranscribing}
+    />
   );
 };
 

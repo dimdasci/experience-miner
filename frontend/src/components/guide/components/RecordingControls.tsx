@@ -1,4 +1,4 @@
-import { Mic, MicOff } from 'lucide-react';
+import { Circle, Square } from 'lucide-react';
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -13,33 +13,51 @@ const RecordingControls = ({
   recordingDuration, 
   onStartRecording 
 }: RecordingControlsProps) => {
-  return (
-    <div className="flex items-center justify-center space-x-4">
-      <button
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  if (!isRecording && recordingDuration === 0) {
+    // Show start recording button
+    return (
+      <button 
         onClick={onStartRecording}
         disabled={isTranscribing}
-        className={`
-          flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all
-          ${isRecording 
-            ? 'bg-red-600 hover:bg-red-700 text-white' 
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }
-          ${isTranscribing ? 'opacity-50 cursor-not-allowed' : ''}
-        `}
+        className="bg-primary hover:bg-primary/90 text-surface rounded-full px-4 py-2 transition-opacity disabled:opacity-50"
+        aria-label="Start recording"
       >
-        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        <span>
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
-        </span>
-      </button>
-
-      {recordingDuration > 0 && (
-        <div className="text-sm text-gray-600">
-          Duration: {Math.floor(recordingDuration / 60)}:
-          {String(recordingDuration % 60).padStart(2, '0')}
+        <div className="flex items-center space-x-2">
+          <Circle className="h-5 w-5" fill="currentColor"/>
+          <span className="text-sm font-medium">Start Recording</span>
         </div>
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4">
+        <button 
+          onClick={onStartRecording}
+          disabled={isTranscribing}
+          aria-label={isRecording ? "Stop recording" : "Resume recording"}
+        >
+          <Circle className="h-5 w-5" fill="currentColor"/>
+        </button>
+        <span className="tabular-nums text-lg tracking-wider">{formatTime(recordingDuration)}</span>
+      </div>
+      {isRecording && (
+        <button 
+          onClick={onStartRecording}
+          className="bg-primary text-surface rounded-full p-3 hover:opacity-80 transition-opacity" 
+          aria-label="Stop recording"
+        >
+          <Square className="h-4 w-4" fill="currentColor" />
+        </button>
       )}
-    </div>
+    </>
   );
 };
 

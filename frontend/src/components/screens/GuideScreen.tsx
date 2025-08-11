@@ -37,11 +37,7 @@ const GuideScreen = () => {
     }
   };
 
-  return (
-    <div className="h-full overflow-y-auto">
-      {renderStep()}
-    </div>
-  );
+  return renderStep();
 };
 
 export default GuideScreen;

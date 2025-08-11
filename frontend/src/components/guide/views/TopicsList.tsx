@@ -15,37 +15,39 @@ interface TopicsListProps {
 const TopicsList = ({ topics, loading, error, selecting, onReload, onSelect }: TopicsListProps) => {
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-secondary">Loading topics...</div>
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <div className="text-secondary">Loading topics...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <SectionHeader 
-        title="Interview Topics"
-        subtitle="Pick a starting point. We'll suggest new topics as we learn more about your story."
-      />
-      {error && (
-        <ErrorMessage 
-          message={error}
-          onRetry={onReload}
-          className="mb-8"
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0">
+        <SectionHeader 
+          title="Interview Topics"
+          subtitle="Pick a starting point. We'll suggest new topics as we learn more about your story."
         />
-      )}
-
-      <div className="space-y-8">
-        {topics.map(topic => (
-          <TopicComponent 
-            key={topic.id} 
-            topic={topic}
-            isSelecting={selecting === topic.id}
-            onSelect={onSelect}
+        {error && (
+          <ErrorMessage 
+            message={error}
+            onRetry={onReload}
+            className="mx-6 mb-8"
           />
-        ))}
+        )}
+      </div>
+      
+      <div className="flex-1 min-h-0 overflow-y-auto pb-8">
+        <div className="mt-12 space-y-8">
+          {topics.map(topic => (
+            <TopicComponent 
+              key={topic.id} 
+              topic={topic}
+              isSelecting={selecting === topic.id}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

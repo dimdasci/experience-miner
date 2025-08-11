@@ -1,4 +1,4 @@
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, Circle, Square } from 'lucide-react';
 
 interface VoiceInputProps {
   isActive: boolean;
@@ -19,54 +19,42 @@ const VoiceInput = ({
   onStopRecording,
   disabled = false
 }: VoiceInputProps) => {
-  const handleClick = () => {
-    if (isRecording) {
-      onStopRecording();
-    } else {
-      onStartRecording();
-    }
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
   return (
-    <div className={`
-      transition-all duration-300 
-      ${isActive ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-gray-50'} 
-      ${disabled ? 'opacity-50 cursor-not-allowed' : ''} 
-      rounded-lg p-4
-    `}>
-      <div className="flex items-center justify-center space-x-4">
-        <button
-          onClick={handleClick}
-          disabled={disabled || isTranscribing}
-          className={`
-            flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all
-            ${isRecording 
-              ? 'bg-red-600 hover:bg-red-700 text-white' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }
-            ${(disabled || isTranscribing) ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-        >
-          {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          <span>
-            {isRecording ? 'Stop Recording' : 'Start Recording'}
-          </span>
-        </button>
-
-        {recordingDuration > 0 && (
-          <div className="text-sm text-gray-600">
-            Duration: {Math.floor(recordingDuration / 60)}:
-            {String(recordingDuration % 60).padStart(2, '0')}
-          </div>
-        )}
+    <div className="flex items-center space-x-6">
+      <div className="flex-shrink-0 w-8 flex justify-center">
+        <Mic className="h-8 w-8 text-secondary" strokeWidth={1.5} />
       </div>
-
-      {isTranscribing && (
-        <div className="flex items-center justify-center space-x-2 text-blue-600 mt-3">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Transcribing audio...</span>
+      <div className="flex-grow flex items-center space-x-4">
+        <div className="flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4">
+          <button 
+            onClick={isRecording ? onStopRecording : onStartRecording}
+            disabled={disabled}
+            aria-label={isRecording ? "Pause recording" : "Start recording"}
+          >
+            <Circle className="h-5 w-5" fill="currentColor"/>
+          </button>
+          <span className="tabular-nums text-lg tracking-wider">
+            {formatTime(recordingDuration)}
+          </span>
         </div>
-      )}
+        <button 
+          className="bg-primary text-surface rounded-full p-3 hover:opacity-80 transition-opacity" 
+          onClick={onStopRecording}
+          disabled={!isRecording}
+          aria-label="Stop recording"
+        >
+          <Square className="h-4 w-4" fill="currentColor" />
+        </button>
+        <p className="text-sm text-secondary">
+          You can pause and resume recording. Stop it to get transcript.
+        </p>
+      </div>
     </div>
   );
 };

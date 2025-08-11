@@ -9,19 +9,11 @@ const InterviewsScreen = () => {
 
   if (isReviewMode) {
     const handleDraft = () => navigate('/interviews');
-    return (
-      <div className="h-full overflow-y-auto">
-        <ReviewContainer interviewId={id} onDraft={handleDraft} />
-      </div>
-    );
+    return <ReviewContainer interviewId={id} onDraft={handleDraft} />;
   }
 
   // Delegate interview list management to proper container
-  return (
-    <div className="h-full overflow-y-auto">
-      <InterviewListContainer />
-    </div>
-  );
+  return <InterviewListContainer />;
 
 };
 

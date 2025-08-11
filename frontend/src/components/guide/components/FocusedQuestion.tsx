@@ -6,10 +6,13 @@ interface FocusedQuestionProps {
 
 const FocusedQuestion = ({ question, number, total }: FocusedQuestionProps) => {
   return (
-    <div className="mb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-3">
-        Q{number}/{total}: {question}
-      </h2>
+    <div className="mt-16 flex items-baseline space-x-6">
+      <div className="flex-shrink-0 w-8 flex justify-center text-headline font-serif font-medium text-secondary">Q</div>
+      <div className="flex-grow">
+        <h2 className="text-headline font-medium text-primary leading-snug">
+          {question}
+        </h2>
+      </div>
     </div>
   );
 };

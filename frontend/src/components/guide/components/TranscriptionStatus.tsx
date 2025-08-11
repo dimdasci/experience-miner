@@ -8,9 +8,13 @@ const TranscriptionStatus = ({ isTranscribing }: TranscriptionStatusProps) => {
   if (!isTranscribing) return null;
 
   return (
-    <div className="flex items-center justify-center space-x-2 text-blue-600">
-      <Loader2 className="w-4 h-4 animate-spin" />
-      <span>Transcribing audio...</span>
+    <div className="flex items-center space-x-6">
+      <div className="flex-shrink-0 w-8 flex justify-center">
+        <Loader2 className="h-5 w-5 text-secondary animate-spin" />
+      </div>
+      <div className="flex-grow">
+        <span className="text-sm text-secondary">Transcribing audio...</span>
+      </div>
     </div>
   );
 };
