@@ -1,12 +1,12 @@
-import RecorderContainer from '../containers/RecorderContainer';
+import RecorderUI from '../views/RecorderUI';
 import { Answer } from '../../../types/business';
 import SectionHeader from '../../ui/section-header';
 import InterviewProgress from '../components/InterviewProgress';
 import QuestionAnswerPair from '../components/QuestionAnswerPair';
 import FocusedQuestion from '../components/FocusedQuestion';
 import InterviewNavigation from '../components/InterviewNavigation';
-import TextInput from '../components/TextInput';
 import ErrorMessage from '../../ui/error-message';
+import { RecordingState } from '../types/recordingTypes';
 
 interface Progress {
   current: number;
@@ -22,9 +22,13 @@ interface InterviewUIProps {
   interviewTitle: string;
   currentQuestionData?: Answer;
   progress: Progress;
+  recordingState: RecordingState;
   onRetry: () => void;
   onNext: () => void;
+  onNavigate: (questionNumber: number) => void;
   onDataUpdate: (data: any) => void;
+  // Hook containing all recording functionality
+  interviewHook: any; // TODO: Type this properly with the return type of useInterview
 }
 
 const InterviewUI = ({
@@ -34,9 +38,12 @@ const InterviewUI = ({
   interviewTitle,
   currentQuestionData,
   progress,
+  recordingState,
   onRetry,
   onNext,
-  onDataUpdate
+  onNavigate,
+  onDataUpdate,
+  interviewHook
 }: InterviewUIProps) => {
   if (loading) {
     return (
@@ -48,7 +55,8 @@ const InterviewUI = ({
     );
   }
 
-  if (error) {
+  // Only treat errors as fatal if no question data is available (i.e. load errors)
+  if (error && !currentQuestionData) {
     return (
       <div className="max-w-3xl mx-auto">
         <ErrorMessage 
@@ -79,7 +87,10 @@ const InterviewUI = ({
         <InterviewProgress 
           current={progress.current} 
           total={progress.total} 
-          percentage={progress.percentage} 
+          percentage={progress.percentage}
+          answers={interviewHook.answers || []}
+          onNavigate={error ? undefined : onNavigate}
+          recordingState={recordingState}
         />
       </div>
       
@@ -92,38 +103,51 @@ const InterviewUI = ({
           total={progress.total}
         />
         
-        {/* Recorder */}
-        <RecorderContainer
-          questionId={String(currentQuestionData.question_number)}
-          questionText={currentQuestionData.question}
-          questionNumber={currentQuestionData.question_number}
-          interviewId={currentQuestionData.interview_id}
-          existingResponse={currentQuestionData.answer ?? undefined}
-          onDataUpdate={onDataUpdate}
+        {/* Recorder - now renders RecorderUI directly with unified hook data */}
+        <RecorderUI
+          // Voice props from unified hook
+          transcript={interviewHook.transcript}
+          isTranscribing={interviewHook.isTranscribing}
+          isRecording={interviewHook.isRecording}
+          recordingDuration={interviewHook.recordingDuration}
+          isSupported={interviewHook.isSupported}
+          error={interviewHook.audioError}
+          hasTranscript={interviewHook.hasTranscript}
+          onStartRecording={interviewHook.handleVoiceStart}
+          onPauseRecording={interviewHook.handlePauseRecording}
+          onStopRecording={interviewHook.handleStopRecording}
+          onTranscriptChange={() => {}} // Not used in unified approach
+          onTranscriptBlur={() => {}} // Not used in unified approach
+          // Text props from unified hook
+          textValue={interviewHook.textValue}
+          onTextChange={interviewHook.handleTextChange}
+          onTextFocus={interviewHook.handleTextFocus}
+          onTextBlur={interviewHook.handleTextBlur}
+          // State props
+          activeMode={interviewHook.activeMode}
         />
-        
-        {/* Answer - grows to fill remaining space */}
-        <div className="mt-10 flex items-start space-x-6 flex-grow min-h-0">
-          <div className="flex-shrink-0 w-8 flex justify-center text-headline font-serif font-medium text-secondary">A</div>
-          <div className="flex-grow min-h-0 h-full rounded-lg bg-surface transition-shadow duration-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-accent">
-            <TextInput 
-              isActive={true}
-              value={currentQuestionData.answer ?? ''}
-              onChange={() => {}}
-              onFocus={() => {}}
-              placeholder="Start writing your answer..."
-              disabled={false}
-            />
-          </div>
-        </div>
       </div>
-      
-      {/* Navigation at bottom */}
-      <InterviewNavigation 
-        onNext={onNext} 
-        isComplete={progress.isComplete} 
-        disabled={saving} 
-      />
+
+      {/* Inline save feedback during text auto-save */}
+      {saving && interviewHook.activeMode === 'text' && (
+        <p className="text-xs text-gray-500 mb-4">Saving…</p>
+      )}
+      {/* Bottom controls: retry on save error, otherwise navigation */}
+      {error ? (
+        <ErrorMessage
+          message={error}
+          onRetry={onRetry}
+          retryText="Retry save"
+          className="mb-4"
+        />
+      ) : (
+        <InterviewNavigation
+          onNext={onNext}
+          isComplete={progress.isComplete}
+          disabled={false}  /* only block recording/transcribing */
+          recordingState={recordingState}
+        />
+      )}
     </>
 
   );

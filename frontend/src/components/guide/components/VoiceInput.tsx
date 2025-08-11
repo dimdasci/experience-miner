@@ -6,6 +6,7 @@ interface VoiceInputProps {
   recordingDuration?: number;
   isTranscribing?: boolean;
   onStartRecording: () => void;
+  onPauseRecording: () => void;
   onStopRecording: () => void;
   disabled?: boolean;
 }
@@ -16,6 +17,7 @@ const VoiceInput = ({
   recordingDuration = 0, 
   isTranscribing = false,
   onStartRecording, 
+  onPauseRecording,
   onStopRecording,
   disabled = false
 }: VoiceInputProps) => {
@@ -33,7 +35,7 @@ const VoiceInput = ({
       <div className="flex-grow flex items-center space-x-4">
         <div className="flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4">
           <button 
-            onClick={isRecording ? onStopRecording : onStartRecording}
+            onClick={isRecording ? onPauseRecording : onStartRecording}
             disabled={disabled}
             aria-label={isRecording ? "Pause recording" : "Start recording"}
           >

@@ -1,17 +1,35 @@
+import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
+
 interface InterviewProgressProps {
   current: number;
   total: number;
   percentage: number;
+  answers: AnswerWithStatus[];
   onNavigate?: (questionNumber: number) => void;
+  recordingState?: RecordingState;
 }
 
-const InterviewProgress = ({ current, total, percentage }: InterviewProgressProps) => {
+const InterviewProgress = ({ current, total, percentage, answers, onNavigate, recordingState }: InterviewProgressProps) => {
+  // Progress control disabled when recording or paused according to task requirements
+  const isNavigationDisabled = recordingState?.isRecording || recordingState?.isPaused;
+
+  const handleStepClick = (step: number) => {
+    if (!isNavigationDisabled && onNavigate) {
+      onNavigate(step);
+    }
+  };
+
   return (
     <div className="mt-12 flex justify-center items-center space-x-2 sm:space-x-4">
       {Array.from({ length: total }, (_, index) => {
         const step = index + 1;
         const isCurrent = step === current;
-        const isCompleted = step < current;
+        
+        // Use pre-computed hasAnswer flag (O(1) instead of O(n) string processing)
+        const questionAnswer = answers[index];
+        const isAnswered = questionAnswer?.hasAnswer || false;
+        
+        const isClickable = !isNavigationDisabled && onNavigate;
         
         return (
           <div 
@@ -19,12 +37,21 @@ const InterviewProgress = ({ current, total, percentage }: InterviewProgressProp
             className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all ${
               isCurrent 
                 ? 'bg-primary text-surface' 
-                : isCompleted 
-                  ? 'bg-primary text-surface' 
+                : isAnswered 
+                  ? 'bg-secondary text-surface' 
                   : 'border border-border-subtle text-secondary'
+            } ${
+              isClickable 
+                ? 'cursor-pointer hover:opacity-80' 
+                : isNavigationDisabled 
+                  ? 'cursor-not-allowed opacity-50' 
+                  : ''
             }`} 
+            onClick={() => handleStepClick(step)}
             aria-current={isCurrent ? "step" : undefined} 
-            aria-label={`Step ${step} of ${total}`}
+            aria-label={`Step ${step} of ${total}${isClickable ? ' (click to navigate)' : ''}`}
+            role={isClickable ? "button" : undefined}
+            tabIndex={isClickable ? 0 : undefined}
           >
             {step}
           </div>
