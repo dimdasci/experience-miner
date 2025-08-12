@@ -1,5 +1,4 @@
 import { Loader2 } from 'lucide-react';
-import { memo } from 'react';
 import IconContentLayout from './IconContentLayout';
 
 interface TranscriptionStatusProps {
@@ -20,4 +19,4 @@ const TranscriptionStatus = ({ isTranscribing }: TranscriptionStatusProps) => {
   );
 };
 
-export default memo(TranscriptionStatus);
+export default TranscriptionStatus;

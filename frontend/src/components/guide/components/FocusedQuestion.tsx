@@ -1,10 +1,10 @@
 interface FocusedQuestionProps {
   question: string;
-  number: number;
-  total: number;
+  number?: number;
+  total?: number;
 }
 
-const FocusedQuestion = ({ question }: FocusedQuestionProps) => {
+const FocusedQuestion = ({ question, number: _number, total: _total }: FocusedQuestionProps) => {
   return (
     <div className="mt-16 flex items-baseline space-x-6">
       <div className="flex-shrink-0 w-8 flex justify-center text-headline font-serif font-medium text-secondary">Q</div>

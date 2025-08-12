@@ -1,40 +1,16 @@
 import RecorderUI from '../views/RecorderUI';
-import { Answer } from '../../../types/business';
 import SectionHeader from '../../ui/section-header';
 import InterviewProgress from '../components/InterviewProgress';
 import FocusedQuestion from '../components/FocusedQuestion';
 import InterviewNavigation from '../components/InterviewNavigation';
 import ErrorMessage from '../../ui/error-message';
 import { RecordingState } from '../types/recordingTypes';
+import { InterviewControls, VoiceControls, TextControls } from '../types/interviewTypes';
 
 interface InterviewUIProps {
-  interview: {
-    data: any;
-    answers: any[];
-    currentQuestionData?: Answer;
-    loading: boolean;
-    error: string | null;
-    onRetry: () => void;
-    onNext: () => Promise<number | undefined>;
-    onNavigate: (questionNumber: number) => Promise<void>;
-  };
-  voice: {
-    isTranscribing: boolean;
-    isRecording: boolean;
-    isPaused: boolean;
-    duration: number;
-    isSupported: boolean;
-    error: string | null;
-    onStart: () => void;
-    onPause: () => void;
-    onStop: () => void;
-  };
-  text: {
-    value: string;
-    onChange: (value: string) => void;
-    onBlur: () => Promise<void>;
-    onFocus: () => void;
-  };
+  interview: InterviewControls;
+  voice: VoiceControls;
+  text: TextControls;
   saving: boolean;
   activeMode: 'voice' | 'text';
   recordingState: RecordingState;

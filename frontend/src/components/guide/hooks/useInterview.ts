@@ -8,8 +8,9 @@ import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
 import { TranscriptionService } from '../../../services/transcriptionService';
 import { useAnswerPersistence } from './useAnswerPersistence';
 import { useInputHandlers } from './useInputHandlers';
+import { UseInterviewReturn } from '../types/interviewTypes';
 
-export function useInterview(interviewIdStr?: string) {
+export function useInterview(interviewIdStr?: string): UseInterviewReturn {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [answers, setAnswers] = useState<AnswerWithStatus[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);

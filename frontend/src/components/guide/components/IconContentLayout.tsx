@@ -1,4 +1,4 @@
-import { ReactNode, memo } from 'react';
+import { ReactNode } from 'react';
 
 interface IconContentLayoutProps {
   icon: ReactNode;
@@ -19,4 +19,4 @@ const IconContentLayout = ({ icon, children, className = '' }: IconContentLayout
   );
 };
 
-export default memo(IconContentLayout);
+export default IconContentLayout;

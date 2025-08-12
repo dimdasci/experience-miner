@@ -1,20 +1,6 @@
 import { useCallback } from 'react';
 import { UserJourneyLogger } from '../../../utils/logger';
-
-interface UseInputHandlersProps {
-  answers: any[];
-  currentIdx: number;
-  setAnswerText: (text: string) => void;
-  setActiveMode: (mode: 'voice' | 'text') => void;
-  saveCurrentText: () => Promise<boolean>;
-  startRecording: () => void;
-  pauseRecording: () => void;
-  resumeRecording: () => void;
-  stopRecording: () => void;
-  audioRecordingState: {
-    isPaused: boolean;
-  };
-}
+import { UseInputHandlersProps, UseInputHandlersReturn } from '../types/interviewTypes';
 
 export function useInputHandlers({
   answers,
@@ -27,7 +13,7 @@ export function useInputHandlers({
   resumeRecording,
   stopRecording,
   audioRecordingState
-}: UseInputHandlersProps) {
+}: UseInputHandlersProps): UseInputHandlersReturn {
   // Recording control handlers
   const handleStartRecording = useCallback(() => {
     const currentQuestion = answers[currentIdx];

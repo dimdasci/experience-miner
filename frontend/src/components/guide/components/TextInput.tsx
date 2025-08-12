@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 
 interface TextInputProps {
   value: string;
@@ -18,10 +17,7 @@ const TextInput = ({
   disabled,
   placeholder = "Start writing your answer..."
 }: TextInputProps) => {
-  const containerClasses = useMemo(() => 
-    'w-full h-full rounded-lg bg-surface transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-accent',
-    []
-  );
+  const containerClasses = 'w-full h-full rounded-lg bg-surface transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-accent';
 
   return (
     <div className={containerClasses}>

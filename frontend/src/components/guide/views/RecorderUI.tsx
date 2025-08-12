@@ -2,25 +2,11 @@ import TranscriptionStatus from '../components/TranscriptionStatus';
 import ErrorMessage from '../../ui/error-message';
 import VoiceInput from '../components/VoiceInput';
 import TextInput from '../components/TextInput';
+import { VoiceControls, TextControls } from '../types/interviewTypes';
 
 interface RecorderUIProps {
-  voice: {
-    isTranscribing: boolean;
-    isRecording: boolean;
-    isPaused: boolean;
-    duration: number;
-    isSupported: boolean;
-    error: string | null;
-    onStart: () => void;
-    onPause: () => void;
-    onStop: () => void;
-  };
-  text: {
-    value: string;
-    onChange: (value: string) => void;
-    onBlur: () => Promise<void>;
-    onFocus: () => void;
-  };
+  voice: VoiceControls;
+  text: TextControls;
   activeMode: 'voice' | 'text';
   saving: boolean;
 }

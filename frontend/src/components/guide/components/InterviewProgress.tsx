@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
 
 interface InterviewProgressProps {
@@ -60,4 +61,4 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
   );
 };
 
-export default InterviewProgress;
+export default memo(InterviewProgress);
