@@ -8,31 +8,54 @@ import ErrorMessage from '../../ui/error-message';
 import { RecordingState } from '../types/recordingTypes';
 
 interface InterviewUIProps {
-  loading: boolean;
-  error: string | null;
+  interview: {
+    data: any;
+    answers: any[];
+    currentQuestionData?: Answer;
+    loading: boolean;
+    error: string | null;
+    onRetry: () => void;
+    onNext: () => Promise<number | undefined>;
+    onNavigate: (questionNumber: number) => Promise<void>;
+  };
+  voice: {
+    isTranscribing: boolean;
+    isRecording: boolean;
+    isPaused: boolean;
+    duration: number;
+    isSupported: boolean;
+    error: string | null;
+    onStart: () => void;
+    onPause: () => void;
+    onStop: () => void;
+  };
+  text: {
+    value: string;
+    onChange: (value: string) => void;
+    onBlur: () => Promise<void>;
+    onFocus: () => void;
+  };
   saving: boolean;
-  interviewTitle: string;
-  currentQuestionData?: Answer;
+  activeMode: 'voice' | 'text';
   recordingState: RecordingState;
   onRetry: () => void;
   onNext: () => void;
   onNavigate: (questionNumber: number) => void;
-  // Hook containing all recording functionality
-  interviewHook: any; // TODO: Type this properly with the return type of useInterview
 }
 
 const InterviewUI = ({
-  loading,
-  error,
+  interview,
+  voice,
+  text,
   saving,
-  interviewTitle,
-  currentQuestionData,
+  activeMode,
   recordingState,
   onRetry,
   onNext,
-  onNavigate,
-  interviewHook
+  onNavigate
 }: InterviewUIProps) => {
+  const { data: interviewData, answers, currentQuestionData, loading, error } = interview;
+  
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -63,8 +86,7 @@ const InterviewUI = ({
     );
   }
 
-  // Compute progress from interviewHook
-  const answers = interviewHook.answers || [];
+  // Compute progress from interview data
   const currentQuestionNumber = currentQuestionData.question_number;
   const current = currentQuestionNumber;
   const total = answers.length;
@@ -75,7 +97,7 @@ const InterviewUI = ({
       {/* Header Section with proper spacing */}
       <div className="flex-shrink-0">
         <SectionHeader
-          title={interviewTitle}
+          title={interviewData?.title || ''}
           subtitle="Track your progress through the interview process."
         />
         
@@ -97,26 +119,11 @@ const InterviewUI = ({
           total={total}
         />
         
-        {/* Recorder - now renders RecorderUI directly with unified hook data */}
+        {/* Recorder - now renders RecorderUI directly with grouped hook data */}
         <RecorderUI
-          // Voice props from unified hook
-          isTranscribing={interviewHook.isTranscribing}
-          isRecording={interviewHook.isRecording}
-          recordingDuration={interviewHook.recordingDuration}
-          isSupported={interviewHook.isSupported}
-          error={interviewHook.audioError}
-          isPaused={recordingState.isPaused}
-          onStartRecording={interviewHook.handleVoiceStart}
-          onPauseRecording={interviewHook.handlePauseRecording}
-          onStopRecording={interviewHook.handleStopRecording}
-          // Text props from unified hook
-          textValue={interviewHook.text.value}
-          onTextChange={interviewHook.text.onChange}
-          onTextFocus={interviewHook.text.onFocus}
-          onTextBlur={interviewHook.text.onBlur}
-          // State props
-          activeMode={interviewHook.activeMode}
-          // Save feedback props
+          voice={voice}
+          text={text}
+          activeMode={activeMode}
           saving={saving}
         />
       </div>

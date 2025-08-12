@@ -7,6 +7,7 @@ import { useCredits } from '../../../contexts/CreditsContext';
 import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
 import { TranscriptionService } from '../../../services/transcriptionService';
 import { useAnswerPersistence } from './useAnswerPersistence';
+import { useInputHandlers } from './useInputHandlers';
 
 export function useInterview(interviewIdStr?: string) {
   const [interview, setInterview] = useState<Interview | null>(null);
@@ -141,7 +142,7 @@ export function useInterview(interviewIdStr?: string) {
         onCreditsUpdate: () => refreshCredits(true)
       }
     );
-  }, [answers, currentIdx, interview, saveAnswer, refreshCredits]);
+  }, [answers, currentIdx, interview, answerText, saveAnswer, refreshCredits]);
 
   // Initialize audio recorder
   const {
@@ -156,81 +157,26 @@ export function useInterview(interviewIdStr?: string) {
     onRecordingComplete: handleRecordingComplete
   });
 
-  // Recording control handlers
-  const handleStartRecording = useCallback(() => {
-    const currentQuestion = answers[currentIdx];
-    if (!currentQuestion) return;
-
-    // Log recording start
-    UserJourneyLogger.logInterviewProgress({
-      stage: 'recording',
-      questionId: String(currentQuestion.question_number)
-    });
-    UserJourneyLogger.logUserAction({
-      action: 'recording_started',
-      component: 'useInterview',
-      data: { questionId: String(currentQuestion.question_number) }
-    });
-    startRecording();
-  }, [startRecording, answers, currentIdx]);
-
-  const handlePauseRecording = useCallback(() => {
-    const currentQuestion = answers[currentIdx];
-    if (!currentQuestion) return;
-
-    // Log recording pause
-    UserJourneyLogger.logInterviewProgress({
-      stage: 'recording',
-      questionId: String(currentQuestion.question_number)
-    });
-    UserJourneyLogger.logUserAction({
-      action: 'recording_paused',
-      component: 'useInterview',
-      data: { questionId: String(currentQuestion.question_number) }
-    });
-    
-    if (audioRecordingState.isPaused) {
-      resumeRecording();
-    } else {
-      pauseRecording();
-    }
-  }, [pauseRecording, resumeRecording, audioRecordingState.isPaused, answers, currentIdx]);
-
-  const handleStopRecording = useCallback(() => {
-    const currentQuestion = answers[currentIdx];
-    if (!currentQuestion) return;
-
-    // Log recording stop
-    UserJourneyLogger.logInterviewProgress({
-      stage: 'recording',
-      questionId: String(currentQuestion.question_number)
-    });
-    UserJourneyLogger.logUserAction({
-      action: 'recording_stopped',
-      component: 'useInterview',
-      data: { questionId: String(currentQuestion.question_number) }
-    });
-    stopRecording();
-  }, [stopRecording, answers, currentIdx]);
-
-  // Text input handlers
-  const handleTextChange = useCallback((value: string) => {
-    setAnswerText(value);
-    // No auto-save - only save on navigation/blur/transcription events
-  }, []);
-
-  const handleTextBlur = useCallback(async () => {
-    await saveCurrentText();
-  }, [saveCurrentText]);
-
-  const handleTextFocus = useCallback(() => {
-    setActiveMode('text');
-  }, []);
-
-  const handleVoiceStart = useCallback(() => {
-    setActiveMode('voice');
-    handleStartRecording();
-  }, [handleStartRecording]);
+  // Input handlers (text and audio)
+  const {
+    handlePauseRecording,
+    handleStopRecording,
+    handleTextChange,
+    handleTextBlur,
+    handleTextFocus,
+    handleVoiceStart
+  } = useInputHandlers({
+    answers,
+    currentIdx,
+    setAnswerText,
+    setActiveMode,
+    saveCurrentText,
+    startRecording,
+    pauseRecording,
+    resumeRecording,
+    stopRecording,
+    audioRecordingState
+  });
 
   const currentQuestionData = answers[currentIdx];
 
@@ -249,20 +195,32 @@ export function useInterview(interviewIdStr?: string) {
   }), [audioRecordingState.isRecording, audioRecordingState.isPaused, isTranscribing, hasContent, activeMode]);
 
   return {
-    // Core interview data & navigation (actively used)
-    interview,
-    answers,
-    loading,
-    error,
-    saving,
-    currentQuestionData,
-    recordingState,
-    loadInterview,
-    saveAnswer,
-    next,
-    navigateToQuestion,
+    // Interview data and navigation
+    interview: {
+      data: interview,
+      answers,
+      currentQuestionData,
+      loading,
+      error,
+      onRetry: loadInterview,
+      onNext: next,
+      onNavigate: navigateToQuestion
+    },
 
-    // Text input (actively used)
+    // Voice recording controls and state
+    voice: {
+      isTranscribing,
+      isRecording: audioRecordingState.isRecording,
+      isPaused: audioRecordingState.isPaused,
+      duration: audioRecordingState.duration,
+      isSupported,
+      error: audioError,
+      onStart: handleVoiceStart,
+      onPause: handlePauseRecording,
+      onStop: handleStopRecording
+    },
+
+    // Text input controls and state
     text: {
       value: answerText,
       onChange: handleTextChange,
@@ -270,18 +228,10 @@ export function useInterview(interviewIdStr?: string) {
       onFocus: handleTextFocus
     },
     
-    // Active mode (actively used)
+    // Top-level frequently accessed state
+    saving,
     activeMode,
-
-    // Recording stubs (flat until we implement voice features)
-    isTranscribing,
-    isRecording: audioRecordingState.isRecording,
-    recordingDuration: audioRecordingState.duration,
-    isSupported,
-    audioError,
-    handleStartRecording,
-    handlePauseRecording,
-    handleStopRecording,
-    handleVoiceStart
+    recordingState,
+    saveAnswer
   };
 }

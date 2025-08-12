@@ -11,53 +11,48 @@ const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSession
   
   const {
     interview,
-    loading,
-    error,
+    voice,
+    text,
     saving,
-    currentQuestionData,
+    activeMode,
     recordingState,
-    loadInterview,
-    saveAnswer,
-    next,
-    navigateToQuestion
+    saveAnswer
   } = interviewHook;
 
   // Retry loading interview (fatal load errors)
   const handleRetry = () => {
-    loadInterview();
+    interview.onRetry();
   };
   // Retry saving current answer (save errors)
   const handleRetrySave = async () => {
     // Re-send the current text answer from the hook
-    await saveAnswer({ response: interviewHook.text.value, recordingDuration: 0 });
+    await saveAnswer({ response: text.value, recordingDuration: 0 });
   };
 
 
   const handleNext = async () => {
-    const completedId = await next();
+    const completedId = await interview.onNext();
     if (completedId !== undefined) {
       onComplete(completedId);
     }
   };
 
   const handleNavigate = async (questionNumber: number) => {
-    await navigateToQuestion(questionNumber - 1); // Convert to 0-based index
+    await interview.onNavigate(questionNumber - 1); // Convert to 0-based index
   };
 
   return (
     <InterviewUI
-      loading={loading}
-      error={error}
+      interview={interview}
+      voice={voice}
+      text={text}
       saving={saving}
-      interviewTitle={interview?.title || ''}
-      currentQuestionData={currentQuestionData}
+      activeMode={activeMode}
       recordingState={recordingState}
       // Use save-retry if we're mid-interview, otherwise reload interview
-      onRetry={currentQuestionData ? handleRetrySave : handleRetry}
+      onRetry={interview.currentQuestionData ? handleRetrySave : handleRetry}
       onNext={handleNext}
       onNavigate={handleNavigate}
-      // Pass through all recording-related props from unified hook
-      interviewHook={interviewHook}
     />
   );
 };

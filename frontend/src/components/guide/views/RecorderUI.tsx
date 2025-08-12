@@ -4,48 +4,51 @@ import VoiceInput from '../components/VoiceInput';
 import TextInput from '../components/TextInput';
 
 interface RecorderUIProps {
-  // Voice props
-  isTranscribing: boolean
-  isRecording: boolean
-  recordingDuration: number
-  isSupported: boolean
-  error: string | null
-  isPaused?: boolean
-  onStartRecording: () => void
-  onPauseRecording: () => void
-  onStopRecording: () => void
-  // Text props
-  textValue: string
-  onTextChange: (value: string) => void
-  onTextFocus: () => void
-  onTextBlur: () => void
-  // State props
-  activeMode: 'voice' | 'text'
-  // Save feedback props
-  saving: boolean
+  voice: {
+    isTranscribing: boolean;
+    isRecording: boolean;
+    isPaused: boolean;
+    duration: number;
+    isSupported: boolean;
+    error: string | null;
+    onStart: () => void;
+    onPause: () => void;
+    onStop: () => void;
+  };
+  text: {
+    value: string;
+    onChange: (value: string) => void;
+    onBlur: () => Promise<void>;
+    onFocus: () => void;
+  };
+  activeMode: 'voice' | 'text';
+  saving: boolean;
 }
 
 const RecorderUI = ({
-  // Voice props
-  isTranscribing,
-  isRecording,
-  recordingDuration,
-  isSupported,
-  error,
-  isPaused = false,
-  onStartRecording,
-  onPauseRecording,
-  onStopRecording,
-  // Text props
-  textValue,
-  onTextChange,
-  onTextFocus,
-  onTextBlur,
-  // State props
+  voice,
+  text,
   activeMode,
-  // Save feedback props
   saving
 }: RecorderUIProps) => {
+  const {
+    isTranscribing,
+    isRecording,
+    isPaused,
+    duration: recordingDuration,
+    isSupported,
+    error,
+    onStart: onStartRecording,
+    onPause: onPauseRecording,
+    onStop: onStopRecording
+  } = voice;
+
+  const {
+    value: textValue,
+    onChange: onTextChange,
+    onFocus: onTextFocus,
+    onBlur: onTextBlur
+  } = text;
   return (
     <>
       {/* Voice section - always visible, isActive based on activeMode */}
