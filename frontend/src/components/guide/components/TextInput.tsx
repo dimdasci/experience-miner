@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 interface TextInputProps {
-  isActive: boolean;
   value: string;
   onChange: (value: string) => void;
   onFocus: () => void;
@@ -11,7 +10,7 @@ interface TextInputProps {
 }
 
 const TextInput = ({ 
-  isActive, 
+ 
   value, 
   onChange, 
   onFocus, 
@@ -20,12 +19,8 @@ const TextInput = ({
   placeholder = "Start writing your answer..."
 }: TextInputProps) => {
   const containerClasses = useMemo(() => 
-    `w-full h-full rounded-lg bg-surface transition-all duration-200 ${
-      isActive 
-        ? 'ring-2 ring-accent ring-offset-2 ring-offset-background' 
-        : 'focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-accent'
-    }`,
-    [isActive]
+    'w-full h-full rounded-lg bg-surface transition-all duration-200 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-background focus-within:ring-accent',
+    []
   );
 
   return (

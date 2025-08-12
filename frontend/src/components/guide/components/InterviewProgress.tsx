@@ -3,13 +3,12 @@ import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
 interface InterviewProgressProps {
   current: number;
   total: number;
-  percentage: number;
   answers: AnswerWithStatus[];
   onNavigate?: (questionNumber: number) => void;
   recordingState?: RecordingState;
 }
 
-const InterviewProgress = ({ current, total, percentage, answers, onNavigate, recordingState }: InterviewProgressProps) => {
+const InterviewProgress = ({ current, total, answers, onNavigate, recordingState }: InterviewProgressProps) => {
   // Progress control disabled when recording or paused according to task requirements
   const isNavigationDisabled = recordingState?.isRecording || recordingState?.isPaused;
 
@@ -38,7 +37,7 @@ const InterviewProgress = ({ current, total, percentage, answers, onNavigate, re
               isCurrent 
                 ? 'bg-primary text-surface' 
                 : isAnswered 
-                  ? 'bg-secondary text-surface' 
+                  ? 'bg-neutral-bg' 
                   : 'border border-border-subtle text-secondary'
             } ${
               isClickable 

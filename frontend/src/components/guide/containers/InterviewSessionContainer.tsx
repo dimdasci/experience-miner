@@ -15,7 +15,6 @@ const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSession
     error,
     saving,
     currentQuestionData,
-    progress,
     recordingState,
     loadInterview,
     saveAnswer,
@@ -30,12 +29,9 @@ const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSession
   // Retry saving current answer (save errors)
   const handleRetrySave = async () => {
     // Re-send the current text answer from the hook
-    await saveAnswer({ response: interviewHook.textValue, recordingDuration: 0 });
+    await saveAnswer({ response: interviewHook.text.value, recordingDuration: 0 });
   };
 
-  const handleDataUpdate = (data: any) => {
-    saveAnswer(data);
-  };
 
   const handleNext = async () => {
     const completedId = await next();
@@ -55,13 +51,11 @@ const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSession
       saving={saving}
       interviewTitle={interview?.title || ''}
       currentQuestionData={currentQuestionData}
-      progress={progress}
       recordingState={recordingState}
       // Use save-retry if we're mid-interview, otherwise reload interview
       onRetry={currentQuestionData ? handleRetrySave : handleRetry}
       onNext={handleNext}
       onNavigate={handleNavigate}
-      onDataUpdate={handleDataUpdate}
       // Pass through all recording-related props from unified hook
       interviewHook={interviewHook}
     />

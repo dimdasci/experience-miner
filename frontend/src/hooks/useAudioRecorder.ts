@@ -170,7 +170,7 @@ export const useAudioRecorder = (options: UseAudioRecorderOptions = {}) => {
     }
     
     stopTimer()
-    setRecordingState(prev => ({ ...prev, isRecording: false, isPaused: false }))
+    setRecordingState(prev => ({ ...prev, isRecording: false, isPaused: false, duration: 0 }))
   }, [stopTimer])
 
   // Update ref whenever stopRecording changes
