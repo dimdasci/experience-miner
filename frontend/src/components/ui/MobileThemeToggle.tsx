@@ -1,20 +1,23 @@
 import { Moon, Sun } from 'lucide-react';
+import { Button } from './button';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const MobileThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={toggleTheme}
-      className="p-1 rounded-md hover:bg-neutral-bg transition-colors"
-      aria-label="Toggle theme"
+      className="h-8 px-2"
     >
       {theme === 'dark' ? (
         <Sun className="h-4 w-4" />
       ) : (
         <Moon className="h-4 w-4" />
       )}
-    </button>
+      <span className="sr-only">Toggle theme</span>
+    </Button>
   );
 };

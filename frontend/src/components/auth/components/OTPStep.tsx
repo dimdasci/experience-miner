@@ -44,7 +44,7 @@ const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPSte
           type="submit"
           className="w-full"
           disabled={loading || otp.length !== 6}
-          variant={otp.length !== 6 ? 'secondary' : 'default'}
+          variant={otp.length !== 6 ? 'default' : 'accent'}
         >
           {loading ? 'Verifying...' : 'Verify code'}
         </Button>

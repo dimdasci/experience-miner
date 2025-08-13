@@ -38,11 +38,11 @@ const InterviewList = ({
       />
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="text-red-800">{error}</div>
+        <div className="mb-6 p-4 bg-accent border border-accent rounded-lg">
+          <div className="text-surface">{error}</div>
           <button 
             onClick={onRetry}
-            className="mt-2 text-red-600 hover:text-red-800 underline"
+            className="mt-2 text-surface hover:text-surface/80 underline focus-ring"
           >
             Try again
           </button>

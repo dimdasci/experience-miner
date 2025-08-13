@@ -49,4 +49,8 @@
   .animate-caret-blink {
     animation: caret-blink 1.25s ease-out infinite;
   }
+
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent;
+  }
 }

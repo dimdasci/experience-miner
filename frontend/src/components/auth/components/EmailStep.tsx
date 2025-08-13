@@ -31,14 +31,14 @@ const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) =>
         <div className="text-center w-full max-w-sm mx-auto">
           <p className="mb-4 text-body-sm text-secondary">
             By clicking "Get Started," you agree to our<br />
-            <a href="/terms" className="text-accent hover:underline">Terms of Service</a>
+            <a href="/terms" className="text-accent hover:underline focus-ring">Terms of Service</a>
             {' '}and{' '}
-            <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a>.
+            <a href="/privacy" className="text-accent hover:underline focus-ring">Privacy Policy</a>.
           </p>
           <Button 
             type="submit" 
             disabled={loading || !email}
-            variant={!email ? 'secondary' : 'default'}
+            variant={!email ? 'default' : 'accent'}
             className="w-full"
           >
             {loading ? 'Sending...' : 'Get Started'}

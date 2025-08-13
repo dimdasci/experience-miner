@@ -46,6 +46,7 @@ const MobileBottomNav = () => {
                 min-h-[44px] min-w-[44px] rounded-lg
                 transition-all duration-200
                 active:scale-95 active:bg-primary/20
+                focus-ring
                 ${isActive 
                   ? 'text-primary bg-primary/10' 
                   : 'text-secondary hover:text-primary hover:bg-neutral-bg'

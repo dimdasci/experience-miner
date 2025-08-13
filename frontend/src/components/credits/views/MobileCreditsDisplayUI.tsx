@@ -1,4 +1,5 @@
 import { Coins } from 'lucide-react';
+import { Button } from '../../ui/button';
 
 interface MobileCreditsDisplayUIProps {
   credits: number | null;
@@ -12,7 +13,9 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
     return (
       <div className="flex items-center space-x-1 text-accent">
         <Coins className="h-3 w-3" />
-        <span className="text-xs cursor-pointer" onClick={onRefresh}>Err</span>
+        <Button variant="ghost" size="sm" onClick={onRefresh} className="text-accent p-0 h-auto font-normal text-xs">
+          Err
+        </Button>
       </div>
     );
   }
@@ -31,20 +34,19 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
   const isEmpty = displayCredits <= 0;
 
   return (
-    <div 
-      className={`flex items-center space-x-1 ${
+    <button 
+      className={`flex items-center space-x-1 focus-ring ${
         isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
         'text-secondary'
       }`}
       onClick={onRefresh}
       title="Tap to refresh credits"
-      style={{ cursor: 'pointer' }}
     >
       <Coins className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       <span className="text-xs font-medium">
         {displayCredits} {displayCredits === 1 ? 'credit' : 'credits'}
       </span>
-    </div>
+    </button>
   );
 };

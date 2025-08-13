@@ -1,5 +1,5 @@
 import { Coins } from 'lucide-react';
-// UI component for CreditsDisplay, no extra Button import needed
+import { Button } from '../../ui/button';
 
 interface CreditsDisplayUIProps {
   credits: number | null;
@@ -13,7 +13,9 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
     return (
       <div className="flex items-center space-x-1 text-accent">
         <Coins className="h-4 w-4" />
-        <span className="text-sm cursor-pointer" onClick={onRefresh}>Error</span>
+        <Button variant="ghost" size="sm" onClick={onRefresh} className="text-accent p-0 h-auto font-normal">
+          Error
+        </Button>
       </div>
     );
   }
@@ -32,20 +34,19 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
   const isEmpty = displayCredits <= 0;
 
   return (
-    <div
-      className={`flex items-center space-x-1 ${
+    <button
+      className={`flex items-center space-x-1 focus-ring ${
         isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
         'text-secondary'
       }`}
       onClick={onRefresh}
       title="Click to refresh credits"
-      style={{ cursor: 'pointer' }}
     >
       <Coins className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
       <span className="text-sm font-medium">
         {displayCredits} {displayCredits === 1 ? 'credit' : 'credits'}
       </span>
-    </div>
+    </button>
   );
 };

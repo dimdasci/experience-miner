@@ -15,11 +15,12 @@ const Topic = ({ topic, isSelecting, onSelect }: TopicProps) => {
   };
 
   return (
-    <div 
-      className={`cursor-pointer transition-colors py-2 group flex gap-6 ${
+    <button 
+      className={`cursor-pointer transition-colors py-2 group flex gap-6 focus-ring text-left ${
         isSelecting ? 'opacity-50 cursor-wait' : ''
       }`}
       onClick={handleClick}
+      disabled={isSelecting}
     >
       {/* Decorative chevron - vertically centered in title's 28px height */}
       <div className="flex-shrink-0 w-12 flex justify-center items-center h-7">
@@ -41,7 +42,7 @@ const Topic = ({ topic, isSelecting, onSelect }: TopicProps) => {
         </h3>
         <p className="text-body text-secondary">{topic.motivational_quote}</p>
       </div>
-    </div>
+    </button>
   );
 };
 

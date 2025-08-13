@@ -1,4 +1,5 @@
 import { RecordingState } from '../types/recordingTypes';
+import { Button } from '../../ui/button';
 
 interface InterviewNavigationProps {
   onNext: () => void;
@@ -16,17 +17,14 @@ const InterviewNavigation = ({ onNext, isComplete, disabled, recordingState }: I
 
   return (
     <div className="flex-shrink-0 py-6 flex justify-end items-center">
-      <button 
+      <Button 
+        variant={hasContent ? "accent" : "primary"} 
         onClick={onNext}
         disabled={isNavigationDisabled}
-        className={`font-semibold py-3 px-8 rounded-lg transition-colors outline-none disabled:opacity-50 ${
-          hasContent 
-            ? 'bg-accent hover:bg-accent-hover text-white' 
-            : 'bg-primary hover:bg-primary-hover text-white'
-        }`}
+        className="font-semibold py-3 px-8"
       >
         {isComplete ? 'Complete' : 'Next'}
-      </button>
+      </Button>
     </div>
   );
 };

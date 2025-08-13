@@ -17,7 +17,7 @@ const ErrorMessage = ({
       {onRetry && (
         <button 
           onClick={onRetry} 
-          className="mt-2 text-accent hover:text-accent/80 transition-colors"
+          className="mt-2 text-accent hover:text-accent/80 transition-colors focus-ring"
         >
           {retryText}
         </button>

@@ -32,9 +32,9 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
         const isClickable = !isNavigationDisabled && onNavigate;
         
         return (
-          <div 
+          <button 
             key={step} 
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all focus-ring ${
               isCurrent 
                 ? 'bg-primary text-surface' 
                 : isAnswered 
@@ -48,13 +48,12 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
                   : ''
             }`} 
             onClick={() => handleStepClick(step)}
+            disabled={!isClickable}
             aria-current={isCurrent ? "step" : undefined} 
             aria-label={`Step ${step} of ${total}${isClickable ? ' (click to navigate)' : ''}`}
-            role={isClickable ? "button" : undefined}
-            tabIndex={isClickable ? 0 : undefined}
           >
             {step}
-          </div>
+          </button>
         );
       })}
     </div>

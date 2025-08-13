@@ -25,7 +25,7 @@ const DesktopNavigation = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`py-3 text-body-sm font-medium transition-colors ${
+              className={`py-3 text-body-sm font-medium transition-colors focus-ring ${
                 isActivePath(item.path)
                   ? 'border-b-[3px] border-accent text-primary'
                   : 'text-secondary hover:text-primary hover:border-b-[3px] hover:border-subtle'

@@ -4,6 +4,7 @@ import ReviewAnswersList from '../components/ReviewAnswersList';
 import ReviewAnswer from '../components/ReviewAnswer';
 import ReviewNavigation from '../components/ReviewNavigation';
 import ProcessingModal from '../../guide/components/ProcessingModal';
+import { Button } from '../../ui/button';
 
 interface ReviewUIProps {
   interview: Interview | null;
@@ -47,11 +48,11 @@ const ReviewUI = ({
   if (error) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="text-red-800">{error}</div>
-          <button onClick={onRetry} className="mt-2 text-red-600 hover:text-red-800 underline">
+        <div className="p-4 bg-accent border border-accent rounded-lg">
+          <div className="text-surface">{error}</div>
+          <Button variant="outline" size="sm" onClick={onRetry} className="mt-2">
             Try again
-          </button>
+          </Button>
         </div>
       </div>
     );

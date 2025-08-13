@@ -60,7 +60,7 @@ const VoiceInput = ({
     <IconContentLayout icon={micIcon}>
       <div className="flex items-center space-x-4">
         <button 
-          className={`flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4 hover:opacity-90 transition-opacity disabled:opacity-50`}
+          className={`flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4 hover:opacity-90 transition-opacity disabled:opacity-50 focus-ring`}
           onClick={recordButtonAction}
           disabled={disabled}
           aria-label={recordButtonLabel}
@@ -75,7 +75,7 @@ const VoiceInput = ({
           </span>
         </button>
         <button 
-          className={`rounded-full p-3 hover:opacity-80 transition-opacity ${stopButtonStyles}`}
+          className={`rounded-full p-3 hover:opacity-80 transition-opacity focus-ring ${stopButtonStyles}`}
           onClick={onStopRecording}
           disabled={!isRecording && !isPaused}
           aria-label="Stop recording"
