@@ -3,19 +3,22 @@ import ErrorMessage from '../../ui/error-message';
 import VoiceInput from '../components/VoiceInput';
 import TextInput from '../components/TextInput';
 import { VoiceControls, TextControls } from '../types/interviewTypes';
+import { RefObject } from 'react';
 
 interface RecorderUIProps {
   voice: VoiceControls;
   text: TextControls;
   activeMode: 'voice' | 'text';
   saving: boolean;
+  textInputRef?: RefObject<HTMLTextAreaElement | null>;
 }
 
 const RecorderUI = ({
   voice,
   text,
   activeMode,
-  saving
+  saving,
+  textInputRef
 }: RecorderUIProps) => {
   const {
     isTranscribing,
@@ -77,6 +80,7 @@ const RecorderUI = ({
         <div className="flex-shrink-0 w-8 flex justify-center text-headline font-serif font-medium pt-5 text-secondary">A</div>
         <div className="flex-grow min-h-0 h-full">
           <TextInput 
+            ref={textInputRef}
             value={textValue}
             onChange={onTextChange}
             onFocus={onTextFocus}

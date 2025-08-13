@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, RefObject } from 'react';
 import { apiService } from '../../../services/apiService';
 import { Interview } from '../../../types/business';
 import { UserJourneyLogger } from '../../../utils/logger';
@@ -10,7 +10,7 @@ import { useAnswerPersistence } from './useAnswerPersistence';
 import { useInputHandlers } from './useInputHandlers';
 import { UseInterviewReturn } from '../types/interviewTypes';
 
-export function useInterview(interviewIdStr?: string): UseInterviewReturn {
+export function useInterview(interviewIdStr?: string, textInputRef?: RefObject<HTMLTextAreaElement | null>): UseInterviewReturn {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [answers, setAnswers] = useState<AnswerWithStatus[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -138,6 +138,13 @@ export function useInterview(interviewIdStr?: string): UseInterviewReturn {
             response: newText,
             recordingDuration: duration
           });
+
+          // Focus text input after successful transcription
+          if (textInputRef?.current) {
+            textInputRef.current.focus();
+            // Move cursor to end of text
+            textInputRef.current.setSelectionRange(newText.length, newText.length);
+          }
         },
         onTranscriptionComplete: () => setIsTranscribing(false),
         onCreditsUpdate: () => refreshCredits(true)

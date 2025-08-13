@@ -34,7 +34,7 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
         return (
           <button 
             key={step} 
-            className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all focus-ring ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all focus-transitional-ring ${
               isCurrent 
                 ? 'bg-primary text-surface' 
                 : isAnswered 

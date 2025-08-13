@@ -50,6 +50,22 @@
     animation: caret-blink 1.25s ease-out infinite;
   }
 
+  /* For text-based transitional elements (navigation links, topic titles) */
+  .focus-transitional-invert {
+    @apply focus-visible:outline-none focus-visible:bg-primary focus-visible:text-surface p-1;
+  }
+
+  /* For button-based transitional elements (Button component, VoiceInput) */
+  .focus-transitional-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+
+  /* For retained elements (text inputs only - all users see focus) */
+  .focus-retained {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent;
+  }
+
+  /* Legacy utility - will be replaced by specific utilities above */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-accent;
   }

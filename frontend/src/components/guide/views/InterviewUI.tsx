@@ -6,6 +6,7 @@ import InterviewNavigation from '../components/InterviewNavigation';
 import ErrorMessage from '../../ui/error-message';
 import { RecordingState } from '../types/recordingTypes';
 import { InterviewControls, VoiceControls, TextControls } from '../types/interviewTypes';
+import { RefObject } from 'react';
 
 interface InterviewUIProps {
   interview: InterviewControls;
@@ -17,6 +18,7 @@ interface InterviewUIProps {
   onRetry: () => void;
   onNext: () => void;
   onNavigate: (questionNumber: number) => void;
+  textInputRef?: RefObject<HTMLTextAreaElement | null>;
 }
 
 const InterviewUI = ({
@@ -28,7 +30,8 @@ const InterviewUI = ({
   recordingState,
   onRetry,
   onNext,
-  onNavigate
+  onNavigate,
+  textInputRef
 }: InterviewUIProps) => {
   const { data: interviewData, answers, currentQuestionData, loading, error } = interview;
   
@@ -101,6 +104,7 @@ const InterviewUI = ({
           text={text}
           activeMode={activeMode}
           saving={saving}
+          textInputRef={textInputRef}
         />
       </div>
 

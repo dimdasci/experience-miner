@@ -22,17 +22,22 @@ const DesktopNavigation = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex space-x-8">
           {navigationItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`py-3 text-body-sm font-medium transition-colors focus-ring ${
-                isActivePath(item.path)
-                  ? 'border-b-[3px] border-accent text-primary'
-                  : 'text-secondary hover:text-primary hover:border-b-[3px] hover:border-subtle'
-              }`}
-            >
-              {item.label}
-            </Link>
+            <div key={item.path} className={`py-2 ${
+              isActivePath(item.path)
+                ? 'border-b-[3px] border-accent'
+                : 'hover:border-b-[3px] hover:border-subtle'
+            }`}>
+              <Link
+                to={item.path}
+                className={`text-body-sm font-medium transition-colors focus-transitional-invert ${
+                  isActivePath(item.path)
+                    ? 'text-primary'
+                    : 'text-secondary hover:text-primary'
+                }`}
+              >
+                {item.label}
+              </Link>
+            </div>
           ))}
         </div>
       </div>

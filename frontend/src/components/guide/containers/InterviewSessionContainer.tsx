@@ -1,5 +1,6 @@
 import InterviewUI from '../views/InterviewUI';
 import { useInterview } from '../hooks/useInterview';
+import { useRef } from 'react';
 
 interface InterviewSessionContainerProps {
   interviewId?: string;
@@ -7,7 +8,8 @@ interface InterviewSessionContainerProps {
 }
 
 const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSessionContainerProps) => {
-  const interviewHook = useInterview(interviewId);
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const interviewHook = useInterview(interviewId, textInputRef);
   
   const {
     interview,
@@ -53,6 +55,7 @@ const InterviewSessionContainer = ({ interviewId, onComplete }: InterviewSession
       onRetry={interview.currentQuestionData ? handleRetrySave : handleRetry}
       onNext={handleNext}
       onNavigate={handleNavigate}
+      textInputRef={textInputRef}
     />
   );
 };
