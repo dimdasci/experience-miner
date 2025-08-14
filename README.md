@@ -1,6 +1,6 @@
 # Experience Miner
 
-A guided AI interview system that helps job seekers extract and organize their career experiences into structured data for resume building and interview preparation.
+A guided AI interview system that helps job seekers extract and organize their career experiences into structured data for resume building and interview preparation. It is branded as espejo.
 
 ## Overview
 
