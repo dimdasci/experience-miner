@@ -1,5 +1,27 @@
-// Shared types between frontend and backend
+// API response types matching backend ServiceResponse structure
+export enum AppErrorCode {
+  UNAUTHORIZED = "UNAUTHORIZED",
+  FORBIDDEN = "FORBIDDEN", 
+  NOT_FOUND = "NOT_FOUND",
+  CONFLICT = "CONFLICT",
+  RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED",
+  DUPLICATE_REQUEST = "DUPLICATE_REQUEST",
+  VALIDATION_FAILED = "VALIDATION_FAILED",
+  INSUFFICIENT_CREDITS = "INSUFFICIENT_CREDITS",
+  AI_SERVICE_UNAVAILABLE = "AI_SERVICE_UNAVAILABLE",
+  INTERNAL_ERROR = "INTERNAL_ERROR"
+}
 
+// Match backend ServiceResponse exactly (removes isDuplicate, error fields)
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  responseObject: T;
+  statusCode: number;
+  errorCode?: AppErrorCode;
+}
+
+// Legacy types from types.ts that need to be preserved
 export interface InterviewSession {
   id: string
   userId?: string
@@ -52,43 +74,4 @@ export interface ProcessingResult {
   }
   processingTime: number
   model: string
-}
-
-// API Response wrapper (matches backend ServiceResponse)
-export interface ApiResponse<T = any> {
-  success: boolean
-  responseObject: T
-  message: string
-  statusCode: number
-  error?: string
-  isDuplicate?: boolean // Flag for duplicate request detection
-}
-
-// Audio recording types
-export interface AudioRecording {
-  blob: Blob
-  duration: number
-  size: number
-}
-
-export interface TranscriptionResult {
-  text: string
-  confidence: number
-  timestamp: number
-}
-
-// UI State types
-export interface RecordingState {
-  isRecording: boolean
-  isPaused: boolean
-  duration: number
-  volume: number
-}
-
-export interface InterviewState {
-  currentQuestionIndex: number
-  totalQuestions: number
-  sessionId?: string
-  isProcessing: boolean
-  responses: InterviewResponse[]
 }

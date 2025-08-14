@@ -1,5 +1,4 @@
 // Interview topics and questions based on POC findings
-
 export const INTERVIEW_TOPICS = {
   CAREER_OVERVIEW: 'career_overview',
   KEY_ACHIEVEMENTS: 'key_achievements', 
@@ -21,6 +20,7 @@ export const TOPIC_METADATA = {
   }
 } as const
 
+// All interview questions array
 export const INTERVIEW_QUESTIONS = [
   // Career Overview Topic
   {
@@ -179,7 +179,7 @@ export const INTERVIEW_QUESTIONS = [
   },
 ]
 
-// UI Constants
+// Recording constraints and limits
 export const RECORDING_CONSTRAINTS = {
   audio: {
     echoCancellation: true,
@@ -190,14 +190,3 @@ export const RECORDING_CONSTRAINTS = {
 
 export const MAX_RECORDING_DURATION = 300 // 5 minutes in seconds
 export const MIN_RESPONSE_LENGTH = 10 // Minimum characters for a valid response
-
-export const API_ENDPOINTS = {
-  HEALTH: '/api/health',
-  INTERVIEW: {
-    START: '/api/interview/start',
-    SUBMIT_RESPONSE: '/api/interview/response',
-    PROCESS: '/api/interview/process',
-    GET_SESSION: '/api/interview/session',
-    GET_FACTS: '/api/interview/facts'
-  }
-} as const
