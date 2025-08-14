@@ -1,4 +1,4 @@
-import { Interview } from '../../../types/business';
+import { Interview } from '@shared/types/business';
 import { RecordingState, AnswerWithStatus } from './recordingTypes';
 
 // Voice control interface

@@ -1,4 +1,4 @@
-import { Answer } from '../../../types/business';
+import { Answer } from '@shared/types/business';
 
 export interface RecordingState {
   isRecording: boolean

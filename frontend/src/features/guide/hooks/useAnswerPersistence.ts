@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { apiService } from '../../../services/apiService';
-import { UserJourneyLogger } from '../../../utils/logger';
-import { Interview } from '../../../types/business';
+import { apiService } from '@shared/services/apiService';
+import { UserJourneyLogger } from '@shared/utils/logger';
+import { Interview } from '@shared/types/business';
 import { AnswerWithStatus } from '../types/recordingTypes';
 
 // Helper function to compute if an answer exists
@@ -52,7 +52,7 @@ export function useAnswerPersistence(
         // clear any previous save error
         callbacks.onError(null);
         success = true;
-      } else if (!(resp.isDuplicate || resp.statusCode === 429)) {
+      } else if (!(resp.errorCode === 'DUPLICATE_REQUEST' || resp.statusCode === 429)) {
         callbacks.onError(resp.message || 'Failed to save answer');
         UserJourneyLogger.logError(new Error(resp.message), {
           action: 'answer_save_failed',

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { MoreVertical, X } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { MobileThemeToggle } from '../../ui/MobileThemeToggle';
-import UserMenuContainer from '../../auth/containers/UserMenuContainer';
+import { Button } from '@shared/components/ui/button';
+import { MobileThemeToggle } from '@shared/components/ui/MobileThemeToggle';
+import UserMenuContainer from '@features/auth/containers/UserMenuContainer';
 import MobileFooter from './MobileFooter';
 
 const MobileOverflowMenu = () => {

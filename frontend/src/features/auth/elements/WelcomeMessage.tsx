@@ -1,4 +1,4 @@
-import Logo  from '@/components/ui/Logo';
+import Logo  from '@shared/components/ui/Logo';
 
 interface WelcomeMessageProps {
   step: 'email' | 'otp';

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../../../services/apiService';
-import { ExtractedFacts, ProfessionalSummary } from '../../../types/business';
-import { UserJourneyLogger } from '../../../utils/logger';
+import { apiService } from '@shared/services/apiService';
+import { ExtractedFacts, ProfessionalSummary } from '@shared/types/business';
+import { UserJourneyLogger } from '@shared/utils/logger';
 
 export function useExperienceData() {
   const [data, setData] = useState<ExtractedFacts | null>(null);
@@ -16,7 +16,7 @@ export function useExperienceData() {
       if (response.success) {
         const summary = response.responseObject as ProfessionalSummary;
         setData(summary.extractedFacts);
-      } else if (!(response.isDuplicate || response.statusCode === 429)) {
+      } else if (!(response.errorCode === 'DUPLICATE_REQUEST' || response.statusCode === 429)) {
         setError(response.message || 'Failed to load experience data');
       }
     } catch (err) {

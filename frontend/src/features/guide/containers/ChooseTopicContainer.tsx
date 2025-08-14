@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import TopicsList from '../views/TopicsList';
 import { useTopics } from '../hooks/useTopics';
-import { apiService } from '../../../services/apiService';
-import { UserJourneyLogger } from '../../../utils/logger';
+import { apiService } from '@shared/services/apiService';
+import { UserJourneyLogger } from '@shared/utils/logger';
 
 interface ChooseTopicContainerProps {
   onTopicSelect: (step: string, interviewId?: string) => void;
@@ -22,7 +22,7 @@ const ChooseTopicContainer = ({ onTopicSelect }: ChooseTopicContainerProps) => {
       if (resp.success) {
         const interviewId = resp.responseObject.interview.id;
         onTopicSelect('interview', String(interviewId));
-      } else if (!(resp.isDuplicate || resp.statusCode === 429)) {
+      } else if (!(resp.errorCode === 'DUPLICATE_REQUEST' || resp.statusCode === 429)) {
         setLocalError(resp.message || 'Failed to select topic');
       }
     } catch (err) {

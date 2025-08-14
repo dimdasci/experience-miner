@@ -1,6 +1,6 @@
 import { Moon, Sun } from 'lucide-react';
 import { Button } from './button';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '@shared/contexts/ThemeContext';
 
 export const MobileThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();

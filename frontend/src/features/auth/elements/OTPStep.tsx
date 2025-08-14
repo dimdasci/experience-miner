@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '../../ui/button';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../ui/input-otp';
+import { Button } from '@shared/components/ui/button';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@shared/components/ui/input-otp';
 
 interface OTPStepProps {
   email: string;

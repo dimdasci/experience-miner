@@ -1,4 +1,4 @@
-import ExperienceContainer from '../experience/containers/ExperienceContainer';
+import ExperienceContainer from '@features/experience/containers/ExperienceContainer';
 
 const ExperienceScreen = () => {
   return <ExperienceContainer />;

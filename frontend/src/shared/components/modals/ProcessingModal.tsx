@@ -1,5 +1,5 @@
 import { Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '../../ui/button';
+import { Button } from '@shared/components/ui/button';
 
 interface ProcessingModalProps {
   isProcessing: boolean;

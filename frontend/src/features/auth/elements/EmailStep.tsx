@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
+import { Button } from '@shared/components/ui/button';
+import { Input } from '@shared/components/ui/input';
 
 interface EmailStepProps {
   email: string;

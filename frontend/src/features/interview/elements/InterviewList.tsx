@@ -1,7 +1,7 @@
-import { Button } from '../../ui/button';
-import SectionHeader from '../../ui/section-header';
+import { Button } from '@shared/components/ui/button';
+import SectionHeader from '@shared/components/ui/section-header';
 import InterviewItem from './InterviewItem';
-import { Interview } from '../../../types/business';
+import { Interview } from '@shared/types/business';
 
 interface InterviewListProps {
   interviews: Interview[];

@@ -1,5 +1,5 @@
 import { Target } from 'lucide-react';
-import { Project } from '../../../types/business';
+import { Project } from '@shared/types/business';
 import AchievementsList from './AchievementsList';
 
 interface ProjectsListProps {

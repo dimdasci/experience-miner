@@ -1,4 +1,4 @@
-import { INTERVIEW_QUESTIONS, INTERVIEW_TOPICS, TOPIC_METADATA } from '../constants';
+import { INTERVIEW_QUESTIONS, INTERVIEW_TOPICS, TOPIC_METADATA } from '@shared/constants/app';
 
 export interface Question {
   id: string;

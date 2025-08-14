@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import ChooseTopicContainer from '../guide/containers/ChooseTopicContainer';
-import InterviewSessionContainer from '../guide/containers/InterviewSessionContainer';
-import ReviewContainer from '../interview/containers/ReviewContainer';
+import ChooseTopicContainer from '@features/guide/containers/ChooseTopicContainer';
+import InterviewSessionContainer from '@features/guide/containers/InterviewSessionContainer';
+import ReviewContainer from '@features/interview/containers/ReviewContainer';
 
 const GuideScreen = () => {
   const { step, id } = useParams();

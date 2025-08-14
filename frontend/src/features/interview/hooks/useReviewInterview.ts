@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../../../services/apiService';
-import { Interview, Answer } from '../../../types/business';
-import { UserJourneyLogger } from '../../../utils/logger';
-import { useCredits } from '../../../contexts/CreditsContext';
+import { apiService } from '@shared/services/apiService';
+import { Interview, Answer } from '@shared/types/business';
+import { UserJourneyLogger } from '@shared/utils/logger';
+import { useCredits } from '@shared/contexts/CreditsContext';
 
 interface UseReviewInterviewResult {
   interview?: Interview | null;
@@ -44,7 +44,7 @@ export function useReviewInterview(interviewIdStr?: string): UseReviewInterviewR
       if (resp.success) {
         setInterview(resp.responseObject.interview);
         setAnswers(resp.responseObject.answers);
-      } else if (!(resp.isDuplicate || resp.statusCode === 429)) {
+      } else if (!(resp.errorCode === 'DUPLICATE_REQUEST' || resp.statusCode === 429)) {
         setError(resp.message || 'Failed to load interview');
         UserJourneyLogger.logError(new Error(resp.message), {
           action: 'interview_loading_failed',
@@ -88,17 +88,17 @@ export function useReviewInterview(interviewIdStr?: string): UseReviewInterviewR
         UserJourneyLogger.logUserAction({ action: 'interview_extraction_completed', component: 'useReviewInterview', data: { interviewId: id } });
         return true;
       } else {
-        if (result.isDuplicate || result.statusCode === 429) {
+        if (result.errorCode === 'DUPLICATE_REQUEST' || result.statusCode === 429) {
           // no error
         } else if (result.statusCode === 402) {
           setExtractionError('Not enough credits to process this request.');
         } else if (result.statusCode === 409) {
           setExtractionError('Another operation is in progress, please wait.');
         } else {
-          setExtractionError(result.error || 'Failed to extract data from interview');
+          setExtractionError(result.message || 'Failed to extract data from interview');
         }
-        if (!(result.isDuplicate || result.statusCode === 429)) {
-          UserJourneyLogger.logInterviewProgress({ stage: 'error', errorMessage: result.error, data: { statusCode: result.statusCode } });
+        if (!(result.errorCode === 'DUPLICATE_REQUEST' || result.statusCode === 429)) {
+          UserJourneyLogger.logInterviewProgress({ stage: 'error', errorMessage: result.message, data: { statusCode: result.statusCode } });
         }
         return false;
       }

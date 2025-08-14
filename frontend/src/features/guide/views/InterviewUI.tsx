@@ -1,9 +1,9 @@
 import RecorderUI from '../views/RecorderUI';
-import SectionHeader from '../../ui/section-header';
-import InterviewProgress from '../components/InterviewProgress';
-import FocusedQuestion from '../components/FocusedQuestion';
-import InterviewNavigation from '../components/InterviewNavigation';
-import ErrorMessage from '../../ui/error-message';
+import SectionHeader from '@shared/components/ui/section-header';
+import InterviewProgress from '../elements/InterviewProgress';
+import FocusedQuestion from '../elements/FocusedQuestion';
+import InterviewNavigation from '../elements/InterviewNavigation';
+import ErrorMessage from '@shared/components/ui/error-message';
 import { RecordingState } from '../types/recordingTypes';
 import { InterviewControls, VoiceControls, TextControls } from '../types/interviewTypes';
 import { RefObject } from 'react';

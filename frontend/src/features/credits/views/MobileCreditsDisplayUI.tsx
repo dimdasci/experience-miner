@@ -1,5 +1,5 @@
 import { Coins } from 'lucide-react';
-import { Button } from '../../ui/button';
+import { Button } from '@shared/components/ui/button';
 
 interface MobileCreditsDisplayUIProps {
   credits: number | null;

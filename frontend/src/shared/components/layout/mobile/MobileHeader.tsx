@@ -1,5 +1,5 @@
-import Logo from '../../ui/Logo';
-import CreditsDisplayContainer from '../../credits/containers/CreditsDisplayContainer';
+import Logo from '@shared/components/ui/Logo';
+import CreditsDisplayContainer from '@features/credits/containers/CreditsDisplayContainer';
 import MobileOverflowMenu from './MobileOverflowMenu';
 
 const MobileHeader = () => {

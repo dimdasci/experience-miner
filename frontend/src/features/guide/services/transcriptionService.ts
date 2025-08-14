@@ -1,5 +1,5 @@
-import { apiService } from './apiService';
-import { UserJourneyLogger } from '../utils/logger';
+import { apiService } from '@shared/services/apiService';
+import { UserJourneyLogger } from '@shared/utils/logger';
 
 export interface TranscriptionRequest {
   recording: { blob: Blob; duration: number };
@@ -63,7 +63,7 @@ export class TranscriptionService {
         });
       } else {
         // Track transcription API failures
-        UserJourneyLogger.logError(new Error(result.error || 'Transcription failed'), {
+        UserJourneyLogger.logError(new Error(result.message || 'Transcription failed'), {
           action: 'transcription_api_failed',
           component: 'transcriptionService',
           questionId: String(questionNumber),

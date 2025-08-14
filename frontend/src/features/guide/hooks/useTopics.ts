@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '../../../services/apiService';
-import { Topic } from '../../../types/business';
-import { UserJourneyLogger } from '../../../utils/logger';
+import { apiService } from '@shared/services/apiService';
+import { Topic } from '@shared/types/business';
+import { UserJourneyLogger } from '@shared/utils/logger';
 
 export function useTopics() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -15,7 +15,7 @@ export function useTopics() {
       const response = await apiService.getTopics();
       if (response.success) {
         setTopics(response.responseObject);
-      } else if (!(response.isDuplicate || response.statusCode === 429)) {
+      } else if (!(response.errorCode === 'DUPLICATE_REQUEST' || response.statusCode === 429)) {
         setError(response.message || 'Failed to load topics');
       }
     } catch (err) {

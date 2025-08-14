@@ -1,7 +1,7 @@
-import Logo from '../../ui/Logo';
-import CreditsDisplayContainer from '../../credits/containers/CreditsDisplayContainer';
-import UserMenuContainer from '../../auth/containers/UserMenuContainer';
-import { ThemeToggle } from '../../ui/ThemeToggle';
+import Logo from '@shared/components/ui/Logo';
+import CreditsDisplayContainer from '@features/credits/containers/CreditsDisplayContainer';
+import UserMenuContainer from '@features/auth/containers/UserMenuContainer';
+import { ThemeToggle } from '@shared/components/ui/ThemeToggle';
 
 const DesktopHeader = () => {
   return (

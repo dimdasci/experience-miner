@@ -1,9 +1,9 @@
 import { AlertCircle } from 'lucide-react';
-import { ExtractedFacts } from '../../../types/business';
-import { Button } from '../../ui/button';
-import SectionHeader from '../../ui/section-header';
-import Summary from '../components/Summary';
-import RolesList from '../components/RolesList';
+import { ExtractedFacts } from '@shared/types/business';
+import { Button } from '@shared/components/ui/button';
+import SectionHeader from '@shared/components/ui/section-header';
+import Summary from '../elements/Summary';
+import RolesList from '../elements/RolesList';
 
 interface ExperienceUIProps {
   data: ExtractedFacts | null;

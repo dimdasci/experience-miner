@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../../services/apiService';
-import { Interview } from '../../../types/business';
-import { UserJourneyLogger } from '../../../utils/logger';
-import InterviewList from '../components/InterviewList';
+import { apiService } from '@shared/services/apiService';
+import { Interview } from '@shared/types/business';
+import { UserJourneyLogger } from '@shared/utils/logger';
+import InterviewList from '../elements/InterviewList';
 
 const InterviewListContainer = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const InterviewListContainer = () => {
       if (response.success) {
         setInterviews(response.responseObject);
       } else {
-        if (response.isDuplicate || response.statusCode === 429) {
+        if (response.errorCode === 'DUPLICATE_REQUEST' || response.statusCode === 429) {
           console.log('Duplicate interviews request detected - waiting for original request');
           return;
         } else {

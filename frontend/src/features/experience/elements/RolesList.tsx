@@ -1,4 +1,4 @@
-import { Role } from '../../../types/business';
+import { Role } from '@shared/types/business';
 import RoleItem from './RoleItem';
 
 interface RolesListProps {

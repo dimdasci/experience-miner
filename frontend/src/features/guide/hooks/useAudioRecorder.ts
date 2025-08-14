@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { AudioRecording, RecordingState } from '../types'
-import { RECORDING_CONSTRAINTS, MAX_RECORDING_DURATION } from '../constants'
-import { UserJourneyLogger } from '../utils/logger'
+import { AudioRecording, RecordingState } from '@shared/types/ui'
+import { RECORDING_CONSTRAINTS, MAX_RECORDING_DURATION } from '@shared/constants/app'
+import { UserJourneyLogger } from '@shared/utils/logger'
 
 interface UseAudioRecorderOptions {
   onRecordingComplete?: (recording: AudioRecording) => void

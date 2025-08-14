@@ -39,7 +39,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
         return newCredits;
       } else {
         // Special handling for duplicate requests - don't treat as errors
-        if (response.isDuplicate || response.statusCode === 429) {
+        if (response.errorCode === 'DUPLICATE_REQUEST' || response.statusCode === 429) {
           console.log('Duplicate credits request detected, using cached value');
           return credits;
         }

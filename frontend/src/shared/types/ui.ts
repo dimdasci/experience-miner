@@ -1,3 +1,6 @@
+// Import the InterviewResponse type from api.ts for InterviewState
+import type { InterviewResponse } from './api'
+
 // UI state and recording types
 export interface RecordingState {
   isRecording: boolean
@@ -25,6 +28,3 @@ export interface TranscriptionResult {
   confidence: number
   timestamp: number
 }
-
-// Import the InterviewResponse type from api.ts for InterviewState
-import type { InterviewResponse } from './api'

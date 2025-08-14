@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import ReviewContainer from '../interview/containers/ReviewContainer';
-import InterviewListContainer from '../interview/containers/InterviewListContainer';
+import ReviewContainer from '@features/interview/containers/ReviewContainer';
+import InterviewListContainer from '@features/interview/containers/InterviewListContainer';
 
 const InterviewsScreen = () => {
   const navigate = useNavigate();

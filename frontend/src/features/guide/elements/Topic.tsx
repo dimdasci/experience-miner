@@ -1,4 +1,4 @@
-import { Topic as TopicType } from '../../../types/business';
+import { Topic as TopicType } from '@shared/types/business';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

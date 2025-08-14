@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, RefObject } from 'react';
-import { apiService } from '../../../services/apiService';
-import { Interview } from '../../../types/business';
-import { UserJourneyLogger } from '../../../utils/logger';
-import { useAudioRecorder } from '../../../hooks/useAudioRecorder';
-import { useCredits } from '../../../contexts/CreditsContext';
+import { apiService } from '@shared/services/apiService';
+import { Interview } from '@shared/types/business';
+import { UserJourneyLogger } from '@shared/utils/logger';
+import { useAudioRecorder } from './useAudioRecorder';
+import { useCredits } from '@shared/contexts/CreditsContext';
 import { RecordingState, AnswerWithStatus } from '../types/recordingTypes';
-import { TranscriptionService } from '../../../services/transcriptionService';
+import { TranscriptionService } from '../services/transcriptionService';
 import { useAnswerPersistence } from './useAnswerPersistence';
 import { useInputHandlers } from './useInputHandlers';
 import { UseInterviewReturn } from '../types/interviewTypes';
@@ -58,7 +58,7 @@ export function useInterview(interviewIdStr?: string, textInputRef?: RefObject<H
         }));
         setAnswers(answersWithHasAnswer);
         setCurrentIdx(0);
-      } else if (!(response.isDuplicate || response.statusCode === 429)) {
+      } else if (!(response.errorCode === 'DUPLICATE_REQUEST' || response.statusCode === 429)) {
         setError(response.message || 'Failed to load interview');
         UserJourneyLogger.logError(new Error(response.message), {
           action: 'interview_loading_failed',

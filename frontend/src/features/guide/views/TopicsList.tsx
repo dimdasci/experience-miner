@@ -1,7 +1,7 @@
-import { Topic } from '../../../types/business';
-import SectionHeader from '../../ui/section-header';
-import TopicComponent from '../components/Topic';
-import ErrorMessage from '../../ui/error-message';
+import { Topic } from '@shared/types/business';
+import SectionHeader from '@shared/components/ui/section-header';
+import TopicComponent from '../elements/Topic';
+import ErrorMessage from '@shared/components/ui/error-message';
 
 interface TopicsListProps {
   topics: Topic[];

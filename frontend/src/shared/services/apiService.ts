@@ -1,10 +1,11 @@
 import { 
   ApiResponse, 
+  AppErrorCode,
   InterviewSession, 
   InterviewResponse, 
   CareerFact, 
   ProcessingResult 
-} from '../types'
+} from '@shared/types/api'
 import { UserJourneyLogger } from '../utils/logger'
 import {
   Topic,
@@ -12,9 +13,9 @@ import {
   Interview,
   Answer,
   UpdateAnswerRequest
-} from '../types/business'
-import { API_ENDPOINTS } from '../constants'
-import { supabase } from '../lib/supabase'
+} from '@shared/types/business'
+import { API_ENDPOINTS } from '@shared/constants/api'
+import { supabase } from '@shared/lib/supabase'
 
 class ApiService {
   private baseUrl: string
@@ -68,8 +69,7 @@ class ApiService {
             responseObject: {} as T,
             message: 'Duplicate request - original is being processed',
             statusCode: 429,
-            error: 'DUPLICATE_REQUEST',
-            isDuplicate: true
+            errorCode: AppErrorCode.DUPLICATE_REQUEST
           };
         }
       }
@@ -95,7 +95,7 @@ class ApiService {
         responseObject: {} as T,
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         statusCode: 500,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        errorCode: AppErrorCode.INTERNAL_ERROR
       }
     }
   }
@@ -201,7 +201,7 @@ class ApiService {
         responseObject: '',
         message: error instanceof Error ? error.message : 'Transcription failed',
         statusCode: 500,
-        error: error instanceof Error ? error.message : 'Transcription failed'
+        errorCode: AppErrorCode.INTERNAL_ERROR
       }
     }
   }

@@ -1,6 +1,6 @@
-import WelcomeMessage from '../components/WelcomeMessage';
-import EmailStep from '../components/EmailStep';
-import OTPStep from '../components/OTPStep';
+import WelcomeMessage from '../elements/WelcomeMessage';
+import EmailStep from '../elements/EmailStep';
+import OTPStep from '../elements/OTPStep';
 
 interface AuthFormUIProps {
   email: string;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useCredits } from '../../../contexts/CreditsContext';
+import { useCredits } from '@shared/contexts/CreditsContext';
 
 export const useCreditsDisplay = () => {
   const { credits, loading, error, refreshCredits } = useCredits();

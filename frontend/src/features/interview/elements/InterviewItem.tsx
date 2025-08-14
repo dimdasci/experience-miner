@@ -1,5 +1,5 @@
-import { Button } from '../../ui/button';
-import { Interview } from '../../../types/business';
+import { Button } from '@shared/components/ui/button';
+import { Interview } from '@shared/types/business';
 
 interface InterviewItemProps {
   interview: Interview;

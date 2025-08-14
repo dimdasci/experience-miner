@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { UserJourneyLogger } from '../../../utils/logger';
+import { UserJourneyLogger } from '@shared/utils/logger';
 import { UseInputHandlersProps, UseInputHandlersReturn } from '../types/interviewTypes';
 
 export function useInputHandlers({

@@ -1,5 +1,5 @@
 import { Briefcase, Calendar } from 'lucide-react';
-import { Role } from '../../../types/business';
+import { Role } from '@shared/types/business';
 import ProjectsList from './ProjectsList';
 import SkillsList from './SkillsList';
 

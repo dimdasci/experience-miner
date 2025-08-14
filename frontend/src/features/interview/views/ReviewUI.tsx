@@ -1,10 +1,10 @@
-import { Interview, Answer } from '../../../types/business';
-import SectionHeader from '../../ui/section-header';
-import ReviewAnswersList from '../components/ReviewAnswersList';
-import ReviewAnswer from '../components/ReviewAnswer';
-import ReviewNavigation from '../components/ReviewNavigation';
-import ProcessingModal from '../../guide/components/ProcessingModal';
-import { Button } from '../../ui/button';
+import { Interview, Answer } from '@shared/types/business';
+import SectionHeader from '@shared/components/ui/section-header';
+import ReviewAnswersList from '../elements/ReviewAnswersList';
+import ReviewAnswer from '../elements/ReviewAnswer';
+import ReviewNavigation from '../elements/ReviewNavigation';
+import ProcessingModal from '@shared/components/modals/ProcessingModal';
+import { Button } from '@shared/components/ui/button';
 
 interface ReviewUIProps {
   interview: Interview | null;

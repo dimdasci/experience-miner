@@ -1,7 +1,7 @@
-import TranscriptionStatus from '../components/TranscriptionStatus';
-import ErrorMessage from '../../ui/error-message';
-import VoiceInput from '../components/VoiceInput';
-import TextInput from '../components/TextInput';
+import TranscriptionStatus from '../elements/TranscriptionStatus';
+import ErrorMessage from '@shared/components/ui/error-message';
+import VoiceInput from '../elements/VoiceInput';
+import TextInput from '../elements/TextInput';
 import { VoiceControls, TextControls } from '../types/interviewTypes';
 import { RefObject } from 'react';
 
