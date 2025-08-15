@@ -4,8 +4,9 @@ import ReviewAnswersList from '../elements/ReviewAnswersList';
 import ReviewAnswer from '../elements/ReviewAnswer';
 import ReviewNavigation from '../elements/ReviewNavigation';
 import ProcessingModal from '@shared/components/modals/ProcessingModal';
-import { Button } from '@shared/components/ui/button';
 import { MIN_RESPONSE_LENGTH } from '@shared/constants/app';
+import ErrorMessage from '@shared/components/ui/error-message';
+import { AlertTriangle } from 'lucide-react';
 
 interface ReviewUIProps {
   interview: Interview | null;
@@ -38,7 +39,7 @@ const ReviewUI = ({
 }: ReviewUIProps) => {
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto p-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-secondary">Loading interview...</div>
         </div>
@@ -46,22 +47,9 @@ const ReviewUI = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
-          <div className="text-accent">{error}</div>
-          <Button variant="outline" size="sm" onClick={onRetry} className="mt-2">
-            Try again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   if (!interview) {
     return (
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto p-6">
         <div className="text-secondary">No interview data available.</div>
       </div>
     );
@@ -78,6 +66,14 @@ const ReviewUI = ({
           title={interview.title} 
           subtitle="Review Your story"
         />
+        {error && (
+          <div className="mt-12">
+            <ErrorMessage 
+              message={error}
+              onRetry={onRetry}
+            />
+          </div>
+        )}
       </div>
       
       {/* Fixed Spacer */}
@@ -86,24 +82,21 @@ const ReviewUI = ({
       {/* Scrollable Content */}
       <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
         <ReviewAnswersList>
-          {answers.map((answer, index) => (
+          {answers.map((answer) => (
             <ReviewAnswer 
               key={answer.id} 
               questionNumber={answer.question_number}
               question={answer.question} 
               answer={answer.answer}
               recordingDuration={answer.recording_duration_seconds}
-              isFirst={index === 0}
             />
           ))}
         </ReviewAnswersList>
 
-        {answers.length === 0 && (
+        {answers.length === 0 && !error && (
           <div className="text-center py-12">
             <div className="text-secondary mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd"/>
-              </svg>
+              <AlertTriangle className="w-16 h-16 mx-auto" />
             </div>
             <p className="text-secondary">No interview questions found</p>
           </div>

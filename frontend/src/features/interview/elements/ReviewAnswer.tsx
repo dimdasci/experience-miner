@@ -3,15 +3,14 @@ interface ReviewAnswerProps {
   question: string;
   answer: string | null;
   recordingDuration?: number | null;
-  isFirst?: boolean;
 }
 
-const ReviewAnswer = ({ questionNumber, question, answer, recordingDuration, isFirst = false }: ReviewAnswerProps) => {
+const ReviewAnswer = ({ questionNumber, question, answer }: ReviewAnswerProps) => {
   return (
     <>
       {/* Question Section - matching FocusedQuestion pattern */}
-      <div className={`${isFirst ? '' : 'mt-16'} flex items-baseline space-x-6`}>
-        <div className="flex-shrink-0 w-8 flex justify-center text-body-lg font-medium text-secondary tabular-nums">{questionNumber}</div>
+      <div className="flex items-baseline space-x-6">
+        <div className="flex-shrink-0 w-8 flex justify-center text-body-lg text-secondary tabular-nums">{questionNumber}</div>
         <div className="flex-grow">
           <h2 className="text-body-lg font-medium text-primary leading-snug">
             {question}

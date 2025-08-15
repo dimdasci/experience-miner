@@ -29,26 +29,36 @@ const TopicsList = ({ topics, loading, error, selecting, onReload, onSelect }: T
           subtitle="Pick a starting point. We'll suggest new topics as we learn more about your story."
         />
         {error && (
-          <ErrorMessage 
-            message={error}
-            onRetry={onReload}
-            className="mx-6 mb-8"
-          />
+          <div className="mt-12">
+            <ErrorMessage 
+              message={error}
+              onRetry={onReload}
+              className="mx-6 mb-8"
+            />
+          </div>
         )}
       </div>
       
-      <div className="flex-1 min-h-0 overflow-y-auto pb-8">
-        <div className="mt-12 space-y-8">
-          {topics.map(topic => (
-            <TopicComponent 
-              key={topic.id} 
-              topic={topic}
-              isSelecting={selecting === topic.id}
-              onSelect={onSelect}
-            />
-          ))}
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
+        <div className="max-w-3xl mx-auto p-6">
+          <div className="space-y-10">
+            {topics.map(topic => (
+              <TopicComponent 
+                key={topic.id} 
+                topic={topic}
+                isSelecting={selecting === topic.id}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
         </div>
       </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
     </div>
   );
 };

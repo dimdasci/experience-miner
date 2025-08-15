@@ -17,8 +17,6 @@ const ReviewNavigation = ({
   onResume, 
   onExport, 
   onExtract, 
-  answeredCount, 
-  totalCount, 
   isExtracting,
   hasMinimumContent
 }: ReviewNavigationProps) => {

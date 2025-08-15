@@ -24,7 +24,7 @@ const Topic = ({ topic, isSelecting, onSelect }: TopicProps) => {
     }`}>
       {/* Decorative chevron - vertically centered in title's 28px height */}
       <div className="flex-shrink-0 w-12 flex justify-center items-center h-7">
-        <ChevronRight className={`w-5 h-5 pt-1 transition-colors ${
+        <ChevronRight className={`w-7 h-7 pt-1 transition-colors ${
           isSelecting 
             ? 'text-secondary' 
             : 'text-secondary group-hover:text-accent'

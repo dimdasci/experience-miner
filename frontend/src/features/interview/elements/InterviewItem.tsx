@@ -1,4 +1,5 @@
-import { Button } from '@shared/components/ui/button';
+import { CheckCircle, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Interview } from '@shared/types/business';
 
 interface InterviewItemProps {
@@ -7,42 +8,48 @@ interface InterviewItemProps {
 }
 
 const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-UK', {
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('de-DE', {
       year: '2-digit',
-      month: '2-digit',
-      day: '2-digit'
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
+  const isCompleted = interview.status === 'completed';
+  const StatusIcon = isCompleted ? CheckCircle : Clock;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onSelect(interview);
+  };
+
   return (
-    <div className="bg-white border rounded-lg p-6 hover:border-blue-300 transition-colors">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-sm text-gray-500">{formatDate(interview.updated_at)}</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              interview.status === 'completed' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-yellow-100 text-yellow-800'
-            }`}>
-              {interview.status}
-            </span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            {interview.title}
-          </h3>
-        </div>
-        
-        <div className="flex gap-2 ml-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSelect(interview)}
+    <div className="py-2 group flex gap-6">
+      {/* Status icon - vertically centered */}
+      <div className="flex-shrink-0 w-12 flex justify-center items-center h-7">
+        <StatusIcon className={`w-7 h-7 pt-1 transition-colors ${
+          isCompleted 
+            ? 'text-primary group-hover:text-accent' 
+            : 'text-secondary group-hover:text-accent'
+        }`} />
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1">
+        <h3 className="text-headline font-medium mb-2 leading-8 -ml-1 -mt-1">
+          <Link
+            to="#"
+            className="block focus-transitional-invert cursor-pointer transition-colors text-primary hover:text-accent"
+            onClick={handleClick}
           >
-            Review
-          </Button>
-        </div>
+            {interview.title}
+          </Link>
+        </h3>
+        <p className="text-body text-secondary mb-2">{interview.motivational_quote}</p>
+        <span className="text-body-sm text-secondary tabular-nums">{formatDateTime(interview.updated_at)}</span>
       </div>
     </div>
   );

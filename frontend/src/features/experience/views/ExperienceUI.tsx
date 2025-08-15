@@ -16,18 +16,18 @@ interface ExperienceUIProps {
 const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceUIProps) => {
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
-        <div className="text-gray-600">Loading experience data...</div>
+      <div className="max-w-3xl mx-auto p-6 text-center">
+        <div className="text-secondary">Loading experience data...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
+      <div className="max-w-3xl mx-auto p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
         <h2 className="text-xl font-semibold mb-2">Processing Error</h2>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="text-secondary mb-4">{error}</p>
         {onRestart && (
           <Button onClick={onRestart}>Start New Interview</Button>
         )}
@@ -37,9 +37,9 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
 
   if (!data) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
+      <div className="max-w-3xl mx-auto p-6 text-center">
         <h2 className="text-xl font-semibold mb-2">No Experience Data</h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-secondary mb-4">
           Complete an interview to start building your professional profile.
         </p>
         {onRestart && (
@@ -50,7 +50,7 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="max-w-3xl mx-auto p-6">
       <SectionHeader 
         title="Your Professional Experience"
         subtitle={data.summary?.basedOnInterviews.length ? `Based on ${data.summary.basedOnInterviews.length} interviews` : "Here you will find insights from your career interviews"}

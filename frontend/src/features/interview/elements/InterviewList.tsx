@@ -2,6 +2,8 @@ import { Button } from '@shared/components/ui/button';
 import SectionHeader from '@shared/components/ui/section-header';
 import InterviewItem from './InterviewItem';
 import { Interview } from '@shared/types/business';
+import ErrorMessage from '@shared/components/ui/error-message';
+import { MicOff } from 'lucide-react';
 
 interface InterviewListProps {
   interviews: Interview[];
@@ -22,57 +24,62 @@ const InterviewList = ({
 }: InterviewListProps) => {
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Loading interviews...</div>
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <div className="text-secondary">Loading interviews...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <SectionHeader 
-        title="All Your Stories" 
-        subtitle="All your interview sessions in one place - both finished and in progress. You can review what you shared and update your career profile anytime."
-      />
-
-      {error && (
-        <div className="mb-6 p-4 bg-accent border border-accent rounded-lg">
-          <div className="text-surface">{error}</div>
-          <button 
-            onClick={onRetry}
-            className="mt-2 text-surface hover:text-surface/80 underline focus-transitional-invert"
-          >
-            Try again
-          </button>
-        </div>
-      )}
-
-      {interviews.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No interviews yet</h3>
-          <p className="text-gray-500 mb-4">Start your first interview in the Guide section</p>
-          <Button onClick={onStartInterview}>
-            Start Interview
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {interviews.map(interview => (
-            <InterviewItem 
-              key={interview.id} 
-              interview={interview}
-              onSelect={onSelectInterview}
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0">
+        <SectionHeader 
+          title="All Your Stories" 
+          subtitle=""
+        />
+        {error && (
+          <div className="mt-12">
+            <ErrorMessage 
+              message={error}
+              onRetry={onRetry}
+              className="mx-6 mb-8"
             />
-          ))}
+          </div>
+        )}
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
+        <div className="max-w-3xl mx-auto p-6">
+          {interviews.length === 0 && !error ? (
+            <div className="text-center py-12">
+              <div className="text-secondary mb-4">
+                <MicOff className="w-16 h-16 mx-auto" />
+              </div>
+              <h3 className="text-lg font-medium text-primary mb-2">No interviews yet</h3>
+              <p className="text-secondary mb-4">Start your first interview in the Guide section</p>
+              <Button onClick={onStartInterview}>
+                Go to Guide
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {interviews.map((interview) => (
+                <InterviewItem 
+                  key={interview.id} 
+                  interview={interview}
+                  onSelect={onSelectInterview}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
     </div>
   );
 };
