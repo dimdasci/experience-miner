@@ -39,7 +39,7 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
                 ? 'bg-primary text-surface' 
                 : isAnswered 
                   ? 'bg-neutral-bg' 
-                  : 'border border-border-subtle text-secondary'
+                  : 'border border-subtle text-secondary'
             } ${
               isClickable 
                 ? 'cursor-pointer hover:opacity-80' 
