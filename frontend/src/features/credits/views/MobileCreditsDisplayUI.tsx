@@ -35,7 +35,7 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
 
   return (
     <button 
-      className={`flex items-center space-x-1 focus-ring ${
+      className={`flex items-center space-x-1 focus-transitional-ring ${
         isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
         'text-secondary'

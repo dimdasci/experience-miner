@@ -16,8 +16,6 @@ const getVariantClasses = (variant: string) => {
       return 'bg-neutral-bg hover:bg-accent hover:text-surface text-primary';
     case 'ghost': 
       return 'hover:bg-accent hover:text-surface text-primary';
-    case 'link': 
-      return 'text-accent underline-offset-4 hover:underline';
     default: // 'default' variant
       return 'bg-neutral-bg hover:bg-accent text-primary hover:text-surface';
   }
@@ -37,7 +35,7 @@ const getSizeClasses = (size: string) => {
 };
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'accent' | 'primary' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?: 'default' | 'accent' | 'primary' | 'destructive' | 'outline' | 'secondary' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 

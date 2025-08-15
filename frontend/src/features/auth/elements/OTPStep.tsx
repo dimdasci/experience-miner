@@ -51,14 +51,13 @@ const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPSte
       </form>
 
       <div className="text-center max-w-sm mx-auto">
-        <Button
-          variant="link"
+        <button
           onClick={onReset}
           disabled={loading}
-          className="text-body-sm"
+          className="text-primary underline-offset-4 hover:underline text-body-sm focus-transitional-invert disabled:opacity-50"
         >
           Use a different email
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ const InterviewList = ({
           <div className="text-surface">{error}</div>
           <button 
             onClick={onRetry}
-            className="mt-2 text-surface hover:text-surface/80 underline focus-ring"
+            className="mt-2 text-surface hover:text-surface/80 underline focus-transitional-invert"
           >
             Try again
           </button>

@@ -35,7 +35,7 @@ export const CreditsDisplayUI = ({ credits, loading, error, onRefresh }: Credits
 
   return (
     <button
-      className={`flex items-center space-x-1 focus-ring ${
+      className={`flex items-center space-x-1 focus-transitional-ring ${
         isEmpty ? 'text-accent' : 
         isLow ? 'text-yellow-600' : 
         'text-secondary'

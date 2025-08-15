@@ -19,7 +19,7 @@ export const MobileUserMenuUI = ({ userPrefix, onSignOut }: MobileUserMenuUIProp
       </div>
       <button
         onClick={handleSignOut}
-        className="w-full text-left px-2 py-2 text-sm hover:bg-neutral-bg rounded-md transition-colors focus-ring"
+        className="w-full text-left px-2 py-2 text-sm hover:bg-neutral-bg rounded-md transition-colors focus-transitional-ring"
       >
         Sign Out
       </button>
