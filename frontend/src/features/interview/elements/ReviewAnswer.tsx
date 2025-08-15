@@ -3,25 +3,29 @@ interface ReviewAnswerProps {
   question: string;
   answer: string | null;
   recordingDuration?: number | null;
+  isFirst?: boolean;
 }
 
-const ReviewAnswer = ({ questionNumber, question, answer, recordingDuration }: ReviewAnswerProps) => {
+const ReviewAnswer = ({ questionNumber, question, answer, recordingDuration, isFirst = false }: ReviewAnswerProps) => {
   return (
-    <div className="bg-white border rounded-lg p-6">
-      <div className="mb-4">
-        <h3 className="font-semibold text-gray-900 mb-2">Question {questionNumber}</h3>
-        <p className="text-gray-700 mb-4">{question}</p>
+    <>
+      {/* Question Section - matching FocusedQuestion pattern */}
+      <div className={`${isFirst ? '' : 'mt-16'} flex items-baseline space-x-6`}>
+        <div className="flex-shrink-0 w-8 flex justify-center text-body-lg font-medium text-secondary tabular-nums">{questionNumber}</div>
+        <div className="flex-grow">
+          <h2 className="text-body-lg font-medium text-primary leading-snug">
+            {question}
+          </h2>
+        </div>
       </div>
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">Your Response:</h4>
-        <p className="text-gray-700 whitespace-pre-wrap">{answer || 'No response recorded'}</p>
-        {recordingDuration && (
-          <div className="mt-3 text-sm text-gray-500">
-            Recording duration: {recordingDuration} seconds
-          </div>
-        )}
+      
+      {/* Answer Section - aligned with question text */}
+      <div className="mt-10 ml-14">
+        <div className="text-body text-primary whitespace-pre-wrap leading-relaxed">
+          {answer || 'No response given'}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

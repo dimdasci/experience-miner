@@ -5,6 +5,7 @@ import ReviewAnswer from '../elements/ReviewAnswer';
 import ReviewNavigation from '../elements/ReviewNavigation';
 import ProcessingModal from '@shared/components/modals/ProcessingModal';
 import { Button } from '@shared/components/ui/button';
+import { MIN_RESPONSE_LENGTH } from '@shared/constants/app';
 
 interface ReviewUIProps {
   interview: Interview | null;
@@ -37,9 +38,9 @@ const ReviewUI = ({
 }: ReviewUIProps) => {
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto px-4">
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Loading interview...</div>
+          <div className="text-secondary">Loading interview...</div>
         </div>
       </div>
     );
@@ -47,9 +48,9 @@ const ReviewUI = ({
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="p-4 bg-accent border border-accent rounded-lg">
-          <div className="text-surface">{error}</div>
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+          <div className="text-accent">{error}</div>
           <Button variant="outline" size="sm" onClick={onRetry} className="mt-2">
             Try again
           </Button>
@@ -60,44 +61,59 @@ const ReviewUI = ({
 
   if (!interview) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="text-gray-600">No interview data available.</div>
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="text-secondary">No interview data available.</div>
       </div>
     );
   }
 
   const answeredQuestions = answers.filter(a => a.answer && a.answer.trim() !== '');
+  const hasMinimumContent = answeredQuestions.some(a => a.answer && a.answer.trim().length >= MIN_RESPONSE_LENGTH);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <SectionHeader 
-        title="Review Your Story" 
-        subtitle={`Topic was "${interview.title}" - Take a look at what you shared before we organize it for you`}
-      />
+    <>
+      {/* Fixed Header */}
+      <div className="flex-shrink-0">
+        <SectionHeader 
+          title={interview.title} 
+          subtitle="Review Your story"
+        />
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      {/* Scrollable Content */}
+      <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
+        <ReviewAnswersList>
+          {answers.map((answer, index) => (
+            <ReviewAnswer 
+              key={answer.id} 
+              questionNumber={answer.question_number}
+              question={answer.question} 
+              answer={answer.answer}
+              recordingDuration={answer.recording_duration_seconds}
+              isFirst={index === 0}
+            />
+          ))}
+        </ReviewAnswersList>
 
-      <ReviewAnswersList>
-        {answers.map(answer => (
-          <ReviewAnswer 
-            key={answer.id} 
-            questionNumber={answer.question_number}
-            question={answer.question} 
-            answer={answer.answer}
-            recordingDuration={answer.recording_duration_seconds}
-          />
-        ))}
-      </ReviewAnswersList>
-
-      {answers.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd"/>
-            </svg>
+        {answers.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-secondary mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd"/>
+              </svg>
+            </div>
+            <p className="text-secondary">No interview questions found</p>
           </div>
-          <p className="text-gray-500">No interview questions found</p>
-        </div>
-      )}
-
+        )}
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      {/* Navigation - part of main content flow like InterviewNavigation */}
       <ReviewNavigation 
         onDraft={onDraft} 
         onResume={onResume}
@@ -106,6 +122,7 @@ const ReviewUI = ({
         answeredCount={answeredQuestions.length}
         totalCount={answers.length}
         isExtracting={isExtracting}
+        hasMinimumContent={hasMinimumContent}
       />
 
       <ProcessingModal 
@@ -114,7 +131,7 @@ const ReviewUI = ({
         onRetry={onExtract}
         onCancel={onClearError}
       />
-    </div>
+    </>
   );
 };
 

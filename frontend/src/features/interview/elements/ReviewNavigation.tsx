@@ -9,6 +9,7 @@ interface ReviewNavigationProps {
   answeredCount: number;
   totalCount: number;
   isExtracting: boolean;
+  hasMinimumContent: boolean;
 }
 
 const ReviewNavigation = ({ 
@@ -18,22 +19,21 @@ const ReviewNavigation = ({
   onExtract, 
   answeredCount, 
   totalCount, 
-  isExtracting 
+  isExtracting,
+  hasMinimumContent
 }: ReviewNavigationProps) => {
   return (
-    <div className="mt-8 flex justify-between items-center bg-gray-50 rounded-lg p-6">
-      <div>
-        <h3 className="font-semibold text-gray-900 mb-1">Ready to process your responses?</h3>
-        <p className="text-gray-600 text-sm">
-          Extract structured insights from your interview or save as draft ({answeredCount} of {totalCount} questions answered)
-        </p>
-      </div>
+    <div className="flex-shrink-0 py-6 flex justify-center items-center">
       <div className="flex gap-3">
-        <Button variant="outline" onClick={onDraft}>Save as Draft</Button>
-        <Button variant="outline" onClick={onResume}>Resume Interview</Button>
+        <Button variant="outline" onClick={onDraft}>Finish Later</Button>
+        <Button variant="outline" onClick={onResume}>Resume</Button>
         <Button variant="outline" onClick={onExport}>Export</Button>
-        <Button onClick={onExtract} className="bg-green-600 hover:bg-green-700" disabled={answeredCount === 0 || isExtracting}>
-          {isExtracting ? (<><Loader2 className="w-4 h-4 animate-spin mr-2"/>Processing...</>) : 'Complete & Analyze'}
+        <Button 
+          onClick={onExtract} 
+          variant={hasMinimumContent ? "accent" : "outline"}
+          disabled={!hasMinimumContent || isExtracting}
+        >
+          {isExtracting ? (<><Loader2 className="w-4 h-4 animate-spin mr-2"/>Processing...</>) : 'Analyze'}
         </Button>
       </div>
     </div>

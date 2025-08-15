@@ -14,6 +14,9 @@ const DesktopNavigation = () => {
     if (path === '/guide') {
       return location.pathname === '/' || location.pathname.startsWith('/guide');
     }
+    if (path === '/interviews') {
+      return location.pathname.startsWith('/interviews');
+    }
     return location.pathname === path;
   };
 
