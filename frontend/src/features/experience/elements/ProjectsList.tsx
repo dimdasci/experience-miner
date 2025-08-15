@@ -1,4 +1,3 @@
-import { Target } from 'lucide-react';
 import { Project } from '@shared/types/business';
 import AchievementsList from './AchievementsList';
 
@@ -10,16 +9,12 @@ const ProjectsList = ({ projects }: ProjectsListProps) => {
   if (!projects || projects.length === 0) return null;
 
   return (
-    <div className="mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Target className="w-4 h-4 text-orange-600" />
-        <h3 className="font-semibold text-gray-900">Projects</h3>
-      </div>
-      <div className="space-y-3">
+    <div className="mb-6">
+      <div className="space-y-4">
         {projects.map((proj, idx) => (
-          <div key={idx} className="p-4 bg-orange-50 rounded">
-            <div className="font-medium mb-2">{proj.name}</div>
-            <div className="text-sm text-gray-600 mb-3">{proj.goal}</div>
+          <div key={idx}>
+            <h3 className="text-body-lg font-medium text-primary mb-1">{proj.name}</h3>
+            <div className="text-body text-secondary mb-2">{proj.goal}</div>
             <AchievementsList achievements={proj.achievements || []} />
           </div>
         ))}

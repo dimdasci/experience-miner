@@ -9,7 +9,7 @@ const RolesList = ({ roles }: RolesListProps) => {
   if (!roles || roles.length === 0) return null;
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {roles.map((role, i) => (
         <RoleItem key={i} role={role} />
       ))}

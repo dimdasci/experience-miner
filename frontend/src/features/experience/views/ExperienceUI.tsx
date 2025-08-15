@@ -1,9 +1,9 @@
-import { AlertCircle } from 'lucide-react';
 import { ExtractedFacts } from '@shared/types/business';
 import { Button } from '@shared/components/ui/button';
 import SectionHeader from '@shared/components/ui/section-header';
 import Summary from '../elements/Summary';
 import RolesList from '../elements/RolesList';
+import ErrorMessage from '@shared/components/ui/error-message';
 
 interface ExperienceUIProps {
   data: ExtractedFacts | null;
@@ -22,19 +22,6 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-3xl mx-auto p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Processing Error</h2>
-        <p className="text-secondary mb-4">{error}</p>
-        {onRestart && (
-          <Button onClick={onRestart}>Start New Interview</Button>
-        )}
-      </div>
-    );
-  }
-
   if (!data) {
     return (
       <div className="max-w-3xl mx-auto p-6 text-center">
@@ -43,36 +30,61 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
           Complete an interview to start building your professional profile.
         </p>
         {onRestart && (
-          <Button onClick={onRestart}>Start Interview</Button>
+          <Button onClick={onRestart}>Go to Guide</Button>
         )}
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <SectionHeader 
-        title="Your Professional Experience"
-        subtitle={data.summary?.basedOnInterviews.length ? `Based on ${data.summary.basedOnInterviews.length} interviews` : "Here you will find insights from your career interviews"}
-      />
+    <div className="h-full flex flex-col">
+      {/* Fixed Header */}
+      <div className="flex-shrink-0">
+        <SectionHeader 
+          title="Your Professional Experience"
+          subtitle={data.summary?.basedOnInterviews.length ? `Based on ${data.summary.basedOnInterviews.length} interviews` : "Here you will find insights from your career interviews"}
+        />
+        {error && (
+          <div className="mt-12">
+            <ErrorMessage 
+              message={error}
+              onRetry={onRestart}
+              className="mx-6 mb-8"
+            />
+          </div>
+        )}
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      {/* Scrollable Content */}
+      <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
+        <div className="max-w-3xl mx-auto p-6">
+          <div className="space-y-10">
+            {/* Professional Summary */}
+            {data.summary?.text && (
+              <Summary 
+                summaryText={data.summary.text}
+                basedOnInterviews={data.summary.basedOnInterviews}
+              />
+            )}
+
+            {/* Roles */}
+            <RolesList roles={data.roles || []} />
+          </div>
+        </div>
+      </div>
+      
+      {/* Fixed Spacer */}
+      <div className="flex-shrink-0 h-10"></div>
+      
+      {/* Fixed Footer - Export Button */}
       {onExport && (
-        <div className="flex justify-end mb-4">
-          <Button variant="outline" onClick={onExport}>Export</Button>
+        <div className="flex-shrink-0 py-6 flex justify-center items-center">
+          <Button onClick={onExport}>Export</Button>
         </div>
       )}
-
-      <div className="space-y-6">
-        {/* Professional Summary */}
-        {data.summary?.text && (
-          <Summary 
-            summaryText={data.summary.text}
-            basedOnInterviews={data.summary.basedOnInterviews}
-          />
-        )}
-
-        {/* Roles */}
-        <RolesList roles={data.roles || []} />
-      </div>
     </div>
   );
 };
