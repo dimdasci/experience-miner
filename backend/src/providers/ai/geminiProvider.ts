@@ -97,7 +97,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		return { allowed: true };
 	}
 
-	private trackRequest(): void {
+	private trackRequest(request: GenerateContentParameters): void {
 		const now = Date.now();
 		this.requestTracker.requests.push(now);
 		this.requestTracker.dailyRequests++;
@@ -105,6 +105,14 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			requestsThisMinute: this.requestTracker.requests.length,
 			requestsToday: this.requestTracker.dailyRequests,
 			dailyLimit: this.rateLimitConfig.requestsPerDay,
+			request: {
+				model: request.model,
+				systemPrompt: request.config?.systemInstruction,
+				userPrompt: request.contents,
+				maxOutputTokens: request.config?.maxOutputTokens,
+				temperature: request.config?.temperature,
+				responseSchema: request.config?.responseSchema,
+			},
 		});
 	}
 
@@ -282,7 +290,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 					}
 
 					try {
-						this.trackRequest();
+						this.trackRequest(request);
 						const result: GenerateContentResponse =
 							await this.client.models.generateContent(request);
 
@@ -294,23 +302,47 @@ export class GeminiProvider implements IGenerativeAIProvider {
 						return result;
 					} catch (error) {
 						attempt++;
+						const errorMessage =
+							error instanceof Error ? error.message : "Unknown error";
+
+						// Check if the error is a client-side error (non-retryable)
+						const isClientError = this.isNonRetryableError(error);
+
 						Sentry.logger?.warn?.("Gemini API request failed", {
 							attempt,
 							maxRetries: this.rateLimitConfig.maxRetries,
-							error: error instanceof Error ? error.message : "Unknown error",
+							error: errorMessage,
 							backoffMs,
+							isClientError,
 						});
+
+						// Don't retry client-side errors
+						if (isClientError) {
+							Sentry.captureException(error, {
+								tags: {
+									service: "gemini",
+									operation: "generateCompletion",
+									errorType: "client",
+								},
+								extra: { attempts: attempt },
+							});
+							throw new BadRequestError(
+								`Gemini AI request failed: ${errorMessage}`,
+							);
+						}
 
 						if (attempt >= this.rateLimitConfig.maxRetries) {
 							this.isProviderHealthy = false;
 							Sentry.captureException(error, {
-								tags: { service: "gemini", operation: "generateCompletion" },
+								tags: {
+									service: "gemini",
+									operation: "generateCompletion",
+									errorType: "server",
+								},
 								extra: { attempts: attempt, finalBackoff: backoffMs },
 							});
 							throw new ServiceUnavailableError(
-								`Gemini AI request failed after ${attempt} attempts: ${
-									error instanceof Error ? error.message : "Unknown error"
-								}`,
+								`Gemini AI request failed after ${attempt} attempts: ${errorMessage}`,
 							);
 						}
 						await this.sleep(backoffMs);
@@ -408,6 +440,43 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		} else {
 			return userPrompt;
 		}
+	}
+
+	/**
+	 * Determines if an error is non-retryable (client-side error)
+	 * Client errors like INVALID_ARGUMENT shouldn't be retried as they won't succeed
+	 * with the same input parameters
+	 */
+	private isNonRetryableError(error: unknown): boolean {
+		// Check for error message containing client error indicators
+		if (error instanceof Error) {
+			const errorMessage = error.message.toLowerCase();
+
+			// Check for specific error statuses in JSON error responses
+			if (
+				errorMessage.includes('"status":"invalid_argument"') ||
+				errorMessage.includes("invalid_argument") ||
+				errorMessage.includes("bad request") ||
+				errorMessage.includes("exceeds the maximum allowed") ||
+				errorMessage.includes("permission_denied") ||
+				errorMessage.includes("unauthenticated")
+			) {
+				return true;
+			}
+
+			// For standard HTTP errors, check if it's a 4XX client error
+			if (
+				errorMessage.includes("status code 400") ||
+				errorMessage.includes("status code 401") ||
+				errorMessage.includes("status code 403") ||
+				errorMessage.includes("status code 404") ||
+				errorMessage.includes("status code 422")
+			) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	getHealthStatus(): {
