@@ -19,10 +19,10 @@ The Espejo design system is built around a warm, supportive, and empowering iden
 This design system is organized into the following sections:
 
 
-- [Color System](./visual-system/color-system.md)
-- [Typography](./visual-system/typography.md)
-- [Spacing & Layout](./visual-system/spacing-and-layout.md)
-- [Focus Management](./visual-system/focus-management.md)
+- [Color System](./color-system.md)
+- [Typography](./typography.md)
+- [Spacing & Layout](./spacing-and-layout.md)
+- [Focus Management](./focus-management.md)
 
 
 ## Implementation Guidelines
