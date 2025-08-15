@@ -21,10 +21,13 @@ module.exports = {
         'accent-hover': 'var(--accent-hover)',
         'primary': 'var(--text-primary)',        // Keep existing usage pattern
         'secondary': 'var(--text-secondary)',    // Keep existing usage pattern  
-        'border-subtle': 'var(--border-subtle)',
         'neutral-bg': 'var(--neutral-bg)',
         // Special mappings for specific use cases
         'foreground': 'var(--text-primary)', // For bg-foreground → bg-foreground usage (caret)
+      },
+      borderColor: {
+        DEFAULT: 'var(--border-subtle)',
+        'subtle': 'var(--border-subtle)',
       },
       fontSize: {
         'display': ['2.5rem', '3rem'],     // 40px / 48px line-height
