@@ -197,6 +197,28 @@ For groups of related buttons:
 </div>
 ```
 
+## Mobile-Specific Spacing
+
+On mobile devices, spacing is adjusted to optimize the user experience on smaller screens:
+
+### Mobile Spacing Scale
+
+| Desktop Token | Mobile Token | Desktop Size | Mobile Size | Reduction |
+|---------------|--------------|--------------|-------------|-----------|
+| `space-x-6`   | `space-x-3`  | 24px        | 12px        | -12px     |
+| `space-y-10`  | `space-y-6`  | 40px        | 24px        | -16px     |
+| `p-6`         | `p-4`        | 24px        | 16px        | -8px      |
+| `mt-10`       | `mt-6`       | 40px        | 24px        | -16px     |
+| `px-4 py-2`   | `px-3 py-2`  | 16px/8px    | 12px/8px    | -4px/0px  |
+
+### Mobile Layout Principles
+
+1. **Reduced margins**: Horizontal margins are typically reduced by 25-50%
+2. **Tighter vertical spacing**: Section spacing is reduced proportionally
+3. **Touch targets**: All interactive elements maintain minimum 44px height
+4. **Compact components**: Component padding is reduced while maintaining usability
+5. **Preserved hierarchy**: The ratio of spacing between related and unrelated elements is maintained
+
 ## Implementation Notes
 
 - All spacing values are implemented using Tailwind's utility classes

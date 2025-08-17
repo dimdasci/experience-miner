@@ -31,26 +31,38 @@ The Espejo design system uses a defined type scale to maintain consistent text s
 
 | Token       | Size / Line Height | Usage                                    |
 |-------------|--------------------|-----------------------------------------|
-| `display`   | 35px / 42px        | Hero headers, large section titles       |
+| `display`   | 35px / 44px        | Hero headers, large section titles       |
 | `headline`  | 21px / 28px        | Section headings, card titles            |
-| `body-lg`   | 15.75px / 24.5px   | Primary content, emphasized text         |
-| `body`      | 14px / 21px        | Standard body text, most UI text         |
-| `body-sm`   | 12.25px / 17.5px   | Secondary information, labels            |
-| `caption`   | 10.5px / 14px      | Metadata, footnotes, input hints         |
+| `body-lg`   | 15.75px / 28px     | Primary content, emphasized text         |
+| `body`      | 14px / 24px        | Standard body text, most UI text         |
+| `body-sm`   | 12.25px / 20px     | Secondary information, labels            |
+| `caption`   | 10.5px / 16px      | Metadata, footnotes, input hints         |
 
 ## Implementation
 
 The type scale is implemented in Tailwind configuration:
 
+### Desktop Type Scale
+
 ```js
 // frontend/tailwind.config.js
 fontSize: {
-  'display': ['2.5rem', '3rem'],     // 35px / 42px line-height
-  'headline': ['1.5rem', '2rem'],    // 21px / 28px line-height  
-  'body-lg': ['1.125rem', '1.75rem'], // 15.75px / 24.5px line-height
-  'body': ['1rem', '1.5rem'],        // 14px / 21px line-height
-  'body-sm': ['0.875rem', '1.25rem'], // 12.25px / 17.5px line-height
-  'caption': ['0.75rem', '1rem'],    // 10.5px / 14px line-height
+  // Desktop sizes
+  'display': ['2.5rem', '3.143rem'],    // 35px / 44px line-height
+  'headline': ['1.5rem', '2rem'],       // 21px / 28px line-height  
+  'body-lg': ['1.125rem', '2rem'],      // 15.75px / 28px line-height
+  'body': ['1rem', '1.714rem'],         // 14px / 24px line-height
+  'body-sm': ['0.875rem', '1.429rem'],  // 12.25px / 20px line-height
+  'caption': ['0.75rem', '1.143rem'],   // 10.5px / 16px line-height
+  
+  // Mobile-specific sizes (only display and headline get smaller)
+  'mobile-display': ['1.857rem', '2.286rem'],   // 26px / 32px
+  'mobile-headline': ['1.286rem', '1.714rem'],  // 18px / 24px
+  
+  // Mobile line height variants (same font size, reduced line height)
+  'mobile-body-lg-lh': ['1.125rem', '1.429rem'],  // 15.75px / 20px (same size, reduced LH)
+  'mobile-body-lh': ['1rem', '1.429rem'],         // 14px / 20px (same size, reduced LH)
+  'mobile-body-sm-lh': ['0.875rem', '1.143rem'],  // 12.25px / 16px (same size, reduced LH)
 }
 ```
 
@@ -125,14 +137,49 @@ Strict restrictions on Lora usage:
 - **Never for headings** except the wordmark
 - **Never inline** with regular text
 
-## Responsive Typography
+## Mobile Typography
 
-On small screens (mobile), the typography system adjusts automatically:
+On mobile devices, typography is adjusted for optimal reading on smaller screens:
 
-- Base font size remains at 14px
-- Type scale remains proportional
-- Line heights are preserved
-- Containers adjust to maintain readability
+### Mobile Font Size & Line Height Scale
+
+The mobile typography scale makes these key adjustments:
+
+1. **Reduced headings**: Display and headline text sizes are smaller on mobile
+2. **Consistent body sizes**: Body text sizes remain the same across devices
+3. **Tighter line heights**: Line heights are reduced by 4-8px on mobile for all text variants
+
+| Token       | Desktop Size / LH | Mobile Size / LH | Size Change | LH Change |
+|-------------|-------------------|------------------|-------------|-----------|
+| `display`   | 35px / 44px       | 26px / 32px      | -9px        | -12px     |
+| `headline`  | 21px / 28px       | 18px / 24px      | -3px        | -4px      |
+| `body-lg`   | 15.75px / 28px    | 15.75px / 20px   | None        | -8px      |
+| `body`      | 14px / 24px       | 14px / 20px      | None        | -4px      |
+| `body-sm`   | 12.25px / 20px    | 12.25px / 16px   | None        | -4px      |
+| `caption`   | 10.5px / 16px     | 10.5px / 16px    | None        | None      |
+
+### Implementation
+
+Mobile typography is implemented using responsive utility classes:
+
+```jsx
+// For size and line height changes (headings)
+<h1 className="text-display md:text-mobile-display font-medium">
+  Page Title
+</h1>
+
+// For line height changes only (body text)
+<p className="text-body md:text-mobile-body-lh">
+  This paragraph will have the same size but tighter line height on mobile.
+</p>
+```
+
+### Mobile Typography Principles
+
+1. **Selective size reduction**: Only heading sizes are reduced on mobile
+2. **Consistent body text**: Body text maintains the same size for readability
+3. **Tighter line heights**: All text has more compact line spacing on mobile
+4. **Preserved vertical rhythm**: All mobile line heights align to the 4px grid
 
 ## Best Practices
 
