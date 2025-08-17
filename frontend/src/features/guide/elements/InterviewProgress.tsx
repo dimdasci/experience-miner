@@ -20,7 +20,7 @@ const InterviewProgress = ({ current, total, answers, onNavigate, recordingState
   };
 
   return (
-    <div className="mt-12 flex justify-center items-center space-x-2 sm:space-x-4">
+    <div className="mt-12 hidden md:flex justify-center items-center space-x-2 sm:space-x-4 interview-progress-hide-short">
       {Array.from({ length: total }, (_, index) => {
         const step = index + 1;
         const isCurrent = step === current;

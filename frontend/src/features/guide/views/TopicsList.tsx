@@ -43,8 +43,8 @@ const TopicsList = ({ topics, loading, error, selecting, onReload, onSelect }: T
       <div className="flex-shrink-0 h-10"></div>
       
       <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-6">
-          <div className="space-y-10">
+        <div>
+          <div className="space-y-6 md:space-y-10">
             {topics.map(topic => (
               <TopicComponent 
                 key={topic.id} 

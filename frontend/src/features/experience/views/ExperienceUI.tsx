@@ -16,7 +16,7 @@ interface ExperienceUIProps {
 const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceUIProps) => {
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto p-6 text-center">
+      <div className="text-center">
         <div className="text-secondary">Loading experience data...</div>
       </div>
     );
@@ -24,7 +24,7 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
 
   if (!data) {
     return (
-      <div className="max-w-3xl mx-auto p-6 text-center">
+      <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">No Experience Data</h2>
         <p className="text-secondary mb-4">
           Complete an interview to start building your professional profile.
@@ -60,8 +60,8 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
       
       {/* Scrollable Content */}
       <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-6">
-          <div className="space-y-10">
+        <div>
+          <div className="space-y-6 md:space-y-10">
             {/* Professional Summary */}
             {data.summary?.text && (
               <Summary 
@@ -77,7 +77,7 @@ const ExperienceUI = ({ data, loading, error, onRestart, onExport }: ExperienceU
       </div>
       
       {/* Fixed Spacer */}
-      <div className="flex-shrink-0 h-10"></div>
+      <div className="flex-shrink-0 h-2 md:h-10"></div>
       
       {/* Fixed Footer - Export Button */}
       {onExport && (

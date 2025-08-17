@@ -9,7 +9,7 @@ interface AppViewportProps {
  * setting background, font, and min-height, replacing inline div in App.tsx.
  */
 const AppViewport = ({ children }: AppViewportProps) => (
-  <div className="h-screen bg-background font-sans antialiased overflow-hidden">
+  <div className="dynamic-viewport-height bg-background font-sans antialiased">
     {children}
   </div>
 );

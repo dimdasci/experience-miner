@@ -80,6 +80,18 @@
     animation: caret-blink 1.25s ease-out infinite;
   }
 
+  /* Height-based responsive design for interview layout */
+  @media (max-height: 900px) {
+    .interview-progress-hide-short {
+      display: none !important;
+    }
+  }
+
+  /* Dynamic height: 100vh if viewport >= 768px, otherwise 768px minimum */
+  .dynamic-viewport-height {
+    height: max(100vh, 768px);
+  }
+
   /* For text-based transitional elements (navigation links, topic titles) */
   .focus-transitional-invert {
     @apply focus-visible:outline-none focus-visible:bg-primary focus-visible:text-surface p-1;

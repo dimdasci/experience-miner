@@ -41,7 +41,7 @@ const RecorderUI = ({
   return (
     <>
       {/* Voice section - always visible, isActive based on activeMode */}
-      <div className="mt-10">
+      <div className="mt-6 md:mt-10">
         {!isTranscribing && (
           <VoiceInput 
             isActive={activeMode === 'voice' && (isRecording || isPaused)}
@@ -76,8 +76,8 @@ const RecorderUI = ({
       )}
       
       {/* Text section - always visible, exact same DOM structure as InterviewUI */}
-      <div className="mt-10 flex items-start space-x-6 flex-grow min-h-0">
-        <div className="flex-shrink-0 w-7 flex justify-center text-headline font-serif font-medium pt-5 text-secondary">A</div>
+      <div className="mt-10 flex items-start md:space-x-6 flex-grow min-h-0">
+        <div className="hidden md:flex flex-shrink-0 w-7 justify-center text-headline font-serif font-medium pt-5 text-secondary">A</div>
         <div className="flex-grow min-h-0 h-full">
           <TextInput 
             ref={textInputRef}

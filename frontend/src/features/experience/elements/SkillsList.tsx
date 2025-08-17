@@ -7,7 +7,7 @@ const SkillsList = ({ skills }: SkillsListProps) => {
 
   return (
     <div>
-      <h3 className="text-body-lg font-medium text-primary mb-2">Skills</h3>
+      <h3 className="text-mobile-body-lg-lh md:text-body-lg font-medium text-primary mb-2">Skills</h3>
       <div className="text-body text-secondary">
         {skills.join(' • ')}
       </div>

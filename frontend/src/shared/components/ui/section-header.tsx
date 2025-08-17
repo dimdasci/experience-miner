@@ -10,8 +10,8 @@ const SectionHeader = ({ title, subtitle, className }: SectionHeaderProps) => {
   return (
     <div className={cn("mt-12 md:mt-16", className)}>
       <div className="text-center">
-        <h1 className="text-display font-bold text-primary tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-2 text-body-lg text-secondary">{subtitle}</p>}
+        <h1 className="text-mobile-display md:text-display font-bold text-primary tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-2 text-mobile-body-lg-lh md:text-body-lg text-secondary">{subtitle}</p>}
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ const TextInput = forwardRef<HTMLTextAreaElement, TextInputProps>(({
     <div className={containerClasses}>
       <textarea
         ref={ref}
-        className="w-full h-full bg-transparent p-6 border-0 focus:ring-0 focus:outline-none resize-none text-body-lg text-primary leading-relaxed"
+        className="w-full h-full bg-transparent p-4 md:p-6 border-0 focus:ring-0 focus:outline-none resize-none text-mobile-body-lg-lh md:text-body-lg text-primary leading-relaxed"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={onFocus}

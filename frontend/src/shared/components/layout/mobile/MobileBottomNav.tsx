@@ -32,7 +32,7 @@ const MobileBottomNav = () => {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div className="flex justify-around items-center h-full px-2">
+      <div className="flex justify-around items-center h-full px-4">
         {navigationItems.map((item) => {
           const IconComponent = item.icon;
           const isActive = item.activeCondition(location.pathname);
