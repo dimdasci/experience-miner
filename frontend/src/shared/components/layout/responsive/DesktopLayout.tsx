@@ -12,7 +12,7 @@ const DesktopLayout = ({ children }: DesktopLayoutProps) => {
     <div className="h-full bg-background flex flex-col">
       <DesktopHeader />
       <DesktopNavigation />
-      <main className="flex-1 bg-background min-h-0 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
+      <main className="flex-1 min-h-0 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
         {children}
       </main>
       <DesktopFooter />

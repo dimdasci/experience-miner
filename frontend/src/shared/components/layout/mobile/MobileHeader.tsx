@@ -5,7 +5,7 @@ import MobileOverflowMenu from './MobileOverflowMenu';
 const MobileHeader = () => {
   return (
     <header 
-      className="h-14 bg-background border-b flex-shrink-0"
+      className="h-14 bg-surface border-b flex-shrink-0"
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)'
       }}
@@ -15,7 +15,7 @@ const MobileHeader = () => {
         <Logo />
         
         {/* Right side: Credits + Menu */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 md:space-x-3">
           <CreditsDisplayContainer variant="mobile" />
           <MobileOverflowMenu />
         </div>

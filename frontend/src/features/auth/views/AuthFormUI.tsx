@@ -27,7 +27,7 @@ export const AuthFormUI = ({
   onVerify,
   onReset
 }: AuthFormUIProps) => (
-  <div className="w-full max-w-3xl mx-auto space-y-12 p-6">
+  <div className="w-full max-w-3xl mx-auto space-y-12 p-4 md:p-6">
     <WelcomeMessage step={step} />
 
     {error && (
@@ -45,7 +45,7 @@ export const AuthFormUI = ({
           onSend={onSend}
         />
         <div className="text-center w-full max-w-lg mx-auto">
-          <p className="text-body-lg text-secondary">
+          <p className="text-mobile-body-lg-lh md:text-body-lg text-secondary">
             New here? This gets you started with free credits.
           </p>
         </div>

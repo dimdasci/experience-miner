@@ -12,7 +12,7 @@ const MobileLayout = ({ children }: MobileLayoutProps) => {
       <MobileHeader />
       
       {/* Main content area with internal scrolling */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto px-4 flex flex-col">
         {children}
       </main>
       

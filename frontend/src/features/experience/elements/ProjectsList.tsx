@@ -13,7 +13,7 @@ const ProjectsList = ({ projects }: ProjectsListProps) => {
       <div className="space-y-4">
         {projects.map((proj, idx) => (
           <div key={idx}>
-            <h3 className="text-body-lg font-medium text-primary mb-1">{proj.name}</h3>
+            <h3 className="text-mobile-body-lg-lh md:text-body-lg font-medium text-primary mb-1">{proj.name}</h3>
             <div className="text-body text-secondary mb-2">{proj.goal}</div>
             <AchievementsList achievements={proj.achievements || []} />
           </div>

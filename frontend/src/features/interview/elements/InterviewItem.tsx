@@ -27,10 +27,10 @@ const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
   };
 
   return (
-    <div className="py-2 group flex gap-6">
+    <div className="py-2 group flex gap-4 md:gap-6">
       {/* Status icon - vertically centered */}
-      <div className="flex-shrink-0 flex justify-center items-center h-7">
-        <StatusIcon className={`w-7 h-7 pt-1 transition-colors ${
+      <div className="flex-shrink-0 flex justify-center items-center h-5 md:h-7">
+        <StatusIcon className={`w-5 h-5 md:w-7 mt-2.5 md:mt-1 transition-colors ${
           isCompleted 
             ? 'text-primary group-hover:text-accent' 
             : 'text-secondary group-hover:text-accent'
@@ -39,7 +39,7 @@ const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
       
       {/* Content */}
       <div className="flex-1">
-        <h3 className="text-headline font-medium mb-2 leading-8 -ml-1 -mt-1">
+        <h3 className="text-mobile-headline md:text-headline font-medium mb-2 leading-8 -ml-1 -mt-1">
           <Link
             to="#"
             className="block focus-transitional-invert cursor-pointer transition-colors text-primary hover:text-accent"

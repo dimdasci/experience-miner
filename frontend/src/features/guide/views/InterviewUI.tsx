@@ -37,7 +37,7 @@ const InterviewUI = ({
   
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div>
         <div className="flex items-center justify-center py-12">
           <div className="text-secondary">Loading interview...</div>
         </div>
@@ -48,7 +48,7 @@ const InterviewUI = ({
   // Only treat errors as fatal if no question data is available (i.e. load errors)
   if (error && !currentQuestionData) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div>
         <ErrorMessage 
           message={error}
           onRetry={onRetry}
@@ -59,7 +59,7 @@ const InterviewUI = ({
 
   if (!currentQuestionData) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div>
         <div className="text-secondary">No interview data available.</div>
       </div>
     );
@@ -90,7 +90,7 @@ const InterviewUI = ({
       </div>
       
       {/* Q&A Section that fills available space */}
-      <div className="flex flex-col flex-grow min-h-0 pb-10">
+      <div className="flex flex-col flex-grow min-h-0 pb-0 md:pb-6">
         {/* Question */}
         <FocusedQuestion 
           question={currentQuestionData.question} 
@@ -112,8 +112,8 @@ const InterviewUI = ({
       {error ? (
         <div className="flex-shrink-0 py-6">
           {/* Match text section layout with left column space */}
-          <div className="flex items-start space-x-6">
-            <div className="flex-shrink-0 w-7"></div> {/* Empty left column to match "A" icon space */}
+          <div className="flex items-start md:space-x-6">
+            <div className="hidden md:flex flex-shrink-0 w-7"></div> {/* Empty left column to match "A" icon space */}
             <div className="flex-grow">
               <ErrorMessage
                 message={error}

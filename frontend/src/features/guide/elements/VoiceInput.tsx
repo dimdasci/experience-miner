@@ -42,7 +42,7 @@ const VoiceInput = ({
     const isRecordingSession = isRecording || isPaused;
     
     if (!isRecordingSession) {
-      return 'bg-border-subtle text-secondary';
+      return 'bg-neutral-bg text-secondary border border-subtle';
     }
     
     return isActive ? 'bg-accent text-white' : 'bg-primary text-surface';
@@ -66,12 +66,12 @@ const VoiceInput = ({
   );
 
   return (
-    <div className="flex items-center space-x-6">
-      <div className="flex-shrink-0 w-7 flex justify-center">
+    <div className="flex items-center md:space-x-6">
+      <div className="hidden md:flex flex-shrink-0 w-7 justify-center">
         {micIcon}
       </div>
       <div className="flex-grow">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 justify-center md:justify-start">
           <button 
             className={`flex items-center bg-primary text-surface rounded-full px-4 py-2 space-x-4 hover:opacity-90 transition-opacity disabled:opacity-50 focus-transitional-ring`}
             onClick={recordButtonAction}
@@ -96,7 +96,7 @@ const VoiceInput = ({
           >
             <Square className="h-4 w-4" fill="currentColor" />
           </button>
-          <p className="text-sm text-secondary">
+          <p className="hidden md:block text-sm text-secondary">
             You can pause and resume recording. Stop it to get transcript.
           </p>
         </div>

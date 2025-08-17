@@ -39,7 +39,7 @@ const ReviewUI = ({
 }: ReviewUIProps) => {
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div>
         <div className="flex items-center justify-center py-12">
           <div className="text-secondary">Loading interview...</div>
         </div>
@@ -49,7 +49,7 @@ const ReviewUI = ({
 
   if (!interview) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div>
         <div className="text-secondary">No interview data available.</div>
       </div>
     );
@@ -104,7 +104,7 @@ const ReviewUI = ({
       </div>
       
       {/* Fixed Spacer */}
-      <div className="flex-shrink-0 h-10"></div>
+      <div className="flex-shrink-0 h-2 md:h-10"></div>
       
       {/* Navigation - part of main content flow like InterviewNavigation */}
       <ReviewNavigation 

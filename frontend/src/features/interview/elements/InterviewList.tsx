@@ -52,7 +52,7 @@ const InterviewList = ({
       <div className="flex-shrink-0 h-10"></div>
       
       <div className="flex flex-col flex-grow min-h-0 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-6">
+        <div>
           {interviews.length === 0 && !error ? (
             <div className="text-center py-12">
               <div className="text-secondary mb-4">
@@ -65,7 +65,7 @@ const InterviewList = ({
               </Button>
             </div>
           ) : (
-            <div className="space-y-10">
+            <div className="space-y-6 md:space-y-10">
               {interviews.map((interview) => (
                 <InterviewItem 
                   key={interview.id} 
