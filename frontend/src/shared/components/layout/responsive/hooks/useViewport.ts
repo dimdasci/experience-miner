@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 
+import { getViewportType } from '@shared/config/breakpoints';
+
 export type ViewportType = 'desktop' | 'mobile';
 
 export const useViewport = (): ViewportType => {
   const [viewport, setViewport] = useState<ViewportType>(
-    window.innerWidth >= 1024 ? 'desktop' : 'mobile'
+    getViewportType(window.innerWidth)
   );
 
   useEffect(() => {
@@ -13,7 +15,7 @@ export const useViewport = (): ViewportType => {
     const handleResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        setViewport(window.innerWidth >= 1024 ? 'desktop' : 'mobile');
+        setViewport(getViewportType(window.innerWidth));
       }, 100); // Debounce for 100ms
     };
 
