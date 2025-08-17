@@ -4,57 +4,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    font-size: 14px; /* Match reference implementation (inherited from Google AI Studio) */
+    /* Espejo design system - Graphite & Terracotta (Light Mode) */
+    --background: #f9fafb;         /* gray-50 */
+    --surface: #ffffff;            /* white */
+    --accent: #c2410c;             /* orange-700 */
+    --accent-hover: #9a3412;       /* orange-800 */
+    --text-primary: #111827;       /* gray-900 */
+    --text-secondary: #6b7280;     /* gray-500 */
+    --border-subtle: #e5e7eb;      /* gray-200 */
+    --neutral-bg: #e5e7eb;         /* gray-200 */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Espejo design system - Graphite & Terracotta (Dark Mode) */
+    --background: #111827;         /* gray-900 */
+    --surface: #1f2937;            /* gray-800 */
+    --accent: #f97316;             /* orange-500 */
+    --accent-hover: #ea580c;       /* orange-600 */
+    --text-primary: #ffffff;       /* white */
+    --text-secondary: #9ca3af;     /* gray-400 */
+    --border-subtle: #374151;      /* gray-700 */
+    --neutral-bg: #374151;         /* gray-700 */
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-primary;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
@@ -72,4 +49,20 @@
   .animate-caret-blink {
     animation: caret-blink 1.25s ease-out infinite;
   }
+
+  /* For text-based transitional elements (navigation links, topic titles) */
+  .focus-transitional-invert {
+    @apply focus-visible:outline-none focus-visible:bg-primary focus-visible:text-surface p-1;
+  }
+
+  /* For button-based transitional elements (Button component, VoiceInput) */
+  .focus-transitional-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+
+  /* For retained elements (text inputs only - all users see focus) */
+  .focus-retained {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent;
+  }
+
 }

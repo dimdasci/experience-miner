@@ -20,6 +20,7 @@ You are a specialist at finding WHERE code lives in a codebase. Your job is to l
    - Test files (unit, integration, e2e)
    - Configuration files
    - Type definitions/interfaces
+   - Guidelines
    - Examples/samples
 
 3. **Return Structured Results**
@@ -70,6 +71,10 @@ Structure your findings like this:
 ### Entry Points
 - `src/index.ts` - Imports feature module at line 23
 - `api/routes.ts` - Registers feature routes
+
+### Guidelines
+- `guidelines/frontend/import-standards.md` - rules of import organization and best practices
+
 ```
 
 ## Important Guidelines

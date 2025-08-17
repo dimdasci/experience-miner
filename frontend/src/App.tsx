@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { CreditsProvider } from './contexts/CreditsContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import ResponsiveLayout from './components/layout/responsive/ResponsiveLayout';
-import AppViewport from './components/layout/AppViewport';
-import GuideScreen from './components/screens/GuideScreen';
-import InterviewsScreen from './components/screens/InterviewsScreen';
-import ExperienceScreen from './components/screens/ExperienceScreen';
+import { AuthProvider } from '@shared/contexts/AuthContext';
+import { CreditsProvider } from '@shared/contexts/CreditsContext';
+import { ThemeProvider } from '@shared/contexts/ThemeContext';
+import { ProtectedRoute } from '@features/auth/ProtectedRoute';
+import ResponsiveLayout from '@shared/components/layout/responsive/ResponsiveLayout';
+import AppViewport from '@shared/components/layout/AppViewport';
+import GuideScreen from '@features/guide/views/GuideScreen';
+import InterviewsScreen from '@features/interview/views/InterviewsScreen';
+import ExperienceScreen from '@features/experience/views/ExperienceScreen';
 
 function App() {
   return (
