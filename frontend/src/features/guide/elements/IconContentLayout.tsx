@@ -9,7 +9,7 @@ interface IconContentLayoutProps {
 const IconContentLayout = ({ icon, children, className = '' }: IconContentLayoutProps) => {
   return (
     <div className={`flex items-center space-x-6 ${className}`}>
-      <div className="flex-shrink-0 w-8 flex justify-center">
+      <div className="flex-shrink-0 w-7 flex justify-center">
         {icon}
       </div>
       <div className="flex-grow">

@@ -23,7 +23,7 @@ const Topic = ({ topic, isSelecting, onSelect }: TopicProps) => {
       isSelecting ? 'opacity-50' : ''
     }`}>
       {/* Decorative chevron - vertically centered in title's 28px height */}
-      <div className="flex-shrink-0 w-12 flex justify-center items-center h-7">
+      <div className="flex-shrink-0 flex justify-center items-center h-7">
         <ChevronRight className={`w-7 h-7 pt-1 transition-colors ${
           isSelecting 
             ? 'text-secondary' 

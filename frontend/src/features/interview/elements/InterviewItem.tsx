@@ -1,4 +1,4 @@
-import { CheckCircle, Clock } from 'lucide-react';
+import { CheckCircle, ClockFading } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Interview } from '@shared/types/business';
 
@@ -19,7 +19,7 @@ const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
   };
 
   const isCompleted = interview.status === 'completed';
-  const StatusIcon = isCompleted ? CheckCircle : Clock;
+  const StatusIcon = isCompleted ? CheckCircle : ClockFading;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,7 +29,7 @@ const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
   return (
     <div className="py-2 group flex gap-6">
       {/* Status icon - vertically centered */}
-      <div className="flex-shrink-0 w-12 flex justify-center items-center h-7">
+      <div className="flex-shrink-0 flex justify-center items-center h-7">
         <StatusIcon className={`w-7 h-7 pt-1 transition-colors ${
           isCompleted 
             ? 'text-primary group-hover:text-accent' 

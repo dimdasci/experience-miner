@@ -10,7 +10,7 @@ const ReviewAnswer = ({ questionNumber, question, answer }: ReviewAnswerProps) =
     <>
       {/* Question Section - matching FocusedQuestion pattern */}
       <div className="flex items-baseline space-x-6">
-        <div className="flex-shrink-0 w-8 flex justify-center text-body-lg text-secondary tabular-nums">{questionNumber}</div>
+        <div className="flex-shrink-0 w-7 flex justify-center text-body-lg text-secondary tabular-nums">{questionNumber}</div>
         <div className="flex-grow">
           <h2 className="text-body-lg font-medium text-primary leading-snug">
             {question}

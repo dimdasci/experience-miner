@@ -10,7 +10,7 @@ const TranscriptionStatus = ({ isTranscribing }: TranscriptionStatusProps) => {
 
   return (
     <IconContentLayout 
-      icon={<Loader2 className="h-5 w-5 text-secondary animate-spin" />}
+      icon={<Loader2 className="h-5 w-5 p-1 text-secondary animate-spin" />}
     >
       <div className="flex items-center py-2">
         <span className="text-lg text-secondary">Transcribing audio...</span>

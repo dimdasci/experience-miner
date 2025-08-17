@@ -62,7 +62,7 @@ const VoiceInput = ({
   }, [isPaused, isRecording]);
 
   const micIcon = useMemo(
-    () => <Mic className={`h-8 w-8 ${isActive ? 'text-accent' : 'text-secondary'}`} strokeWidth={1.5} />,
+    () => <Mic className={`h-7 w-7 ${isActive ? 'text-accent' : 'text-secondary'}`} strokeWidth={1.5} />,
     [isActive]
   );
 

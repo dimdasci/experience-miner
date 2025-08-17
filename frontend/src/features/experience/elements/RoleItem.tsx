@@ -13,7 +13,7 @@ const RoleItem = ({ role }: RoleItemProps) => {
     <div className="space-y-4">
       {/* Role Header Row */}
       <div className="flex gap-6">
-        <div className="flex-shrink-0 w-8 flex justify-center items-start pt-1">
+        <div className="flex-shrink-0 flex justify-center items-start pt-1">
           <Briefcase className="w-7 h-7 p-1 text-secondary" />
         </div>
         <div className="flex-1">
@@ -38,7 +38,7 @@ const RoleItem = ({ role }: RoleItemProps) => {
       {/* Project Rows */}
       {role.projects && role.projects.length > 0 && role.projects.map((project, idx) => (
         <div key={idx} className="flex gap-6">
-          <div className="flex-shrink-0 w-8 flex justify-center items-start pt-1">
+          <div className="flex-shrink-0 flex justify-center items-start pt-1">
             <BookCheck className="w-7 h-7 p-1 text-secondary" />
           </div>
           <div className="flex-1">
@@ -52,7 +52,7 @@ const RoleItem = ({ role }: RoleItemProps) => {
       {/* Skills Row */}
       {role.skills && role.skills.length > 0 && (
         <div className="flex gap-6">
-          <div className="flex-shrink-0 w-8 flex justify-center items-start pt-1">
+          <div className="flex-shrink-0 flex justify-center items-start pt-1">
             <Hand className="w-7 h-7 p-1 text-secondary" />
           </div>
           <div className="flex-1">

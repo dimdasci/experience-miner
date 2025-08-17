@@ -77,7 +77,7 @@ const RecorderUI = ({
       
       {/* Text section - always visible, exact same DOM structure as InterviewUI */}
       <div className="mt-10 flex items-start space-x-6 flex-grow min-h-0">
-        <div className="flex-shrink-0 w-8 flex justify-center text-headline font-serif font-medium pt-5 text-secondary">A</div>
+        <div className="flex-shrink-0 w-7 flex justify-center text-headline font-serif font-medium pt-5 text-secondary">A</div>
         <div className="flex-grow min-h-0 h-full">
           <TextInput 
             ref={textInputRef}

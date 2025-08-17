@@ -113,7 +113,7 @@ const InterviewUI = ({
         <div className="flex-shrink-0 py-6">
           {/* Match text section layout with left column space */}
           <div className="flex items-start space-x-6">
-            <div className="flex-shrink-0 w-8"></div> {/* Empty left column to match "A" icon space */}
+            <div className="flex-shrink-0 w-7"></div> {/* Empty left column to match "A" icon space */}
             <div className="flex-grow">
               <ErrorMessage
                 message={error}
