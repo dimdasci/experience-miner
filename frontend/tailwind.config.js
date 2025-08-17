@@ -30,12 +30,22 @@ module.exports = {
         'subtle': 'var(--border-subtle)',
       },
       fontSize: {
-        'display': ['2.5rem', '3rem'],     // 40px / 48px line-height
-        'headline': ['1.5rem', '2rem'],    // 24px / 32px line-height  
-        'body-lg': ['1.125rem', '1.75rem'], // 18px / 28px line-height
-        'body': ['1rem', '1.5rem'],        // 16px / 24px line-height
-        'body-sm': ['0.875rem', '1.25rem'], // 14px / 20px line-height
-        'caption': ['0.75rem', '1rem'],    // 12px / 16px line-height
+        // Desktop sizes (14px base: 1rem = 14px)
+        'display': ['2.5rem', '3.143rem'],    // 35px / 44px line-height
+        'headline': ['1.5rem', '2rem'],       // 21px / 28px line-height  
+        'body-lg': ['1.125rem', '2rem'],      // 15.75px / 28px line-height
+        'body': ['1rem', '1.714rem'],         // 14px / 24px line-height
+        'body-sm': ['0.875rem', '1.429rem'],  // 12.25px / 20px line-height
+        'caption': ['0.75rem', '1.143rem'],   // 10.5px / 16px line-height
+        
+        // Mobile-specific sizes (only display and headline get smaller)
+        'mobile-display': ['1.857rem', '2.286rem'],   // 26px / 32px
+        'mobile-headline': ['1.286rem', '1.714rem'],  // 18px / 24px
+        
+        // Mobile line height variants (same font size, reduced line height)
+        'mobile-body-lg-lh': ['1.125rem', '1.429rem'],  // 15.75px / 20px (same size, reduced LH)
+        'mobile-body-lh': ['1rem', '1.429rem'],         // 14px / 20px (same size, reduced LH)
+        'mobile-body-sm-lh': ['0.875rem', '1.143rem'],  // 12.25px / 16px (same size, reduced LH)
       },
     },
   },
