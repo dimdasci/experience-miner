@@ -33,6 +33,36 @@
   body {
     @apply bg-background text-primary;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Global font settings for consistency */
+  .font-serif {
+    font-variant-ligatures: common-ligatures;
+    font-kerning: normal;
+    letter-spacing: 0.01em;
+    font-feature-settings: 'kern', 'liga';
+  }
+  
+  /* Logo text styling for cross-browser consistency */
+  .logo-text {
+    /* Shared properties for all browsers */
+    font-weight: 600;
+    font-synthesis: none;
+    
+    /* Fine-tune for specific browsers */
+    @supports (-webkit-touch-callout: none) {
+      /* Safari-only styles */
+      -webkit-font-smoothing: subpixel-antialiased;
+      letter-spacing: 0.015em; /* Slightly wider letter spacing in Safari */
+    }
+    
+    @supports not (-webkit-touch-callout: none) {
+      /* Non-Safari browsers (Chrome, Firefox, etc.) */
+      font-variant-numeric: lining-nums;
+    }
   }
 }
 

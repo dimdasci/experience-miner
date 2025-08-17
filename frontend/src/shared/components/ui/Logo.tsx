@@ -1,6 +1,9 @@
 const Logo = () => {
+  // We'll let the CSS handle browser-specific styling
   return (
-    <h1 className="text-2xl font-semibold italic text-primary font-serif">espejo</h1>
+    <h1 className="text-2xl italic text-primary font-serif logo-text">
+      espejo
+    </h1>
   );
 };
 
