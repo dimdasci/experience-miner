@@ -137,3 +137,6 @@ __tests__/coverage/
 tasks/
 references/
 CLAUDE.md
+
+# Playwright MCP files
+.playwright-mcp/
