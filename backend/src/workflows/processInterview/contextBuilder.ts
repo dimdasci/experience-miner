@@ -1,5 +1,4 @@
 import type { Answer } from "@/answers";
-import { aiConfig } from "@/config";
 import type { ExtractedFacts, Role } from "@/experience/types";
 import type { Interview } from "@/interviews/types";
 
@@ -22,7 +21,7 @@ export function buildInterviewContext(
 		for (const answer of answers) {
 			if (
 				!answer.answer ||
-				answer.answer.trim().length <= aiConfig.minAnswerLength
+				answer.answer.trim().length <= 32 // Use constant for minAnswerLength
 			) {
 				continue; // Skip empty or short answers
 			}

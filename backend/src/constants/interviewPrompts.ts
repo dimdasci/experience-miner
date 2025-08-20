@@ -7,6 +7,9 @@ export const transcriptionUserPrompt =
 export const extractionSystemPrompt =
 	"You are a person who is working on structuring professional experiences through a series of guided interviews.";
 
+export const projectExtractionSystemPrompt =
+	"You are a person who is working on structuring professional experiences through a series of guided interviews. Only select and prompt results with projects that match the given role specified in the transcript; projects from irrelevant roles must be strictly ignored.";
+
 export const extractionUserPrompt = `## Overview
 You've just had an interview session with your coach. Your task is to write
 a summary of your professional experiences based on the current understanding of your career. You must be reasonably self-confident in your experiences and articulate your professional identity clearly.
@@ -40,4 +43,6 @@ For known projects, when you see them in your answers, keep the original identif
 
 ## Known Projects:
 {projects}
+
+Find projects that relate to this specific role only.
 `;

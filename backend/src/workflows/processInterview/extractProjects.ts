@@ -1,8 +1,7 @@
 import type * as TE from "fp-ts/lib/TaskEither.js";
 import { z } from "zod";
-import { aiConfig } from "@/config";
 import {
-	extractionSystemPrompt,
+	projectExtractionSystemPrompt,
 	projectExtractionUserPrompt,
 } from "@/constants/interviewPrompts";
 import type { AppError } from "@/errors";
@@ -48,12 +47,10 @@ export const extractProjects = (
 	});
 
 	return aiProvider.generateCompletion(
-		aiConfig.models.extraction,
-		extractionSystemPrompt,
+		"extraction",
+		projectExtractionSystemPrompt,
 		prompt,
 		undefined,
-		0.1,
-		aiConfig.maxTokens.extraction,
 		ProjectsLiteSchema,
 	);
 };

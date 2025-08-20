@@ -9,7 +9,7 @@ import { pipe } from "fp-ts/lib/function.js";
 import * as TE from "fp-ts/lib/TaskEither.js";
 import type { ZodTypeAny, z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { aiConfig, type RateLimitConfig } from "@/config/ai.js";
+import { aiConfig, type GeminiProviderConfig } from "@/config/ai.js";
 import { AppError, BadRequestError, ServiceUnavailableError } from "@/errors";
 import type { IGenerativeAIProvider } from "@/providers/ai/IGenerativeAIProvider";
 import type { MediaData, ModelResponse, Usage } from "./types.js";
@@ -22,16 +22,15 @@ interface RequestTracker {
 
 export class GeminiProvider implements IGenerativeAIProvider {
 	private client: GoogleGenAI;
-	private rateLimitConfig: RateLimitConfig;
+	private config: GeminiProviderConfig;
 	private requestTracker: RequestTracker;
 	private isProviderHealthy: boolean = true;
 
 	constructor() {
+		this.config = aiConfig.providers.gemini;
 		this.client = new GoogleGenAI({
-			apiKey: aiConfig.apiKey,
+			apiKey: this.config.apiKey,
 		});
-
-		this.rateLimitConfig = aiConfig.rateLimits;
 
 		this.requestTracker = {
 			requests: [],
@@ -47,7 +46,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 	private async testConnection(): Promise<void> {
 		try {
 			await this.client.models.generateContent({
-				model: aiConfig.models.topicGeneration,
+				model: this.config.models.transcription || "gemini-2.5-flash",
 				contents: [{ parts: [{ text: "Test connection" }] }],
 			});
 			this.isProviderHealthy = true;
@@ -74,7 +73,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 	private canMakeRequest(): { allowed: boolean; waitTime?: number } {
 		this.resetDailyCounterIfNeeded();
 		if (
-			this.requestTracker.dailyRequests >= this.rateLimitConfig.requestsPerDay
+			this.requestTracker.dailyRequests >= this.config.rateLimits.requestsPerDay
 		) {
 			const msUntilReset =
 				24 * 60 * 60 * 1000 -
@@ -88,7 +87,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		);
 		if (
 			this.requestTracker.requests.length >=
-			this.rateLimitConfig.requestsPerMinute
+			this.config.rateLimits.requestsPerMinute
 		) {
 			const oldestRequest = Math.min(...this.requestTracker.requests);
 			const waitTime = 60000 - (now - oldestRequest);
@@ -104,7 +103,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 		Sentry.logger?.debug?.("Gemini API request tracked", {
 			requestsThisMinute: this.requestTracker.requests.length,
 			requestsToday: this.requestTracker.dailyRequests,
-			dailyLimit: this.rateLimitConfig.requestsPerDay,
+			dailyLimit: this.config.rateLimits.requestsPerDay,
 			request: {
 				model: request.model,
 				systemPrompt: request.config?.systemInstruction,
@@ -122,33 +121,27 @@ export class GeminiProvider implements IGenerativeAIProvider {
 
 	// Functional overload signatures
 	generateCompletion<T extends ZodTypeAny>(
-		model: string,
+		task: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media: MediaData | undefined,
-		temperature: number | undefined,
-		maxOutputTokens: number | undefined,
 		responseSchema: T,
 	): TE.TaskEither<AppError, ModelResponse<z.infer<T>>>;
 
 	generateCompletion(
-		model: string,
+		task: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media: MediaData | undefined,
-		temperature: number | undefined,
-		maxOutputTokens: number | undefined,
 		responseSchema: string,
 	): TE.TaskEither<AppError, ModelResponse<string>>;
 
 	// Functional implementation
 	generateCompletion<T extends ZodTypeAny>(
-		model: string,
+		task: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media?: MediaData,
-		temperature?: number,
-		maxOutputTokens?: number,
 		responseSchema?: T | string,
 	): TE.TaskEither<
 		AppError,
@@ -163,23 +156,37 @@ export class GeminiProvider implements IGenerativeAIProvider {
 				),
 			),
 			TE.bind("request", ({ isStructuredCall }) => {
+				// Map task to actual model, tokens, and temperature
+				const selectedModel =
+					this.config.models[task] ||
+					this.config.models.transcription ||
+					"gemini-2.5-flash";
+				const selectedMaxTokens =
+					this.config.maxTokens[task] ||
+					this.config.maxTokens.transcription ||
+					5000;
+				const selectedTemperature =
+					this.config.temperatures[task] ||
+					this.config.temperatures.transcription ||
+					0.0;
+
 				const request: GenerateContentParameters = isStructuredCall
 					? this.makeStructuredRequest(
-							model,
+							selectedModel,
 							systemPrompt,
 							userPrompt,
 							zodToJsonSchema(responseSchema as ZodTypeAny),
 							media,
-							temperature,
-							maxOutputTokens,
+							selectedTemperature,
+							selectedMaxTokens,
 						)
 					: this.makeRequest(
-							model,
+							selectedModel,
 							systemPrompt,
 							userPrompt,
 							media,
-							temperature,
-							maxOutputTokens,
+							selectedTemperature,
+							selectedMaxTokens,
 						);
 				return TE.right(request);
 			}),
@@ -278,7 +285,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 				let attempt = 0;
 				let backoffMs = 1000;
 
-				while (attempt < this.rateLimitConfig.maxRetries) {
+				while (attempt < this.config.rateLimits.maxRetries) {
 					const rateLimitCheck = this.canMakeRequest();
 					if (!rateLimitCheck.allowed && rateLimitCheck.waitTime) {
 						if (rateLimitCheck.waitTime > 5000) {
@@ -310,7 +317,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 
 						Sentry.logger?.warn?.("Gemini API request failed", {
 							attempt,
-							maxRetries: this.rateLimitConfig.maxRetries,
+							maxRetries: this.config.rateLimits.maxRetries,
 							error: errorMessage,
 							backoffMs,
 							isClientError,
@@ -331,7 +338,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 							);
 						}
 
-						if (attempt >= this.rateLimitConfig.maxRetries) {
+						if (attempt >= this.config.rateLimits.maxRetries) {
 							this.isProviderHealthy = false;
 							Sentry.captureException(error, {
 								tags: {
@@ -346,7 +353,7 @@ export class GeminiProvider implements IGenerativeAIProvider {
 							);
 						}
 						await this.sleep(backoffMs);
-						backoffMs *= this.rateLimitConfig.backoffMultiplier;
+						backoffMs *= this.config.rateLimits.backoffMultiplier;
 					}
 				}
 				throw new ServiceUnavailableError("Unexpected end of retry loop");
@@ -496,7 +503,8 @@ export class GeminiProvider implements IGenerativeAIProvider {
 			requestsThisMinute: currentMinuteRequests,
 			requestsToday: this.requestTracker.dailyRequests,
 			dailyLimitRemaining:
-				this.rateLimitConfig.requestsPerDay - this.requestTracker.dailyRequests,
+				this.config.rateLimits.requestsPerDay -
+				this.requestTracker.dailyRequests,
 		};
 	}
 

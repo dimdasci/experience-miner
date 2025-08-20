@@ -1,5 +1,4 @@
 import type * as TE from "fp-ts/lib/TaskEither.js";
-import { aiConfig } from "@/config";
 import {
 	extractionSystemPrompt,
 	extractionUserPrompt,
@@ -15,12 +14,10 @@ export const generateSummary = (
 	const prompt = fillTemplate(extractionUserPrompt, { careerContext });
 
 	return aiProvider.generateCompletion(
-		aiConfig.models.extraction,
+		"extraction",
 		extractionSystemPrompt,
 		prompt,
 		undefined,
-		0.5,
-		aiConfig.maxTokens.extraction,
 		undefined,
 	);
 };

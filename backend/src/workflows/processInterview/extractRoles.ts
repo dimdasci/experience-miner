@@ -1,6 +1,5 @@
 import type * as TE from "fp-ts/lib/TaskEither.js";
 import { z } from "zod";
-import { aiConfig } from "@/config";
 import {
 	extractionSystemPrompt,
 	roleExtractionUserPrompt,
@@ -51,12 +50,10 @@ export const extractRoles = (
 	});
 
 	return aiProvider.generateCompletion(
-		aiConfig.models.extraction,
+		"extraction",
 		extractionSystemPrompt,
 		prompt,
 		undefined,
-		0.1,
-		aiConfig.maxTokens.extraction,
 		RolesLiteExtractionSchema,
 	);
 };

@@ -3,7 +3,8 @@ import "dotenv/config";
 
 // AI configuration schema - only sensitive/environment-specific
 const aiSchema = z.object({
-	apiKey: z.string().min(1, "Gemini API key is required"),
+	geminiApiKey: z.string().min(1, "Gemini API key is required"),
+	openaiApiKey: z.string().min(1, "OpenAI API key is required"),
 	lfSecretKey: z.string().min(1, "Langfuse secret key is required"),
 	lfPublicKey: z.string().min(1, "Langfuse public key is required"),
 	lfHost: z.string().url("Langfuse host must be a valid URL"),
@@ -11,7 +12,8 @@ const aiSchema = z.object({
 
 // Parse and validate environment variables
 const aiEnv = aiSchema.parse({
-	apiKey: process.env.API_KEY,
+	geminiApiKey: process.env.GEMINI_API_KEY,
+	openaiApiKey: process.env.OPENAI_API_KEY,
 	lfSecretKey: process.env.LF_SECRET_KEY,
 	lfPublicKey: process.env.LF_PUBLIC_KEY,
 	lfHost: process.env.LF_HOST,
@@ -24,36 +26,68 @@ export interface RateLimitConfig {
 	maxRetries: number;
 }
 
-export const aiConfig = {
-	// Sensitive data (from environment)
-	apiKey: aiEnv.apiKey,
+export interface GeminiProviderConfig {
+	apiKey: string;
+	models: Record<string, string>;
+	maxTokens: Record<string, number>;
+	temperatures: Record<string, number>;
+	rateLimits: RateLimitConfig;
+}
 
+export interface OpenAIProviderConfig {
+	apiKey: string;
+	models: Record<string, string>;
+	maxTokens: Record<string, number>;
+	temperatures: Record<string, number>;
+	sdkOptions: { maxRetries: number; timeout: number };
+}
+
+export const aiConfig = {
+	providers: {
+		gemini: {
+			apiKey: aiEnv.geminiApiKey,
+			models: { transcription: "gemini-2.5-flash" },
+			maxTokens: { transcription: 10000 },
+			temperatures: { transcription: 0.0 },
+			rateLimits: {
+				requestsPerMinute: 150,
+				requestsPerDay: 5000,
+				maxRetries: 3,
+				backoffMultiplier: 2,
+			},
+		} as GeminiProviderConfig,
+		openai: {
+			apiKey: aiEnv.openaiApiKey,
+			models: {
+				extraction: "gpt-4o-mini-2024-07-18", // gpt-4o-2024-08-06 if more power is needed
+				topicGeneration: "gpt-4o-mini-2024-07-18", // Cost-effective
+				topicReranking: "gpt-4o-mini-2024-07-18", // Cost-effective
+			},
+			maxTokens: {
+				extraction: 7500,
+				topicGeneration: 7500,
+				topicReranking: 1000,
+			},
+			temperatures: {
+				extraction: 0.0,
+				topicGeneration: 0.5,
+				topicReranking: 0.1,
+			},
+			sdkOptions: { maxRetries: 3, timeout: 30000 },
+		} as OpenAIProviderConfig,
+	},
+
+	tasks: {
+		transcription: "gemini" as const,
+		extraction: "openai" as const,
+		topicGeneration: "openai" as const,
+		topicReranking: "openai" as const,
+	},
+
+	minAnswerLength: 32,
 	langfuse: {
 		secretKey: aiEnv.lfSecretKey,
 		publicKey: aiEnv.lfPublicKey,
 		host: aiEnv.lfHost,
 	},
-
-	// Operational settings (hardcoded)
-	models: {
-		transcription: "gemini-2.5-flash",
-		extraction: "gemini-2.5-flash",
-		topicGeneration: "gemini-2.5-flash",
-		topicReranking: "gemini-2.5-flash",
-	},
-
-	maxTokens: {
-		transcription: 5000,
-		extraction: 7500,
-		topicGeneration: 7500,
-		topicReranking: 1000,
-	},
-	minAnswerLength: 32, // Minimum length for answers to be considered valid
-
-	rateLimits: {
-		requestsPerMinute: 150,
-		requestsPerDay: 5000,
-		maxRetries: 3,
-		backoffMultiplier: 2,
-	} as RateLimitConfig,
 };

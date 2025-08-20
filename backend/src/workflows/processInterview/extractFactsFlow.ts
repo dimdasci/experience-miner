@@ -2,7 +2,6 @@ import * as Sentry from "@sentry/node";
 import { pipe } from "fp-ts/lib/function.js";
 import * as TE from "fp-ts/lib/TaskEither.js";
 import type { Answer, AnswerRepository } from "@/answers";
-import { aiConfig } from "@/config";
 import { type AppError, BadRequestError } from "@/errors";
 import type { ExperienceRepository } from "@/experience";
 import type {
@@ -94,8 +93,7 @@ export class ExtractFactsFlow {
 				}): TE.TaskEither<AppError, ModelResponse<ExtractedFacts>> => {
 					// Filter answered questions
 					const answeredQuestions = answers.filter(
-						(a) =>
-							a.answer && a.answer.trim().length > aiConfig.minAnswerLength,
+						(a) => a.answer && a.answer.trim().length > 32, // Use constant for minAnswerLength
 					);
 
 					if (answeredQuestions.length === 0) {

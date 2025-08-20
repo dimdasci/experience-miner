@@ -19,7 +19,9 @@ export function buildKnownRoleMarkdown(role: Role): string {
 		parts.push(`**Skills**: ${role.skills.join(", ")}`);
 	}
 
-	return parts.join("\n\n");
+	return parts.length > 0
+		? parts.join("\n\n")
+		: "No known roles for this user.\n";
 }
 
 /**
@@ -44,7 +46,9 @@ export function buildKnownProjectsMarkdown(role: Role): string {
 		}
 	}
 
-	return parts.join("\n");
+	return parts.length > 0
+		? parts.join("\n")
+		: "No known projects for this role.\n";
 }
 
 /**
