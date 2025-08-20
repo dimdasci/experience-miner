@@ -1,5 +1,4 @@
-// Initial topics for new users - Based on business logic specification
-// These replace the frontend hardcoded topics for the database-driven approach
+// Initial topics for new users
 
 export interface TopicQuestion {
 	text: string;
@@ -14,97 +13,56 @@ export interface InitialTopic {
 
 export const INITIAL_TOPICS: InitialTopic[] = [
 	{
-		title: "Career Story: share your professional journey in your own words",
+		title: "My Work Timeline",
 		motivational_quote:
-			"Every professional journey has meaningful moments. Your story shows what matters most to you.",
+			"We'll explore your work experience and ask about specific jobs that interest you.",
 		questions: [
 			{
-				text: "Tell me about your career story - however you'd like to share it. It could be how you got started, a memorable experience, or just where you are now and how you got there.",
+				text: "Walk me briefly through your work experience - jobs you've had, what you did, what is on top of your mind. Please mention your employers, dates and roles so we know you better.",
 				order: 1,
 			},
 			{
-				text: "What's been the most interesting or unexpected part of your professional journey so far?",
+				text: "Tell me more about your current or last work situation. What does a typical day or week look like, your main responsibilities, who do you work with?",
 				order: 2,
 			},
 			{
-				text: "When you think about your work experiences, what has given you the most satisfaction or sense of accomplishment?",
+				text: "Choose one job you mentioned and describe it in more detail. What did you actually do there day-to-day, what was the work environment like, what tools or skills did you use?",
 				order: 3,
 			},
 			{
-				text: "Tell me about something meaningful you've done outside of work - maybe volunteering, a hobby project, community involvement, or personal interest. How does that connect to who you are professionally?",
+				text: "What kind of work do you tend to enjoy or find easier? Is there anything about work that you consistently like or dislike across different jobs?",
 				order: 4,
 			},
 			{
-				text: "Where do you see your story heading next? What feels like the right direction for you?",
+				text: "Is there anything else about your work experience that feels important to mention? Maybe something you learned, a change you made, or just something that stands out to you?",
 				order: 5,
-			},
-			{
-				text: "To wrap up, name all the employers and roles you've had in your career so far, in chronological order.",
-				order: 6,
 			},
 		],
 	},
 	{
-		title:
-			"Career Challenges, Wins and Losses: reflect on your professional ups and downs",
+		title: "What I Do Now",
 		motivational_quote:
-			"Professional life has ups and downs. Your experiences with both show who you are and how you handle things.",
+			"We'll ask about your current or recent job - your daily tasks, work environment, and typical responsibilities.",
 		questions: [
 			{
-				text: "Can you tell me about a time when something at work (or in your career preparation) felt difficult or challenging? It could be learning something new, dealing with a tough situation, or just figuring things out.",
+				text: "Tell me about your current work situation, or your most recent job if you're between positions. What's the company, your role, and what is this job basically about?",
 				order: 1,
 			},
 			{
-				text: "What's something that went really well for you professionally - a project, accomplishment, or just something you felt good about?",
+				text: "Describe what you actually do during a typical day or week at this job. What are your main tasks, what does your schedule look like, what takes up most of your time?",
 				order: 2,
 			},
 			{
-				text: "Tell me about something that didn't go as planned or didn't work out the way you hoped. What did you learn from that experience?",
+				text: "Pick one aspect of your job and describe it in detail - could be a specific responsibility, a type of task you do regularly, or part of your work environment. What makes this part of your job interesting or challenging?",
 				order: 3,
 			},
 			{
-				text: "When you face setbacks or difficulties, what helps you bounce back or keep going?",
+				text: "What do you like or dislike about this job? What parts feel easy or natural to you, what parts are more challenging or frustrating?",
 				order: 4,
 			},
 			{
-				text: "Based on your wins and losses so far, what feels like a smart next step or area to focus on in your career?",
+				text: "Is there anything else about this job that seems worth mentioning? Maybe something you've learned, a skill you use, or just something that stands out about the work?",
 				order: 5,
-			},
-			{
-				text: "To wrap up, can you walk me through the employers and roles you've had, with time frames? Feel free to mention any periods that stand out as especially challenging or rewarding.",
-				order: 6,
-			},
-		],
-	},
-	{
-		title:
-			"Work Impact & Contribution: explore how you add value and make a difference",
-		motivational_quote:
-			"Everyone contributes value in their own way. Your experiences show what you bring to the table.",
-		questions: [
-			{
-				text: "Tell me about work you do (or have done) that you feel good about - whether that's solving problems, keeping things running smoothly, helping others, or being someone people can count on.",
-				order: 1,
-			},
-			{
-				text: "What's something you do well that makes a difference for your team, customers, or organization? It could be maintaining quality, providing support, or just being reliable at what you do.",
-				order: 2,
-			},
-			{
-				text: "What kind of work feels most satisfying to you - when do you feel like you're really adding value or doing something worthwhile?",
-				order: 3,
-			},
-			{
-				text: "Think about times when you've been helpful or dependable - at work, with family, in communities. What was that experience like for you?",
-				order: 4,
-			},
-			{
-				text: "What kind of role or contribution would feel meaningful to you going forward?",
-				order: 5,
-			},
-			{
-				text: "To wrap up, would you share a quick overview of your career path—employers, roles, and time frames—and let me know where you feel you made your biggest impact?",
-				order: 6,
 			},
 		],
 	},

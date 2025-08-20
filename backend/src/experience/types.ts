@@ -9,7 +9,7 @@ export interface ExperienceRecord {
 	updated_at: string;
 }
 
-// Generative AI types
+// TODO: Add references
 export const SourceRefSchema = z.object({
 	interview_id: z
 		.number()
@@ -17,15 +17,19 @@ export const SourceRefSchema = z.object({
 	question_number: z.number().describe("Question number in the interview"),
 });
 
+// Generative AI types
+
 export const ProjectSchema = z.object({
+	id: z.string().describe("Stable project ID like 'proj-1'"),
 	name: z.string().describe("Project name"),
 	goal: z.string().describe("Goal of the project"),
 	achievements: z
 		.array(z.string())
-		.describe("Achievements user made in the project"),
+		.describe("Achievements I made in the project"),
 });
 
 export const RoleSchema = z.object({
+	id: z.string().describe("Stable identifier like 'role-1'"),
 	title: z
 		.string()
 		.describe(
@@ -34,44 +38,33 @@ export const RoleSchema = z.object({
 	company: z.string().describe("Company name, or 'unknown' if not specified"),
 	start_year: z
 		.string()
-		.describe(
-			"Start year of the role, e.g. '2020' or 'unknown' if not specified",
-		),
+		.describe("Start year of the role, YYYY or 'unknown' if not specified"),
 	end_year: z
 		.string()
-		.describe(
-			"End year of the role, e.g. '2021' or 'unknown' if not specified",
-		),
+		.describe("End year of the role, YYYY or 'unknown' if not specified"),
 	experience: z
 		.string()
 		.describe(
-			"User experience in this role, as it was described in the interview, or 'unknown' if not specified",
+			"My experience in this role, as it was answered in the interview, or 'unknown' if not specified",
 		),
 	projects: z
 		.array(ProjectSchema)
 		.describe(
-			"Projects user worked on in this role, or empty list if not specified",
+			"Projects I worked on in this role, or empty list if not specified",
 		),
 	skills: z
 		.array(z.string())
-		.describe("Skills used in this role, or empty list if not specified"),
-	sources: z
-		.array(SourceRefSchema)
-		.describe(
-			"Sources of information for this role, e.g. list of interview ID and question number",
-		),
+		.describe("Skills I used in this role, or empty list if not specified"),
 });
 
 export const ExtractedFactsSchema = z.object({
 	summary: z.object({
-		text: z.string().describe("Summary text of the professional experience"),
+		text: z.string().describe("Summary text of my professional experience"),
 		basedOnInterviews: z.array(z.number()),
 	}),
 	roles: z
 		.array(RoleSchema)
-		.describe(
-			"List of roles user had in their career, with details about each role",
-		),
+		.describe("List of roles I had in my career, with details about each role"),
 });
 
 // Export types

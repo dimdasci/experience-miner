@@ -29,14 +29,22 @@ export const TopicCandidatesSchema = z
 		topics: z
 			.array(
 				z.object({
-					title: z.string().describe("The topic title"),
+					title: z
+						.string()
+						.describe("The topic title: short clear text up to 6 words"),
 					motivational_quote: z
 						.string()
-						.describe("A motivational quote for the topic"),
+						.describe(
+							"User instruction that sets simple, accurate expectations. One sentence.",
+						),
 					questions: z
 						.array(
 							z.object({
-								text: z.string().describe("The question text"),
+								text: z
+									.string()
+									.describe(
+										"The question as a single paragraph with no redundant explanations",
+									),
 								order: z.number().describe("The order of the question"),
 							}),
 						)
