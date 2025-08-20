@@ -29,8 +29,9 @@ export const getConfigHealth = () => {
 			pool: databaseConfig.pool.max,
 		},
 		ai: {
-			hasApiKey: !!aiConfig.apiKey,
-			rateLimits: aiConfig.rateLimits,
+			hasGeminiKey: !!aiConfig.providers.gemini.apiKey,
+			hasOpenAIKey: !!aiConfig.providers.openai.apiKey,
+			tasks: aiConfig.tasks,
 		},
 		auth: {
 			supabaseConfigured: !!authConfig.supabase.url,

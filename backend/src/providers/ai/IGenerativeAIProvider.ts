@@ -12,12 +12,10 @@ export interface IGenerativeAIProvider {
 	 * Generate completion with structured response schema
 	 */
 	generateCompletion<T extends ZodTypeAny>(
-		model: string,
+		task: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media?: MediaData,
-		temperature?: number,
-		maxOutputTokens?: number,
 		responseSchema?: T,
 	): TE.TaskEither<AppError, ModelResponse<z.infer<T>>>;
 
@@ -25,12 +23,10 @@ export interface IGenerativeAIProvider {
 	 * Generate completion with string response
 	 */
 	generateCompletion(
-		model: string,
+		task: string,
 		systemPrompt: string,
 		userPrompt: string,
 		media?: MediaData,
-		temperature?: number,
-		maxOutputTokens?: number,
 		responseSchema?: string,
 	): TE.TaskEither<AppError, ModelResponse<string>>;
 

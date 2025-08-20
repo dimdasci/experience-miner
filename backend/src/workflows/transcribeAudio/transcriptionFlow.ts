@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { pipe } from "fp-ts/lib/function.js";
 import * as TE from "fp-ts/lib/TaskEither.js";
-import { aiConfig } from "@/config";
 import {
 	transcriptionSystemPrompt,
 	transcriptionUserPrompt,
@@ -39,15 +38,13 @@ export class TranscriptionFlow {
 
 		return pipe(
 			this.aiProvider.generateCompletion(
-				aiConfig.models.transcription,
+				"transcription",
 				transcriptionSystemPrompt,
 				transcriptionUserPrompt,
 				{
 					data: audioBuffer,
 					mimeType,
 				} as MediaData,
-				0,
-				aiConfig.maxTokens.transcription,
 			) as TE.TaskEither<AppError, ModelResponse<string>>,
 			TE.map((transcriptionResult: ModelResponse<string>) => {
 				Sentry.logger?.info?.("Audio transcription completed successfully", {

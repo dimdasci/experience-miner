@@ -1,9 +1,25 @@
 import { serverConfig } from "@/config";
 import type { IDatabaseProvider, IGenerativeAIProvider } from "@/providers";
-import { GeminiProvider, PostgresProvider } from "@/providers";
+import { GeminiProvider, OpenAIProvider, PostgresProvider } from "@/providers";
 
 /**
- * Create AI provider instance based on configuration
+ * Create Gemini provider instance
+ * @returns Gemini AI provider instance
+ */
+export function createGeminiProvider(): GeminiProvider {
+	return new GeminiProvider();
+}
+
+/**
+ * Create OpenAI provider instance
+ * @returns OpenAI provider instance
+ */
+export function createOpenAIProvider(): OpenAIProvider {
+	return new OpenAIProvider();
+}
+
+/**
+ * Create AI provider instance based on configuration (backward compatibility)
  * @param providerType - Optional override for provider type
  * @returns AI provider instance
  */
@@ -13,7 +29,9 @@ export function createAIProvider(providerType?: string): IGenerativeAIProvider {
 	switch (type.toLowerCase()) {
 		case "google":
 		case "gemini":
-			return new GeminiProvider();
+			return createGeminiProvider();
+		case "openai":
+			return createOpenAIProvider();
 
 		// case "mock":
 		// case "test":
@@ -21,7 +39,7 @@ export function createAIProvider(providerType?: string): IGenerativeAIProvider {
 
 		default:
 			throw new Error(
-				`Unknown AI provider type: ${type}. Supported types: google, mock`,
+				`Unknown AI provider type: ${type}. Supported types: google, openai, mock`,
 			);
 	}
 }
@@ -61,7 +79,7 @@ export function getAvailableProviders(): {
 	database: string[];
 } {
 	return {
-		ai: ["google", "mock"],
+		ai: ["google", "openai", "mock"],
 		database: ["postgres", "mock"],
 	};
 }

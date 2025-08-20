@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { pipe } from "fp-ts/lib/function.js";
 import * as TE from "fp-ts/lib/TaskEither.js";
-import { aiConfig } from "@/config";
 import {
 	topicGenerationPrompt,
 	topicSystemPrompt,
@@ -42,12 +41,10 @@ export class generateTopicsFlow {
 
 		return pipe(
 			this.aiProvider.generateCompletion(
-				aiConfig.models.topicGeneration,
+				"topicGeneration",
 				topicSystemPrompt,
 				prompt,
 				undefined,
-				0.5,
-				2000,
 				TopicCandidatesSchema,
 			) as TE.TaskEither<AppError, ModelResponse<{ topics: Topic[] }>>,
 			TE.map((generationResult: ModelResponse<{ topics: Topic[] }>) => {

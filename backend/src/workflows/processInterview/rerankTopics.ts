@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { pipe } from "fp-ts/lib/function.js";
 import * as TE from "fp-ts/lib/TaskEither.js";
-import { aiConfig } from "@/config";
 import {
 	topicRankingPrompt,
 	topicSystemPrompt,
@@ -155,12 +154,10 @@ export class rerankTopicsFlow {
 		});
 
 		return this.aiProvider.generateCompletion(
-			aiConfig.models.topicReranking,
+			"topicReranking",
 			topicSystemPrompt,
 			prompt,
 			undefined,
-			0.1,
-			1000,
 			TopicRankingSchema,
 		);
 	}

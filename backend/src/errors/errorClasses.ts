@@ -78,6 +78,34 @@ export class TooManyRequestsError extends AppError {
 }
 
 /**
+ * Rate limit exceeded specifically
+ */
+export class RateLimitExceededError extends AppError {
+	constructor(message: string, details?: unknown) {
+		super(
+			message,
+			StatusCodes.TOO_MANY_REQUESTS,
+			AppErrorCode.RATE_LIMIT_EXCEEDED,
+			details,
+		);
+	}
+}
+
+/**
+ * Validation failed errors
+ */
+export class ValidationFailedError extends AppError {
+	constructor(message: string, details?: unknown) {
+		super(
+			message,
+			StatusCodes.BAD_REQUEST,
+			AppErrorCode.VALIDATION_FAILED,
+			details,
+		);
+	}
+}
+
+/**
  * External service unavailable errors (503)
  */
 export class ServiceUnavailableError extends AppError {

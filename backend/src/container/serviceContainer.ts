@@ -1,8 +1,9 @@
 import { AnswerRepository, AnswerService } from "@/answers";
 import { serverConfig } from "@/config";
 import {
-	createAIProvider,
 	createDatabaseProvider,
+	createGeminiProvider,
+	createOpenAIProvider,
 } from "@/container/providerFactory.js";
 import { CreditsRepository, CreditsService } from "@/credits";
 import { ExperienceRepository } from "@/experience";
@@ -21,7 +22,8 @@ import {
  */
 export class ServiceContainer {
 	private static instance: ServiceContainer;
-	private aiProvider: IGenerativeAIProvider | null = null;
+	private geminiProvider: IGenerativeAIProvider | null = null;
+	private openaiProvider: IGenerativeAIProvider | null = null;
 	private databaseProvider: IDatabaseProvider | null = null;
 
 	private answerRepository: AnswerRepository | null = null;
@@ -67,8 +69,9 @@ export class ServiceContainer {
 		}
 
 		try {
-			// Create providers using factory
-			this.aiProvider = createAIProvider();
+			// Create both AI providers using factory
+			this.geminiProvider = createGeminiProvider();
+			this.openaiProvider = createOpenAIProvider();
 			this.databaseProvider = createDatabaseProvider();
 
 			// Initialize database provider
@@ -88,7 +91,7 @@ export class ServiceContainer {
 			this.topicService = new TopicService(this.topicRepository);
 			this.answerService = new AnswerService(this.answerRepository);
 
-			// Initialize workflows
+			// Initialize workflows with specific providers
 			this.processInterviewWorkflow = new ProcessInterviewWorkflow(
 				this.databaseProvider,
 				this.creditsRepository,
@@ -96,7 +99,7 @@ export class ServiceContainer {
 				this.topicRepository,
 				this.experienceRepository,
 				this.interviewRepository,
-				this.aiProvider,
+				this.openaiProvider, // ✅ For structured extraction tasks
 				this.answerRepository,
 			);
 			this.selectTopicWorkflow = new SelectTopicWorkflow(
@@ -108,13 +111,14 @@ export class ServiceContainer {
 			this.transcribeAudioWorkflow = new TranscribeAudioWorkflow(
 				this.creditsRepository,
 				this.creditsService,
-				this.aiProvider,
+				this.geminiProvider, // ✅ For audio transcription
 			);
 
 			this.initialized = true;
 
 			console.log("Service container initialized successfully", {
-				aiProvider: serverConfig.aiProvider,
+				geminiProvider: "initialized",
+				openaiProvider: "initialized",
 				databaseProvider: serverConfig.databaseProvider,
 			});
 		} catch (error) {
@@ -124,18 +128,33 @@ export class ServiceContainer {
 	}
 
 	/**
-	 * Get AI provider instance
+	 * Get Gemini provider instance
 	 */
-	getAIProvider(): IGenerativeAIProvider {
+	getGeminiProvider(): IGenerativeAIProvider {
 		if (!this.initialized) {
 			throw new Error(
 				"Service container not initialized. Call initialize() first.",
 			);
 		}
-		if (!this.aiProvider) {
-			throw new Error("AI provider not initialized");
+		if (!this.geminiProvider) {
+			throw new Error("Gemini provider not initialized");
 		}
-		return this.aiProvider;
+		return this.geminiProvider;
+	}
+
+	/**
+	 * Get OpenAI provider instance
+	 */
+	getOpenAIProvider(): IGenerativeAIProvider {
+		if (!this.initialized) {
+			throw new Error(
+				"Service container not initialized. Call initialize() first.",
+			);
+		}
+		if (!this.openaiProvider) {
+			throw new Error("OpenAI provider not initialized");
+		}
+		return this.openaiProvider;
 	}
 
 	/**
@@ -327,7 +346,8 @@ export class ServiceContainer {
 	 */
 	reset(): void {
 		this.initialized = false;
-		this.aiProvider = null;
+		this.geminiProvider = null;
+		this.openaiProvider = null;
 		this.databaseProvider = null;
 		this.creditsRepository = null;
 		this.creditsService = null;
@@ -345,7 +365,8 @@ export class ServiceContainer {
 
 		try {
 			await this.databaseProvider?.close();
-			this.aiProvider?.close();
+			this.geminiProvider?.close();
+			this.openaiProvider?.close();
 			this.reset();
 			console.log("Service container cleaned up successfully");
 		} catch (error) {
@@ -379,12 +400,13 @@ export class ServiceContainer {
 			databaseHealthResult?._tag === "Right"
 				? databaseHealthResult.right
 				: false;
-		const aiHealthy: boolean = this.aiProvider?.isHealthy() ?? false;
+		const geminiHealthy: boolean = this.geminiProvider?.isHealthy() ?? false;
+		const openaiHealthy: boolean = this.openaiProvider?.isHealthy() ?? false;
 		return {
-			healthy: databaseHealthy && aiHealthy,
+			healthy: databaseHealthy && geminiHealthy && openaiHealthy,
 			providers: {
 				database: databaseHealthy,
-				ai: aiHealthy,
+				ai: geminiHealthy && openaiHealthy,
 			},
 		};
 	}

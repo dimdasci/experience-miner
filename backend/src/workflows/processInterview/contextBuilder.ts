@@ -1,6 +1,5 @@
 import type { Answer } from "@/answers";
-import { aiConfig } from "@/config";
-import type { ExtractedFacts, Role, SourceRef } from "@/experience/types";
+import type { ExtractedFacts, Role } from "@/experience/types";
 import type { Interview } from "@/interviews/types";
 
 /**
@@ -22,7 +21,7 @@ export function buildInterviewContext(
 		for (const answer of answers) {
 			if (
 				!answer.answer ||
-				answer.answer.trim().length <= aiConfig.minAnswerLength
+				answer.answer.trim().length <= 32 // Use constant for minAnswerLength
 			) {
 				continue; // Skip empty or short answers
 			}
@@ -87,20 +86,5 @@ function addRole(role: Role): string {
 		parts.push(role.skills.map((s) => `<skill>${s}</skill>`).join("\n"));
 		parts.push("</skills>");
 	}
-	parts.push(addSource(role.sources));
-	return `<role company="${role.company}" start="${role.start_year}" end="${role.end_year}">\n${addSource(role.sources)}\n<title>${role.title}</title>\n</role>`;
-}
-
-/**
- * Add source references to context
- */
-function addSource(sources: SourceRef[]): string {
-	if (!sources || sources.length === 0) {
-		return "";
-	}
-
-	const sourceElements = sources.map((s) => {
-		return `<source interview_id="${s.interview_id}" question_number="${s.question_number}"/>`;
-	});
-	return `<sources>\n${sourceElements.join("\n")}\n</sources>`;
+	return `<role company="${role.company}" start="${role.start_year}" end="${role.end_year}">\n<title>${role.title}</title>\n</role>`;
 }
