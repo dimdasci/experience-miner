@@ -13,7 +13,7 @@ export function buildInterviewContext(
 
 	contextParts.push(`<title>${interview.title}</title>`);
 	contextParts.push(
-		`<motivational_quote>${interview.motivational_quote}</motivational_quote>`,
+		`<overview>${interview.overview}</overview>`,
 	);
 
 	if (answers.length > 0) {

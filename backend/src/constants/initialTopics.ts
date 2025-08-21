@@ -7,14 +7,14 @@ export interface TopicQuestion {
 
 export interface InitialTopic {
 	title: string;
-	motivational_quote: string;
+	overview: string;
 	questions: TopicQuestion[];
 }
 
 export const INITIAL_TOPICS: InitialTopic[] = [
 	{
 		title: "My Work Timeline",
-		motivational_quote:
+		overview:
 			"We'll explore your work experience and ask about specific jobs that interest you.",
 		questions: [
 			{
@@ -41,7 +41,7 @@ export const INITIAL_TOPICS: InitialTopic[] = [
 	},
 	{
 		title: "What I Do Now",
-		motivational_quote:
+		overview:
 			"We'll ask about your current or recent job - your daily tasks, work environment, and typical responsibilities.",
 		questions: [
 			{

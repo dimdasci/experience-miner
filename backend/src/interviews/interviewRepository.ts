@@ -23,7 +23,7 @@ export class InterviewRepository implements IInterviewRepository {
 		client?: DatabaseClient,
 	): TE.TaskEither<AppError, Interview> {
 		const db = client || this.db;
-		const insertQuery = `INSERT INTO interviews (user_id, title, motivational_quote, status, created_at, updated_at)
+		const insertQuery = `INSERT INTO interviews (user_id, title, overview, status, created_at, updated_at)
 			 VALUES ($1, $2, $3, 'draft', NOW(), NOW())
 			 RETURNING *`;
 

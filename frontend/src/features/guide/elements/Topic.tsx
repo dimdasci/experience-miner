@@ -46,7 +46,7 @@ const Topic = ({ topic, isSelecting, onSelect }: TopicProps) => {
             {isSelecting ? `${topic.title} - Starting...` : topic.title}
           </Link>
         </h3>
-        <p className="text-body text-secondary">{topic.motivational_quote}</p>
+        <p className="text-body text-secondary">{topic.overview}</p>
       </div>
     </div>
   );

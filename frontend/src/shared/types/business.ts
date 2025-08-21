@@ -5,7 +5,7 @@ export interface Topic {
   id: string;
   user_id: string;
   title: string;
-  motivational_quote: string;
+  overview: string;
   questions: TopicQuestion[];
   status: TopicStatus;
   created_at: string;
@@ -23,7 +23,7 @@ export interface Interview {
   id: number;
   user_id: string;
   title: string;
-  motivational_quote: string;
+  overview: string;
   status: InterviewStatus;
   created_at: string;
   updated_at: string;

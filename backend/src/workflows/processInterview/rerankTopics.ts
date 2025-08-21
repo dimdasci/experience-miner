@@ -144,7 +144,7 @@ export class rerankTopicsFlow {
 		const topics_list = allTopics
 			.map(
 				(topic, index) =>
-					`${index}: ${topic.title} - ${topic.motivational_quote}`,
+					`${index}: ${topic.title} - ${topic.overview}`,
 			)
 			.join("\n");
 		const prompt = fillTemplate(topicRankingPrompt, {

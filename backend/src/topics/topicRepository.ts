@@ -27,7 +27,7 @@ export class TopicRepository implements ITopicRepository {
 		client?: DatabaseClient,
 	): TE.TaskEither<AppError, Topic> {
 		const db = client || this.db;
-		const insertQuery = `INSERT INTO topics (user_id, title, motivational_quote, questions, status, created_at, updated_at)
+		const insertQuery = `INSERT INTO topics (user_id, title, overview, questions, status, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
 		 RETURNING *`;
 
@@ -102,7 +102,7 @@ export class TopicRepository implements ITopicRepository {
 									this.create(
 										topic.user_id,
 										topic.title,
-										topic.motivational_quote,
+										topic.overview,
 										topic.questions,
 										topic.status,
 										client,
