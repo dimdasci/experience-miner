@@ -54,7 +54,7 @@ const MobileBottomNav = () => {
               `}
             >
               <IconComponent className="h-5 w-5" />
-              <span className="text-xs mt-1">{item.label}</span>
+              <span className="text-body-sm mt-1">{item.label}</span>
             </Link>
           );
         })}
