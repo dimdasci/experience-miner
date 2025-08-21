@@ -38,7 +38,7 @@ export interface OpenAIProviderConfig {
 	apiKey: string;
 	models: Record<string, string>;
 	maxTokens: Record<string, number>;
-	temperatures: Record<string, number>;
+	temperatures: Record<string, number | undefined>; // Allow undefined temperature
 	sdkOptions: { maxRetries: number; timeout: number };
 }
 
@@ -59,8 +59,8 @@ export const aiConfig = {
 		openai: {
 			apiKey: aiEnv.openaiApiKey,
 			models: {
-				extraction: "gpt-4o-mini-2024-07-18", // gpt-4o-2024-08-06 if more power is needed
-				topicGeneration: "gpt-4o-mini-2024-07-18", // Cost-effective
+				extraction: "gpt-4o-mini-2024-07-18", // gpt-4o-2024-11-20 if more power is needed
+				topicGeneration: "o3-mini-2025-01-31", // Reasoning
 				topicReranking: "gpt-4o-mini-2024-07-18", // Cost-effective
 			},
 			maxTokens: {
@@ -70,7 +70,7 @@ export const aiConfig = {
 			},
 			temperatures: {
 				extraction: 0.0,
-				topicGeneration: 0.5,
+				topicGeneration: undefined, // Model doesn't support temperature parameter
 				topicReranking: 0.1,
 			},
 			sdkOptions: { maxRetries: 3, timeout: 30000 },
