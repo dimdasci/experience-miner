@@ -14,12 +14,12 @@ const MobileOverflowMenu = () => {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-8 w-8 p-0"
+        className="h-10 w-10 p-0 rounded-full hover:bg-neutral-bg"
       >
         {isOpen ? (
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         ) : (
-          <MoreVertical className="h-4 w-4" />
+          <MoreVertical className="h-5 w-5" />
         )}
         <span className="sr-only">Open menu</span>
       </Button>
