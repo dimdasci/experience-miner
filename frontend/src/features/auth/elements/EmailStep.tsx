@@ -11,7 +11,7 @@ interface EmailStepProps {
 
 const EmailStep = ({ email, loading, onEmailChange, onSend }: EmailStepProps) => {
   return (
-    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg p-16">
+    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg px-8 py-10 md:p-16">
       <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); onSend(); }} className="space-y-8">
         <div className="max-w-sm mx-auto">
           <label htmlFor="email" className="block text-body font-medium mb-2">
