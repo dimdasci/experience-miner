@@ -94,17 +94,9 @@ export class OpenAIProvider implements IGenerativeAIProvider {
 			TE.flatMap(({ isStructuredCall }) => {
 				// Use provider-managed model, token, and temperature selection
 				const selectedModel =
-					this.config.models[task] ||
-					this.config.models.extraction ||
-					"gpt-4o-mini-2024-07-18";
-				const selectedMaxTokens =
-					this.config.maxTokens[task] ||
-					this.config.maxTokens.extraction ||
-					2000;
-				const selectedTemperature =
-					this.config.temperatures[task] ||
-					this.config.temperatures.extraction ||
-					0.0;
+					this.config.models[task] || "gpt-4o-mini-2024-07-18";
+				const selectedMaxTokens = this.config.maxTokens[task] || 2000;
+				const selectedTemperature = this.config.temperatures[task];
 
 				return this.callModel(
 					selectedModel,
@@ -149,9 +141,13 @@ export class OpenAIProvider implements IGenerativeAIProvider {
 					{
 						model,
 						messages,
-						temperature: temperature ?? 0.0,
 						max_completion_tokens: maxOutputTokens,
 					};
+
+				// Only add temperature if defined (some models don't support it)
+				if (temperature !== undefined) {
+					requestParams.temperature = temperature;
+				}
 
 				// Add structured output if schema provided
 				if (responseSchema) {
@@ -296,6 +292,15 @@ export class OpenAIProvider implements IGenerativeAIProvider {
 	}
 
 	private mapOpenAIError(error: unknown): AppError {
+		// Log detailed error information to Sentry for debugging
+		Sentry.logger?.error?.("OpenAI error details", {
+			errorType: error instanceof Error ? error.constructor.name : typeof error,
+			errorMessage: error instanceof Error ? error.message : String(error),
+			errorDetails: error instanceof OpenAI.APIError ? error.error : undefined,
+			statusCode: error instanceof OpenAI.APIError ? error.status : undefined,
+			errorStack: error instanceof Error ? error.stack : undefined,
+		});
+
 		// Handle OpenAI SDK specific errors
 		if (error instanceof OpenAI.AuthenticationError) {
 			return new UnauthorizedError("OpenAI authentication failed");

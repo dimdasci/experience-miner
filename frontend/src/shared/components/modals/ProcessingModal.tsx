@@ -23,7 +23,7 @@ const ProcessingModal = ({ isProcessing, error, onRetry, onCancel }: ProcessingM
               what you've accomplished, and what makes you proud. Then I'll suggest what we should talk about next. 
             </p>
             <p className="text-gray-600 mb-4">
-              Give me 2-3 minutes to work through this. Please do not close the window
+              Give me 2-3 minutes to work through this
             </p>
             <div className="text-sm text-gray-500">Please don't close this window while we work</div>
           </div>

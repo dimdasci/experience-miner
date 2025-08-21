@@ -51,7 +51,7 @@ export class SelectTopicWorkflow {
 							this.interviewRepository.create(
 								userId,
 								topic.title,
-								topic.motivational_quote,
+								topic.overview,
 								client,
 							),
 						),

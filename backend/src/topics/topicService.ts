@@ -39,7 +39,7 @@ export class TopicService {
 						this.topicRepository.create(
 							userId,
 							initialTopic.title,
-							initialTopic.motivational_quote,
+							initialTopic.overview,
 							initialTopic.questions,
 							"available",
 						),

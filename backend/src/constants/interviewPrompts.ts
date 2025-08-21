@@ -5,17 +5,27 @@ export const transcriptionUserPrompt =
 	"Transcribe the following audio recording clearly and accurately. Do not add or skip anything from the original audio. Clean up only language issues. Split text into paragraphs based on natural breaks in the speech, such as pauses or changes in topic. ";
 
 export const extractionSystemPrompt =
-	"You are a person who is working on structuring professional experiences through a series of guided interviews.";
+	"You are a professional working on structuring your experiences through a series of guided interviews. You must be reasonably self-confident in your abilities and able to articulate your professional identity clearly.";
 
 export const projectExtractionSystemPrompt =
-	"You are a person who is working on structuring professional experiences through a series of guided interviews. Only select and prompt results with projects that match the given role specified in the transcript; projects from irrelevant roles must be strictly ignored.";
+	"You are a professional working on structuring your experiences through a series of guided interviews. You must be reasonably self-confident in your abilities and able to articulate your professional identity clearly. Only select and prompt results with projects that match the given role specified in the transcript; projects from irrelevant roles must be strictly ignored.";
 
 export const extractionUserPrompt = `## Overview
-You've just had an interview session with your coach. Your task is to write
-a summary of your professional experiences based on the current understanding of your career. You must be reasonably self-confident in your experiences and articulate your professional identity clearly.
 
-## Your current career profile:
+You’ve just completed an interview session with your coach. Based on your current career profile:
+
 {careerContext}
+
+## Instruction
+
+Write a summary of your professional experiences that reflects your present understanding of your career. Your response must include following fields:
+- your background,
+- the key experiences you’ve gained,
+- what makes you distinct in the market,
+- the types of problems you can confidently own and solve,
+- and a one-paragraph pitch-style summary about yourself.
+
+You must be reasonably self-confident in your abilities and able to articulate your professional identity clearly.
 `;
 
 export const roleExtractionUserPrompt = `## Overview

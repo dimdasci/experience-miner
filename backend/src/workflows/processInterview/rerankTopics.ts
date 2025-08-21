@@ -142,10 +142,7 @@ export class rerankTopicsFlow {
 	): TE.TaskEither<AppError, ModelResponse<TopicRanking>> {
 		const context = buildFactsContext(extractedFacts);
 		const topics_list = allTopics
-			.map(
-				(topic, index) =>
-					`${index}: ${topic.title} - ${topic.motivational_quote}`,
-			)
+			.map((topic, index) => `${index}: ${topic.title} - ${topic.overview}`)
 			.join("\n");
 		const prompt = fillTemplate(topicRankingPrompt, {
 			context: context,

@@ -9,7 +9,7 @@ export interface Topic {
 	id?: number; // Optional - only set after database persistence
 	user_id: string;
 	title: string;
-	motivational_quote: string;
+	overview: string;
 	questions: TopicQuestion[];
 	status: TopicStatus;
 	created_at: string;
@@ -32,7 +32,7 @@ export const TopicCandidatesSchema = z
 					title: z
 						.string()
 						.describe("The topic title: short clear text up to 6 words"),
-					motivational_quote: z
+					overview: z
 						.string()
 						.describe(
 							"User instruction that sets simple, accurate expectations. One sentence.",

@@ -3,55 +3,6 @@ import type { ProjectLite } from "./extractProjects";
 import type { RoleLite } from "./extractRoles";
 
 /**
- * Creates a markdown representation of a role without projects
- */
-export function buildKnownRoleMarkdown(role: Role): string {
-	const parts: string[] = [];
-	parts.push(
-		`### ${role.title} at ${role.company} (${role.start_year} - ${role.end_year})`,
-	);
-
-	if (role.experience && role.experience !== "unknown") {
-		parts.push(`**Experience**: ${role.experience}`);
-	}
-
-	if (role.skills && role.skills.length > 0) {
-		parts.push(`**Skills**: ${role.skills.join(", ")}`);
-	}
-
-	return parts.length > 0
-		? parts.join("\n\n")
-		: "No known roles for this user.\n";
-}
-
-/**
- * Creates a markdown representation of projects for a specific role
- */
-export function buildKnownProjectsMarkdown(role: Role): string {
-	if (!role.projects || role.projects.length === 0) {
-		return "No known projects for this role.";
-	}
-
-	const parts: string[] = [];
-	parts.push(`Projects at ${role.company} (${role.title}):`);
-
-	for (const project of role.projects) {
-		parts.push(`- **${project.name}**: ${project.goal}`);
-
-		if (project.achievements && project.achievements.length > 0) {
-			parts.push("  Achievements:");
-			for (const achievement of project.achievements) {
-				parts.push(`  - ${achievement}`);
-			}
-		}
-	}
-
-	return parts.length > 0
-		? parts.join("\n")
-		: "No known projects for this role.\n";
-}
-
-/**
  * Converts a RoleLite to a Role object
  */
 export function convertToRole(
@@ -139,40 +90,4 @@ export function mergeRoles(
 	}
 
 	return mergedRoles;
-}
-
-/**
- * Builds a text representation of the career profile without summary
- */
-export function buildCareerContext(roles: Role[]): string {
-	const parts: string[] = [];
-
-	parts.push("# Career Profile");
-
-	if (roles.length > 0) {
-		parts.push("## Professional Experience");
-
-		for (const role of roles) {
-			parts.push(buildKnownRoleMarkdown(role));
-
-			if (role.projects && role.projects.length > 0) {
-				parts.push("#### Projects");
-				for (const project of role.projects) {
-					parts.push(`- **${project.name}**: ${project.goal}`);
-					if (project.achievements && project.achievements.length > 0) {
-						parts.push("  Achievements:");
-						for (const achievement of project.achievements) {
-							parts.push(`  - ${achievement}`);
-						}
-					}
-				}
-			}
-
-			parts.push(""); // Add empty line between roles
-		}
-	} else {
-		parts.push("No professional experience extracted yet.");
-	}
-
-	return parts.join("\n");
 }

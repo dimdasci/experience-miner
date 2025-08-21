@@ -12,15 +12,13 @@ import type {
 import type { InterviewRepository } from "@/interviews";
 import type { Interview } from "@/interviews/types";
 import type { IGenerativeAIProvider, ModelResponse } from "@/providers/ai";
-import { buildInterviewContext } from "./contextBuilder";
 import {
 	buildCareerContext,
+	buildInterviewContext,
 	buildKnownProjectsMarkdown,
 	buildKnownRoleMarkdown,
-	convertToProject,
-	convertToRole,
-	mergeRoles,
-} from "./extractHelpers";
+} from "./contextBuilder";
+import { convertToProject, convertToRole, mergeRoles } from "./extractHelpers";
 import { extractProjects } from "./extractProjects";
 import { extractRoles, type RoleLite, type RolesLite } from "./extractRoles";
 import { generateSummary } from "./summarizeProfile";

@@ -1,10 +1,10 @@
 export const creditsConfig = {
 	// Pricing rates (environment variables for different tiers)
 	rates: {
-		transcriber: 1.5,
-		extractor: 0.8,
-		topicGeneration: 0.8,
-		topicReranking: 0.8,
+		transcriber: 0.5,
+		extractor: 0.25,
+		topicGeneration: 0.75,
+		topicReranking: 0.75,
 	},
 
 	// User management settings (operational configuration)

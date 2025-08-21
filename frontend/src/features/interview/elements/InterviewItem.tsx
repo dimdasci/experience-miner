@@ -48,7 +48,7 @@ const InterviewItem = ({ interview, onSelect }: InterviewItemProps) => {
             {interview.title}
           </Link>
         </h3>
-        <p className="text-body text-secondary mb-2">{interview.motivational_quote}</p>
+        <p className="text-body text-secondary mb-2">{interview.overview}</p>
         <span className="text-body-sm text-secondary tabular-nums">{formatDateTime(interview.updated_at)}</span>
       </div>
     </div>
