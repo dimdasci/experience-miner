@@ -13,7 +13,7 @@ interface OTPStepProps {
 
 const OTPStep = ({ email, otp, loading, onOtpChange, onVerify, onReset }: OTPStepProps) => {
   return (
-    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg p-16 space-y-8">
+    <div className="w-full max-w-lg mx-auto bg-surface rounded-lg px-8 py-10 md:p-16 space-y-8">
       <div className="text-center">
         <h2 className="text-headline font-medium">Check your email</h2>
         <p className="text-body-sm text-secondary mt-2">

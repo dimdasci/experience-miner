@@ -12,8 +12,8 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
   if (error) {
     return (
       <div className="flex items-center space-x-1 text-accent">
-        <Coins className="h-3 w-3" />
-        <Button variant="ghost" size="sm" onClick={onRefresh} className="text-accent p-0 h-auto font-normal text-xs">
+        <Coins className="h-4 w-4" />
+        <Button variant="ghost" size="sm" onClick={onRefresh} className="text-accent p-0 h-auto font-normal text-body-sm">
           Err
         </Button>
       </div>
@@ -23,8 +23,8 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
   if (loading && credits === null) {
     return (
       <div className="flex items-center space-x-1 text-secondary">
-        <Coins className="h-3 w-3 animate-spin" />
-        <span className="text-xs">...</span>
+        <Coins className="h-4 w-4 animate-spin" />
+        <span className="text-body-sm">...</span>
       </div>
     );
   }
@@ -43,8 +43,8 @@ export const MobileCreditsDisplayUI = ({ credits, loading, error, onRefresh }: M
       onClick={onRefresh}
       title="Tap to refresh credits"
     >
-      <Coins className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-      <span className="text-xs font-medium">
+      <Coins className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+      <span className="text-body-sm font-medium">
         {displayCredits} {displayCredits === 1 ? 'credit' : 'credits'}
       </span>
     </button>

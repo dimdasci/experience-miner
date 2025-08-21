@@ -19,7 +19,7 @@ const ReviewAnswer = ({ questionNumber, question, answer }: ReviewAnswerProps) =
       </div>
       
       {/* Answer Section - aligned with question text */}
-      <div className="mt-6 md:mt-10 md:ml-13">
+      <div className="mt-6 md:mt-10 md:pl-13">
         <div className="text-body-lg text-secondary whitespace-pre-wrap leading-relaxed">
           {answer || 'No response given'}
         </div>
