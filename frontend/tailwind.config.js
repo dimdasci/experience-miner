@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      spacing: {
+        '13': '3.25rem', // This would be equivalent to the calculation (1.75rem + 1.5rem)
+      },
       fontFamily: {
         'sans': ['Inter', 'sans-serif'],
         'serif': ['Lora', 'serif'],
